@@ -8,18 +8,18 @@ export default function getBot(): Telegraf {
 
   bot.start(ctx => {
     console.log(ctx.from);
-    ctx.reply(`Добро пожаловать, ${userName(ctx)}! Здесь можно пообщаться с ИИ GPT-3.`);
+    ctx.reply(`Добро пожаловать, ${userName(ctx)}! Здесь можно пообщаться с ИИ GPT-3. 🤖`);
   })
 
   bot.on("text", async ctx => {
     const text = ctx.message.text;
     const gptReply = await chatCompletion(text);
 
-    ctx.reply(gptReply ?? "Нет ответа от OpenAI API. :(");
+    ctx.reply(gptReply ?? "Нет ответа от GPT. 😣");
   });
 
   bot.catch((err, ctx) => {
-    console.log(`Ooops, encountered an error for ${ctx.updateType}`, err);
+    console.log(`В работе бота произошла ошибка (${ctx.updateType})`, err);
   });
 
   return bot;

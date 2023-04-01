@@ -28,13 +28,13 @@ app.post("/bot", async function (req, res) {
     res.status(200).end();
   } catch (error) {
     console.log(error);
-    res.status(500).json({ error: "Failed to save telegram request" });
+    res.status(500).json({ error: "Failed to save telegram request." });
   }
 });
 
 app.use((req, res, next) => {
   return res.status(404).json({
-    error: "Not Found",
+    error: "Not found.",
   });
 });
 
