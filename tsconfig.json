@@ -4,8 +4,5 @@
     "module": "NodeNext",
     "target": "es2021"
   },
-  "include": [
-    "main.ts",
-    "src/**/*.ts"
-  ]
+  "include": ["src/**/*.ts"]
 }
