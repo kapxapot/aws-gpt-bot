@@ -1,15 +1,30 @@
 import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from "openai";
 
+export interface Usage {
+  promptTokens: number;
+  completionTokens: number;
+  totalTokens: number;
+}
+
+export interface Completion {
+  reply: string | null;
+  usage: Usage | null;
+}
+
+export interface CompletionError {
+  error: string;
+}
+
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
 const openai = new OpenAIApi(configuration);
 
-export default async function chatCompletion(
+export async function chatCompletion(
   userMessage: string,
   prompt: string = ""
-): Promise<string | null> {
+): Promise<Completion | CompletionError> {
   const messages: ChatCompletionRequestMessage[] = [];
 
   if (prompt) {
@@ -25,7 +40,7 @@ export default async function chatCompletion(
   });
 
   try {
-    const completion = await openai.createChatCompletion(
+    const response = await openai.createChatCompletion(
       {
         model: "gpt-3.5-turbo",
         messages: messages,
@@ -37,17 +52,32 @@ export default async function chatCompletion(
       }
     );
 
-    return completion.data.choices[0].message?.content ?? null;
+    const completion = response.data;
+
+    return {
+      reply: completion.choices[0].message?.content ?? null,
+      usage: completion.usage
+        ? {
+          promptTokens: completion.usage.prompt_tokens,
+          completionTokens: completion.usage.completion_tokens,
+          totalTokens: completion.usage.total_tokens
+        }
+        : null
+    };
   } catch (error: any) {
     if (error.response) {
       console.error(error.response.status, error.response.data);
 
-      return `Ошибка GPT: ${error.response.data.error.message}`;
+      return {
+        error: `Ошибка GPT: ${error.response.data.error.message}`
+      };
     } else {
       const errorMessage = `Ошибка запроса к GPT: ${error.message}`;
       console.error(errorMessage);
 
-      return errorMessage;
+      return {
+        error: errorMessage
+      };
     }
   }
 }

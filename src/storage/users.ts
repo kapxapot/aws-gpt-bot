@@ -21,8 +21,8 @@ export const getUser = async (id: string): Promise<User | null> =>
 export const getUserByTelegramId = async (telegramId: number): Promise<User | null> =>
   await scanItem<User>(
     usersTable,
-    "telegramId = :tgId",
+    "telegramId = :tid",
     {
-      ":tgId": { N: telegramId }
+      ":tid": telegramId
     }
   );

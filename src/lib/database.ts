@@ -115,6 +115,7 @@ export const scanItems = async <T>(
 
   const dbClient = getDynamoDbClient();
   const result = await dbClient.send(new ScanCommand(params));
+
   const items = result.Items;
 
   if (!items) {

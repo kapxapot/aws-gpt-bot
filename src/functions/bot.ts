@@ -1,10 +1,9 @@
 import { DynamoDBStreamEvent } from "aws-lambda";
+import { TelegramRequest } from "../entities/telegramRequest";
 import { decodeItem } from "../lib/aws";
-import getBot from "../telegram/bot";
+import processTelegramRequest from "../telegram/bot";
 
 export const handler = (event: DynamoDBStreamEvent) => {
-  const bot = getBot();
-
   event.Records.forEach((record) => {
     if (record.eventName !== "INSERT") {
       return;
@@ -16,8 +15,8 @@ export const handler = (event: DynamoDBStreamEvent) => {
       return;
     }
 
-    const item = decodeItem(rawItem);
+    const tgRequest = decodeItem<TelegramRequest>(rawItem);
 
-    bot.handleUpdate(item.request);
+    processTelegramRequest(tgRequest);
   });
 };
