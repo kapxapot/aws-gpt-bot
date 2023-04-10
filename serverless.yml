@@ -8,7 +8,9 @@ package:
 
 custom:
   tables:
+    messages: 'messages-${sls:stage}'
     telegramRequests: 'telegram-requests-${sls:stage}'
+    users: 'users-${sls:stage}'
   gpt:
     timeout: 60
 
@@ -28,9 +30,13 @@ provider:
             - dynamodb:UpdateItem
             - dynamodb:DeleteItem
           Resource:
+            - Fn::GetAtt: [MessagesTable, Arn]
             - Fn::GetAtt: [TelegramRequestsTable, Arn]
+            - Fn::GetAtt: [UsersTable, Arn]
   environment:
+    MESSAGES_TABLE: ${self:custom.tables.messages}
     TELEGRAM_REQUESTS_TABLE: ${self:custom.tables.telegramRequests}
+    USERS_TABLE: ${self:custom.tables.users}
     GPT_TIMEOUT: ${self:custom.gpt.timeout}
 
 plugins:
@@ -53,6 +59,17 @@ functions:
 
 resources:
   Resources:
+    MessagesTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.tables.messages}
     TelegramRequestsTable:
       Type: AWS::DynamoDB::Table
       Properties:
@@ -66,3 +83,14 @@ resources:
         TableName: ${self:custom.tables.telegramRequests}
         StreamSpecification:
           StreamViewType: NEW_IMAGE
+    UsersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.tables.users}

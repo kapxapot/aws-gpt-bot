@@ -6,7 +6,10 @@ const configuration = new Configuration({
 
 const openai = new OpenAIApi(configuration);
 
-export default async function chatCompletion(userMessage: string, prompt: string = "") {
+export default async function chatCompletion(
+  userMessage: string,
+  prompt: string = ""
+): Promise<string | null> {
   const messages: ChatCompletionRequestMessage[] = [];
 
   if (prompt) {
@@ -34,7 +37,7 @@ export default async function chatCompletion(userMessage: string, prompt: string
       }
     );
 
-    return completion.data.choices[0].message?.content;
+    return completion.data.choices[0].message?.content ?? null;
   } catch (error: any) {
     if (error.response) {
       console.error(error.response.status, error.response.data);
