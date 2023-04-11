@@ -33,7 +33,5 @@ export const addMessageToUser = async (user: User, message: Message): Promise<Us
     changes["prompt"] = message;
   }
 
-  console.log("changes", changes);
-
   return await updateUser(user, changes);
 }

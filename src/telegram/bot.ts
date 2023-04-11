@@ -51,7 +51,7 @@ export default function processTelegramRequest(tgRequest: TelegramRequest) {
   });
 
   bot.catch((err, ctx) => {
-    console.log(`В работе бота произошла ошибка (${ctx.updateType}).`, err);
+    console.log(`Bot error (${ctx.updateType}).`, err);
   });
 
   bot.handleUpdate(tgRequest.request);

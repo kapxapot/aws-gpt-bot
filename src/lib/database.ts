@@ -144,9 +144,6 @@ export const updateItem = async <T>(
   expression: string,
   attributes: Record<string, any>
 ): Promise<T> => {
-  console.log("expression", expression);
-  console.log("attributes", attributes);
-
   const params: UpdateCommandInput = {
     TableName: table,
     Key: key,
