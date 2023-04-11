@@ -4,7 +4,7 @@ import { TelegramRequest } from "../entities/telegramRequest";
 import { chatCompletion, Completion } from "../gpt/chatCompletion";
 import { timestamp } from "../lib/common";
 import { userName } from "../lib/telegram";
-import { getOrAddUser } from "../services/userService";
+import { addMessageToUser, getOrAddUser } from "../services/userService";
 import { storeMessage } from "../storage/messages";
 
 export default function processTelegramRequest(tgRequest: TelegramRequest) {
@@ -39,13 +39,15 @@ export default function processTelegramRequest(tgRequest: TelegramRequest) {
     }
 
     // store message request/response
-    await storeMessage(
+    const message = await storeMessage(
       user,
       question,
       answer,
       tgRequest.createdAt,
       respondedAt
     );
+
+    await addMessageToUser(user, message);
   });
 
   bot.catch((err, ctx) => {

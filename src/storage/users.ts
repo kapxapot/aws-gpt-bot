@@ -1,4 +1,4 @@
-import { getItem, putItem, scanItem } from "../lib/database";
+import { getItem, putItem, recordToAttributes, recordToExpression, scanItem, updateItem } from "../lib/database";
 import { User } from "../entities/user";
 import { User as TelegrafUser } from "telegraf/types";
 
@@ -25,4 +25,14 @@ export const getUserByTelegramId = async (telegramId: number): Promise<User | nu
     {
       ":tid": telegramId
     }
+  );
+
+export const updateUser = async (user: User, changes: Record<string, any>): Promise<User> =>
+  await updateItem<User>(
+    usersTable,
+    {
+      id: user.id
+    },
+    recordToExpression(changes),
+    recordToAttributes(changes)
   );

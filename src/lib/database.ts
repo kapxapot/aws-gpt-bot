@@ -1,4 +1,4 @@
-import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, QueryCommandInput, ScanCommand, ScanCommandInput } from "@aws-sdk/lib-dynamodb";
+import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, QueryCommandInput, ScanCommand, ScanCommandInput, UpdateCommand, UpdateCommandInput } from "@aws-sdk/lib-dynamodb";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { timestamp } from "../lib/common";
 import { v4 as uuidv4 } from "uuid";
@@ -138,6 +138,56 @@ export const scanItem = async <T>(
   return items.length ? items[0] : null;
 }
 
+export const updateItem = async <T>(
+  table: string,
+  key: Record<string, any>,
+  expression: string,
+  attributes: Record<string, any>
+): Promise<T> => {
+  console.log("expression", expression);
+  console.log("attributes", attributes);
+
+  const params: UpdateCommandInput = {
+    TableName: table,
+    Key: key,
+    UpdateExpression: expression + ", updatedAt = :updatedAt",
+    ExpressionAttributeValues: {
+      ...attributes,
+      ":updatedAt": timestamp()
+    },
+    ReturnValues: "ALL_NEW"
+  };
+
+  const dbClient = getDynamoDbClient();
+  const result = await dbClient.send(new UpdateCommand(params));
+
+  return result.Attributes as T;
+}
+
 function fromItem<T>(item: Record<string, any> | undefined): T | null {
   return item ? item as T : null;
+}
+
+export function recordToExpression(record: Record<string, any>): string {
+  const chunks = [];
+
+  for (const [key, value] of Object.entries(record)) {
+    chunks.push(`${key} = :${key}`);
+  }
+
+  if (!chunks.length) {
+    return "";
+  }
+
+  return "set " + chunks.join(", ");
+}
+
+export function recordToAttributes(record: Record<string, any>): Record<string, any> {
+  let result: Record<string, any> = {};
+
+  for (const [key, value] of Object.entries(record)) {
+    result[`:${key}`] = value;
+  }
+
+  return result;
 }
