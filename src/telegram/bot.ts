@@ -1,10 +1,11 @@
 import { Telegraf } from "telegraf";
 import { message } from "telegraf/filters";
+import { isCompletionError } from "../entities/message";
 import { TelegramRequest } from "../entities/telegramRequest";
-import { chatCompletion, Completion } from "../gpt/chatCompletion";
+import { chatCompletion } from "../gpt/chatCompletion";
 import { timestamp } from "../lib/common";
 import { userName } from "../lib/telegram";
-import { addMessageToUser, getOrAddUser } from "../services/userService";
+import { addMessageToUser, getOrAddUser, resetUserContext } from "../services/userService";
 import { storeMessage } from "../storage/messages";
 
 export default function processTelegramRequest(tgRequest: TelegramRequest) {
@@ -13,30 +14,31 @@ export default function processTelegramRequest(tgRequest: TelegramRequest) {
 
   bot.start(ctx => {
     ctx.reply(`Добро пожаловать, ${userName(ctx.from)}! Здесь можно пообщаться с ИИ GPT-3. 🤖`);
-  })
+  });
+
+  bot.command("reset", async ctx => {
+    const user = await getOrAddUser(ctx.from);
+
+    resetUserContext(user);
+
+    ctx.reply("Контекст диалога сброшен. Следующее ваше сообщение будет установлено в качестве промта.");
+  });
 
   bot.on(message("text"), async ctx => {
+    const user = await getOrAddUser(ctx.from);
+
     ctx.sendChatAction("typing");
 
     const question = ctx.message.text;
-    const answer = await chatCompletion(question);
+    const answer = await chatCompletion(question, user);
 
-    const isError = 'error' in answer;
-
-    const reply = isError
+    const reply = isCompletionError(answer)
       ? answer.error
       : answer.reply;
 
     ctx.reply(reply ?? "Нет ответа от GPT. 😣");
 
     const respondedAt = timestamp();
-
-    // store the message in the db
-    const user = await getOrAddUser(ctx.from);
-
-    if (!user) {
-      return;
-    }
 
     // store message request/response
     const message = await storeMessage(

@@ -1,7 +1,8 @@
 import { User as TelegrafUser } from "telegraf/types";
 import { Message } from "../entities/message";
 import { User } from "../entities/user";
-import { getUserByTelegramId, storeUser, updateUser } from "../storage/users";
+import { timestamp } from "../lib/common";
+import { getUserByTelegramId, removeFromUser, storeUser, updateUser } from "../storage/users";
 
 const userMessageCacheSize = 3;
 
@@ -26,6 +27,7 @@ export const addMessageToUser = async (user: User, message: Message): Promise<Us
   latestMessages.push(message);
 
   let changes: Record<string, any> = {
+    "updatedAt": timestamp(),
     "latestMessages": latestMessages.slice(userMessageCacheSize * -1)
   };
 
@@ -34,4 +36,15 @@ export const addMessageToUser = async (user: User, message: Message): Promise<Us
   }
 
   return await updateUser(user, changes);
+}
+
+export const resetUserContext = async (user: User): Promise<User> => {
+  await removeFromUser(user, ["latestMessages", "prompt"]);
+
+  return await updateUser(
+    user,
+    {
+      "updatedAt": timestamp()
+    }
+  );
 }

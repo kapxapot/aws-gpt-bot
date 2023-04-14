@@ -1,7 +1,6 @@
 import { putItem } from "../lib/database";
-import { Message } from "../entities/message";
+import { Completion, CompletionError, Message } from "../entities/message";
 import { User } from "../entities/user";
-import { Completion, CompletionError } from "../gpt/chatCompletion";
 
 const messagesTable = process.env.MESSAGES_TABLE!;
 

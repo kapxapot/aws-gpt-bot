@@ -1,4 +1,4 @@
-import { getItem, putItem, recordToAttributes, recordToExpression, scanItem, updateItem } from "../lib/database";
+import { attributesToRemoveExpression, getItem, putItem, recordToAttributes, recordToSetExpression, scanItem, updateItem } from "../lib/database";
 import { User } from "../entities/user";
 import { User as TelegrafUser } from "telegraf/types";
 
@@ -33,6 +33,15 @@ export const updateUser = async (user: User, changes: Record<string, any>): Prom
     {
       id: user.id
     },
-    recordToExpression(changes),
+    recordToSetExpression(changes),
     recordToAttributes(changes)
+  );
+
+export const removeFromUser = async (user: User, attributes: string[]): Promise<User> =>
+  await updateItem<User>(
+    usersTable,
+    {
+      id: user.id
+    },
+    attributesToRemoveExpression(attributes)
   );

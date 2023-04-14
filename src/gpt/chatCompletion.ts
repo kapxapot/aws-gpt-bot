@@ -1,19 +1,6 @@
 import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from "openai";
-
-export interface Usage {
-  promptTokens: number;
-  completionTokens: number;
-  totalTokens: number;
-}
-
-export interface Completion {
-  reply: string | null;
-  usage: Usage | null;
-}
-
-export interface CompletionError {
-  error: string;
-}
+import { Completion, CompletionError, isCompletion } from "../entities/message";
+import { User } from "../entities/user";
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
@@ -23,15 +10,31 @@ const openai = new OpenAIApi(configuration);
 
 export async function chatCompletion(
   userMessage: string,
-  prompt: string = ""
+  user: User
 ): Promise<Completion | CompletionError> {
   const messages: ChatCompletionRequestMessage[] = [];
 
-  if (prompt) {
+  if (user.prompt) {
     messages.push({
       role: "system",
-      content: prompt
+      content: user.prompt.request
     });
+  }
+
+  if (user.latestMessages) {
+    for (let message of user.latestMessages) {
+      messages.push({
+        role: "user",
+        content: message.request
+      });
+
+      if (isCompletion(message.response) && message.response.reply) {
+        messages.push({
+          role: "assistant",
+          content: message.response.reply
+        });
+      }
+    }
   }
 
   messages.push({

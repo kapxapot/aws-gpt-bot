@@ -142,18 +142,18 @@ export const updateItem = async <T>(
   table: string,
   key: Record<string, any>,
   expression: string,
-  attributes: Record<string, any>
+  attributes?: Record<string, any>
 ): Promise<T> => {
   const params: UpdateCommandInput = {
     TableName: table,
     Key: key,
-    UpdateExpression: expression + ", updatedAt = :updatedAt",
-    ExpressionAttributeValues: {
-      ...attributes,
-      ":updatedAt": timestamp()
-    },
+    UpdateExpression: expression,
     ReturnValues: "ALL_NEW"
   };
+
+  if (attributes) {
+    params.ExpressionAttributeValues = attributes;
+  }
 
   const dbClient = getDynamoDbClient();
   const result = await dbClient.send(new UpdateCommand(params));
@@ -165,7 +165,7 @@ function fromItem<T>(item: Record<string, any> | undefined): T | null {
   return item ? item as T : null;
 }
 
-export function recordToExpression(record: Record<string, any>): string {
+export function recordToSetExpression(record: Record<string, any>): string {
   const chunks = [];
 
   for (const [key, value] of Object.entries(record)) {
@@ -187,4 +187,8 @@ export function recordToAttributes(record: Record<string, any>): Record<string, 
   }
 
   return result;
+}
+
+export function attributesToRemoveExpression(attributes: string[]): string {
+  return "remove " + attributes.join(", ");
 }
