@@ -1,4 +1,4 @@
-import { Telegraf } from "telegraf";
+import { Context, Telegraf, session } from "telegraf";
 import { message } from "telegraf/filters";
 import { isCompletionError } from "../entities/message";
 import { TelegramRequest } from "../entities/telegramRequest";
@@ -7,10 +7,19 @@ import { timestamp } from "../lib/common";
 import { userName } from "../lib/telegram";
 import { addMessageToUser, getOrAddUser, resetUserContext } from "../services/userService";
 import { storeMessage } from "../storage/messages";
+import { sessionStore } from "./session";
+
+interface BotContext extends Context {
+  session?: any
+}
 
 export default function processTelegramRequest(tgRequest: TelegramRequest) {
   const token = process.env.BOT_TOKEN!;
-  const bot = new Telegraf(token);
+  const bot = new Telegraf<BotContext>(token);
+
+  bot.use(session({
+    store: sessionStore()
+  }));
 
   bot.start(ctx => {
     ctx.reply(`Добро пожаловать, ${userName(ctx.from)}! Здесь можно пообщаться с ИИ GPT-3. 🤖`);

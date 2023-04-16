@@ -1,4 +1,4 @@
-import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, QueryCommandInput, ScanCommand, ScanCommandInput, UpdateCommand, UpdateCommandInput } from "@aws-sdk/lib-dynamodb";
+import { DeleteCommand, DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, QueryCommandInput, ScanCommand, ScanCommandInput, UpdateCommand, UpdateCommandInput } from "@aws-sdk/lib-dynamodb";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { timestamp } from "../lib/common";
 import { v4 as uuidv4 } from "uuid";
@@ -31,7 +31,7 @@ export const putItem = async <T>(table: string, item: any): Promise<T> => {
     TableName: table,
     Item: {
       ...item,
-      id: uuidv4(),
+      id: item.id ?? uuidv4(),
       createdAt: now,
       updatedAt: now
     }
@@ -157,6 +157,20 @@ export const updateItem = async <T>(
 
   const dbClient = getDynamoDbClient();
   const result = await dbClient.send(new UpdateCommand(params));
+
+  return result.Attributes as T;
+}
+
+export const deleteItem = async <T>(table: string, id: string): Promise<T> => {
+  const params = {
+    TableName: table,
+    Key: {
+      id
+    }
+  };
+
+  const dbClient = getDynamoDbClient();
+  const result = await dbClient.send(new DeleteCommand(params));
 
   return result.Attributes as T;
 }
