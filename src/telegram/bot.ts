@@ -1,4 +1,4 @@
-import { Context, Telegraf, session } from "telegraf";
+import { Scenes, Telegraf, session } from "telegraf";
 import { message } from "telegraf/filters";
 import { isCompletionError } from "../entities/message";
 import { TelegramRequest } from "../entities/telegramRequest";
@@ -8,10 +8,8 @@ import { userName } from "../lib/telegram";
 import { addMessageToUser, getOrAddUser, resetUserContext } from "../services/userService";
 import { storeMessage } from "../storage/messages";
 import { sessionStore } from "./session";
-
-interface BotContext extends Context {
-  session?: any
-}
+import { onboardingScene, onboardingSceneName } from "./scenes/onboarding";
+import { BotContext } from "./context";
 
 export default function processTelegramRequest(tgRequest: TelegramRequest) {
   const token = process.env.BOT_TOKEN!;
@@ -20,6 +18,10 @@ export default function processTelegramRequest(tgRequest: TelegramRequest) {
   bot.use(session({
     store: sessionStore()
   }));
+
+  const stage = new Scenes.Stage<BotContext>([onboardingScene]);
+
+  bot.use(stage.middleware());
 
   bot.start(ctx => {
     ctx.reply(`Добро пожаловать, ${userName(ctx.from)}! Здесь можно пообщаться с ИИ GPT-3. 🤖`);
@@ -31,6 +33,10 @@ export default function processTelegramRequest(tgRequest: TelegramRequest) {
     resetUserContext(user);
 
     ctx.reply("Контекст диалога сброшен. Следующее ваше сообщение будет установлено в качестве промта.");
+  });
+
+  bot.command("onboarding", ctx => {
+    ctx.scene.enter(onboardingSceneName);
   });
 
   bot.on(message("text"), async ctx => {
