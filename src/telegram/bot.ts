@@ -8,7 +8,7 @@ import { userName } from "../lib/telegram";
 import { addMessageToUser, getOrAddUser, resetUserContext } from "../services/userService";
 import { storeMessage } from "../storage/messages";
 import { sessionStore } from "./session";
-import { onboardingScene, onboardingSceneName } from "./scenes/onboarding";
+import { tutorialScene, tutorialSceneName } from "./scenes/tutorial";
 import { BotContext } from "./context";
 
 export default function processTelegramRequest(tgRequest: TelegramRequest) {
@@ -19,7 +19,7 @@ export default function processTelegramRequest(tgRequest: TelegramRequest) {
     store: sessionStore()
   }));
 
-  const stage = new Scenes.Stage<BotContext>([onboardingScene]);
+  const stage = new Scenes.Stage<BotContext>([tutorialScene]);
 
   bot.use(stage.middleware());
 
@@ -35,8 +35,8 @@ export default function processTelegramRequest(tgRequest: TelegramRequest) {
     ctx.reply("Контекст диалога сброшен. Следующее ваше сообщение будет установлено в качестве промта.");
   });
 
-  bot.command("onboarding", ctx => {
-    ctx.scene.enter(onboardingSceneName);
+  bot.command("tutorial", ctx => {
+    ctx.scene.enter(tutorialSceneName);
   });
 
   bot.on(message("text"), async ctx => {

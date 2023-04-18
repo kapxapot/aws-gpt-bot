@@ -1,8 +1,9 @@
 import { Composer, Markup } from 'telegraf';
 import { BotContext } from '../context';
 import { WizardScene } from 'telegraf/scenes';
+import { clearInlineKeyboard } from '../../lib/telegram';
 
-export const onboardingSceneName = "ONBOARDING_SCENE";
+export const tutorialSceneName = "TUTORIAL_SCENE";
 
 function makeStepHandler(text: string, last: boolean) {
   const stepHandler = new Composer<BotContext>();
@@ -15,6 +16,8 @@ function makeStepHandler(text: string, last: boolean) {
   }
 
   stepHandler.action("next", async ctx => {
+    clearInlineKeyboard(ctx);
+
     if (last) {
       await ctx.replyWithHTML(text);
       return ctx.scene.leave();
@@ -25,6 +28,8 @@ function makeStepHandler(text: string, last: boolean) {
   });
 
   stepHandler.action("exit", async ctx => {
+    clearInlineKeyboard(ctx);
+
     await ctx.reply("Возвращаемся к диалогу с ИИ.")
     return ctx.scene.leave();
   });
@@ -104,8 +109,8 @@ ChatGPT не просто копирует информацию из интер�
 Попробуйте написать свой первый запрос боту или выберите одну из предустановленных ролей в меню.`
 ];
 
-export const onboardingScene = new WizardScene<BotContext>(
-  onboardingSceneName,
+export const tutorialScene = new WizardScene<BotContext>(
+  tutorialSceneName,
   ...steps.map((step, index) => makeStepHandler(step, index === steps.length - 1)),
   ctx => ctx.scene.leave()
 );
