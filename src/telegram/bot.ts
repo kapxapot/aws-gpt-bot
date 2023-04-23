@@ -27,6 +27,10 @@ export default function processTelegramRequest(tgRequest: TelegramRequest) {
     ctx.reply(`Добро пожаловать, ${userName(ctx.from)}! Здесь можно пообщаться с ИИ GPT-3. 🤖`);
   });
 
+  bot.command("terms", async ctx => {
+    await ctx.reply(process.env.TERMS_URL!);
+  });
+
   bot.command("reset", async ctx => {
     const user = await getOrAddUser(ctx.from);
 
