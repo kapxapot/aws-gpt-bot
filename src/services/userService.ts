@@ -2,9 +2,9 @@ import { User as TelegrafUser } from "telegraf/types";
 import { Message } from "../entities/message";
 import { User } from "../entities/user";
 import { timestamp } from "../lib/common";
-import { getUserByTelegramId, removeFromUser, storeUser, updateUser } from "../storage/users";
-
-const userMessageCacheSize = 3;
+import { getUserByTelegramId, storeUser, updateUser } from "../storage/users";
+import { Context, IContext } from "../entities/context";
+import { History } from "../entities/history";
 
 export const getOrAddUser = async (userData: TelegrafUser): Promise<User> => {
   const existingUser = await getUserByTelegramId(userData.id);
@@ -12,7 +12,7 @@ export const getOrAddUser = async (userData: TelegrafUser): Promise<User> => {
   if (existingUser) {
     return existingUser;
   } else {
-    console.log("User not found. Telegram id = " + userData.id);
+    console.log(`User not found. Telegram id = ${userData.id}`);
   }
 
   return await storeUser(userData);
@@ -22,29 +22,39 @@ export const getOrAddUser = async (userData: TelegrafUser): Promise<User> => {
  * Adds the message to the recent user's messages and sets a prompt if there is none.
  */
 export const addMessageToUser = async (user: User, message: Message): Promise<User> => {
-  const latestMessages = user.latestMessages ?? [];
+  const context = user.context
+    ? Context.fromInterface(user.context)
+    : new Context(message.request);
 
-  latestMessages.push(message);
+  context.addMessage(message);
 
-  let changes: Record<string, any> = {
-    "updatedAt": timestamp(),
-    "latestMessages": latestMessages.slice(userMessageCacheSize * -1)
-  };
-
-  if (!user.prompt) {
-    changes["prompt"] = message;
-  }
-
-  return await updateUser(user, changes);
+  return await updateContext(user, context);
 }
 
-export const resetUserContext = async (user: User): Promise<User> => {
-  await removeFromUser(user, ["latestMessages", "prompt"]);
-
+async function updateContext(user: User, context: IContext): Promise<User> {
   return await updateUser(
     user,
     {
-      "updatedAt": timestamp()
+      "context": context,
+      "updatedAt": timestamp(),
     }
   );
+}
+
+export interface CurrentContext {
+  prompt: string | null;
+  latestMessages: Message[] | null;
+}
+
+export function getCurrentContext(user: User): CurrentContext {
+  if (!user.context) {
+    return { prompt: null, latestMessages: null };
+  }
+
+  const context = Context.fromInterface(user.context);
+
+  return {
+    prompt: context.customPrompt,
+    latestMessages: context.getCurrentHistory().messages
+  };
 }

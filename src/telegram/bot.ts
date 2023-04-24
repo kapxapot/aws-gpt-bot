@@ -5,11 +5,12 @@ import { TelegramRequest } from "../entities/telegramRequest";
 import { chatCompletion } from "../gpt/chatCompletion";
 import { timestamp } from "../lib/common";
 import { userName } from "../lib/telegram";
-import { addMessageToUser, getOrAddUser, resetUserContext } from "../services/userService";
+import { addMessageToUser, getCurrentContext, getOrAddUser } from "../services/userService";
 import { storeMessage } from "../storage/messages";
 import { sessionStore } from "./session";
 import { tutorialScene, tutorialSceneName } from "./scenes/tutorial";
 import { BotContext } from "./context";
+import { promptScene, promptSceneName } from "./scenes/prompt";
 
 export default function processTelegramRequest(tgRequest: TelegramRequest) {
   const token = process.env.BOT_TOKEN!;
@@ -19,7 +20,7 @@ export default function processTelegramRequest(tgRequest: TelegramRequest) {
     store: sessionStore()
   }));
 
-  const stage = new Scenes.Stage<BotContext>([tutorialScene]);
+  const stage = new Scenes.Stage<BotContext>([tutorialScene, promptScene]);
 
   bot.use(stage.middleware());
 
@@ -31,16 +32,12 @@ export default function processTelegramRequest(tgRequest: TelegramRequest) {
     await ctx.reply(process.env.TERMS_URL!);
   });
 
-  bot.command("reset", async ctx => {
-    const user = await getOrAddUser(ctx.from);
-
-    resetUserContext(user);
-
-    ctx.reply("Контекст диалога сброшен. Следующее ваше сообщение будет установлено в качестве промта.");
-  });
-
   bot.command("tutorial", ctx => {
     ctx.scene.enter(tutorialSceneName);
+  });
+
+  bot.command("prompt", ctx => {
+    ctx.scene.enter(promptSceneName);
   });
 
   bot.on(message("text"), async ctx => {
@@ -49,7 +46,9 @@ export default function processTelegramRequest(tgRequest: TelegramRequest) {
     ctx.sendChatAction("typing");
 
     const question = ctx.message.text;
-    const answer = await chatCompletion(question, user);
+
+    const { prompt, latestMessages } = getCurrentContext(user);
+    const answer = await chatCompletion(question, prompt, latestMessages);
 
     const reply = isCompletionError(answer)
       ? answer.error
@@ -57,15 +56,12 @@ export default function processTelegramRequest(tgRequest: TelegramRequest) {
 
     ctx.reply(reply ?? "Нет ответа от GPT. 😣");
 
-    const respondedAt = timestamp();
-
-    // store message request/response
     const message = await storeMessage(
       user,
       question,
       answer,
       tgRequest.createdAt,
-      respondedAt
+      timestamp()
     );
 
     await addMessageToUser(user, message);

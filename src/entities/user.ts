@@ -1,4 +1,4 @@
-import { Message } from "./message";
+import { IContext } from "./context";
 
 export interface User {
   id: string;
@@ -6,8 +6,7 @@ export interface User {
   firstName?: string;
   lastName?: string;
   username?: string;
-  latestMessages?: Message[];
-  prompt?: Message;
+  context?: IContext;
   createdAt: number;
   updatedAt: number;
 }
