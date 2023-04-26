@@ -1,16 +1,18 @@
 import { Scenes, Telegraf, session } from "telegraf";
 import { message } from "telegraf/filters";
-import { isCompletionError } from "../entities/message";
+import { isCompletion, isCompletionError } from "../entities/message";
 import { TelegramRequest } from "../entities/telegramRequest";
 import { chatCompletion } from "../gpt/chatCompletion";
-import { timestamp } from "../lib/common";
+import { timestamp, toText } from "../lib/common";
 import { userName } from "../lib/telegram";
 import { addMessageToUser, getCurrentContext, getOrAddUser } from "../services/userService";
 import { storeMessage } from "../storage/messages";
 import { sessionStore } from "./session";
-import { tutorialScene, tutorialSceneName } from "./scenes/tutorial";
+import { tutorialScene } from "./scenes/tutorial";
 import { BotContext } from "./context";
-import { promptScene, promptSceneName } from "./scenes/prompt";
+import { promptScene, strictPromptScene } from "./scenes/prompt";
+import { commands } from "../lib/constants";
+import { getCommandHandlers } from "./handlers";
 
 export default function processTelegramRequest(tgRequest: TelegramRequest) {
   const token = process.env.BOT_TOKEN!;
@@ -20,25 +22,28 @@ export default function processTelegramRequest(tgRequest: TelegramRequest) {
     store: sessionStore()
   }));
 
-  const stage = new Scenes.Stage<BotContext>([tutorialScene, promptScene]);
+  const stage = new Scenes.Stage<BotContext>([tutorialScene, promptScene, strictPromptScene]);
 
   bot.use(stage.middleware());
 
-  bot.start(ctx => {
-    ctx.reply(`Добро пожаловать, ${userName(ctx.from)}! Здесь можно пообщаться с ИИ GPT-3. 🤖`);
+  bot.start(async ctx => {
+    const user = await getOrAddUser(ctx.from);
+    const newUser = !user.context;
+
+    if (newUser) {
+      ctx.replyWithHTML(toText([
+        `Добро пожаловать, <b>${userName(ctx.from)}</b>! Здесь можно пообщаться с <b>ИИ GPT-3</b>. 🤖`,
+        `Рекомендуем начать с обучения /${commands.tutorial} и настройки промта /${commands.prompt}`
+      ]));
+    } else {
+      ctx.replyWithHTML(toText([
+        `С возвращеним, <b>${userName(ctx.from)}</b>! Продолжаем общение с <b>ИИ GPT-3</b>. 🤖`,
+        `Для настройки промта используйте команду /${commands.prompt}`
+      ]));
+    }
   });
 
-  bot.command("terms", async ctx => {
-    await ctx.reply(process.env.TERMS_URL!);
-  });
-
-  bot.command("tutorial", ctx => {
-    ctx.scene.enter(tutorialSceneName);
-  });
-
-  bot.command("prompt", ctx => {
-    ctx.scene.enter(promptSceneName);
-  });
+  getCommandHandlers().forEach(tuple => bot.command(...tuple));
 
   bot.on(message("text"), async ctx => {
     const user = await getOrAddUser(ctx.from);
@@ -65,6 +70,31 @@ export default function processTelegramRequest(tgRequest: TelegramRequest) {
     );
 
     await addMessageToUser(user, message);
+
+    if (process.env.DEBUG === "true") {
+      const chunks = [];
+
+      if (user.context) {
+        chunks.push(`промт: ${user.context.promptCode}`);
+      }
+
+      if (isCompletion(answer) && answer.usage) {
+        const usg = answer.usage;
+        chunks.push(`токены: ${usg.totalTokens} (${usg.promptTokens} + ${usg.completionTokens})`);
+      }
+
+      ctx.reply(chunks.join(", "));
+    }
+  });
+
+  bot.use(ctx => {
+    const myChatMember = ctx.myChatMember;
+
+    if (myChatMember) {
+      if (["kicked", "left"].includes(myChatMember.new_chat_member.status)) {
+        ctx.session = {};
+      }
+    }
   });
 
   bot.catch((err, ctx) => {

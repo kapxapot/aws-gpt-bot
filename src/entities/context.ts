@@ -15,7 +15,7 @@ export class Context {
   public promptCode: string;
   public history: History[];
 
-  constructor(customPrompt: string);
+  constructor();
   constructor(customPrompt: string | null, promptCode: string, history: History[]);
   constructor(customPrompt?: string | null, promptCode?: string, history?: History[])
   {

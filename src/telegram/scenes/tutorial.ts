@@ -1,11 +1,11 @@
-import { Composer, Markup } from 'telegraf';
-import { BotContext } from '../context';
-import { WizardScene } from 'telegraf/scenes';
-import { clearInlineKeyboard } from '../../lib/telegram';
+import { Composer, Markup } from "telegraf";
+import { WizardScene } from "telegraf/scenes";
+import { BotContext } from "../context";
+import { clearInlineKeyboard, dunno } from "../../lib/telegram";
+import { commands, messages, scenes } from "../../lib/constants";
+import { getOtherCommandHandlers } from "../handlers";
 
-export const tutorialSceneName = "TUTORIAL_SCENE";
-
-function makeStepHandler(text: string, last: boolean) {
+function makeStepHandler(text: string, first: boolean, last: boolean) {
   const stepHandler = new Composer<BotContext>();
 
   function keyboard() {
@@ -14,6 +14,15 @@ function makeStepHandler(text: string, last: boolean) {
       Markup.button.callback("Закончить", "exit")
     ]);
   }
+
+  getOtherCommandHandlers(commands.tutorial).forEach(tuple => {
+    stepHandler.command(tuple[0], ctx => {
+      clearInlineKeyboard(ctx);
+      ctx.scene.leave();
+
+      return tuple[1](ctx);
+    });
+  });
 
   stepHandler.action("next", async ctx => {
     clearInlineKeyboard(ctx);
@@ -30,13 +39,17 @@ function makeStepHandler(text: string, last: boolean) {
   stepHandler.action("exit", async ctx => {
     clearInlineKeyboard(ctx);
 
-    await ctx.reply("Возвращаемся к диалогу с ИИ.")
+    await ctx.reply(messages.backToAI)
     return ctx.scene.leave();
   });
 
   stepHandler.use(ctx => {
-    ctx.replyWithHTML(text, keyboard());
-    ctx.wizard.next();
+    if (first) {
+      ctx.replyWithHTML(text, keyboard());
+      ctx.wizard.next();
+    } else {
+      dunno(ctx);
+    }
   });
 
   return stepHandler;
@@ -110,7 +123,7 @@ ChatGPT не просто копирует информацию из интер�
 ];
 
 export const tutorialScene = new WizardScene<BotContext>(
-  tutorialSceneName,
-  ...steps.map((step, index) => makeStepHandler(step, index === steps.length - 1)),
+  scenes.tutorial,
+  ...steps.map((step, index) => makeStepHandler(step, index === 0, index === steps.length - 1)),
   ctx => ctx.scene.leave()
 );

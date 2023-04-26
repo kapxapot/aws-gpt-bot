@@ -31,3 +31,7 @@ const prompts: Prompt[] = [
 export function getPrompts(): Prompt[] {
   return prompts;
 }
+
+export function getPromptByCode(code: string): Prompt | null {
+  return prompts.find(p => p.code === code) ?? null;
+}

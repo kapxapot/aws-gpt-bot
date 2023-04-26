@@ -4,31 +4,51 @@ import { User } from "../entities/user";
 import { timestamp } from "../lib/common";
 import { getUserByTelegramId, storeUser, updateUser } from "../storage/users";
 import { Context, IContext } from "../entities/context";
-import { History } from "../entities/history";
+import { Prompt, customPromptCode, getPromptByCode } from "../entities/prompt";
 
 export const getOrAddUser = async (userData: TelegrafUser): Promise<User> => {
-  const existingUser = await getUserByTelegramId(userData.id);
-
-  if (existingUser) {
-    return existingUser;
-  } else {
-    console.log(`User not found. Telegram id = ${userData.id}`);
-  }
-
-  return await storeUser(userData);
+  return await getUserByTelegramId(userData.id)
+    ?? await storeUser(userData);
 }
 
 /**
  * Adds the message to the recent user's messages and sets a prompt if there is none.
  */
 export const addMessageToUser = async (user: User, message: Message): Promise<User> => {
-  const context = user.context
-    ? Context.fromInterface(user.context)
-    : new Context(message.request);
-
+  const context = getContext(user);
   context.addMessage(message);
 
   return await updateContext(user, context);
+}
+
+export const newCustomPrompt = async (user: User, customPrompt: string): Promise<User> => {
+  const context = getContext(user);
+
+  context.customPrompt = customPrompt;
+  context.promptCode = customPromptCode;
+
+  return await updateContext(user, context);
+}
+
+export const backToCustomPrompt = async (user: User): Promise<User> => {
+  const context = getContext(user);
+  context.promptCode = customPromptCode;
+
+  return await updateContext(user, context);
+}
+
+export const setPrompt = async (user: User, prompt: Prompt): Promise<User> => {
+  const context = getContext(user);
+
+  context.promptCode = prompt.code;
+
+  return await updateContext(user, context);
+}
+
+function getContext(user: User): Context {
+  return user.context
+    ? Context.fromInterface(user.context)
+    : new Context();
 }
 
 async function updateContext(user: User, context: IContext): Promise<User> {
@@ -53,8 +73,12 @@ export function getCurrentContext(user: User): CurrentContext {
 
   const context = Context.fromInterface(user.context);
 
+  const prompt = (context.promptCode === customPromptCode)
+    ? context.customPrompt
+    : getPromptByCode(context.promptCode)?.content ?? null;
+
   return {
-    prompt: context.customPrompt,
+    prompt,
     latestMessages: context.getCurrentHistory().messages
   };
 }
