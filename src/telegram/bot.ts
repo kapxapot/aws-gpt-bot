@@ -12,7 +12,7 @@ import { tutorialScene } from "./scenes/tutorial";
 import { BotContext } from "./context";
 import { promptScene, strictPromptScene } from "./scenes/prompt";
 import { commands } from "../lib/constants";
-import { getCommandHandlers } from "./handlers";
+import { getCommandHandlers, kickHandler } from "./handlers";
 
 export default function processTelegramRequest(tgRequest: TelegramRequest) {
   const token = process.env.BOT_TOKEN!;
@@ -87,15 +87,7 @@ export default function processTelegramRequest(tgRequest: TelegramRequest) {
     }
   });
 
-  bot.use(ctx => {
-    const myChatMember = ctx.myChatMember;
-
-    if (myChatMember) {
-      if (["kicked", "left"].includes(myChatMember.new_chat_member.status)) {
-        ctx.session = {};
-      }
-    }
-  });
+  bot.use(kickHandler);
 
   bot.catch((err, ctx) => {
     console.log(`Bot error (${ctx.updateType}).`, err);

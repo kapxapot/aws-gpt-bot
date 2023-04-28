@@ -3,7 +3,7 @@ import { WizardScene } from "telegraf/scenes";
 import { BotContext } from "../context";
 import { clearInlineKeyboard, dunno } from "../../lib/telegram";
 import { commands, messages, scenes } from "../../lib/constants";
-import { getOtherCommandHandlers } from "../handlers";
+import { getOtherCommandHandlers, kickHandler } from "../handlers";
 
 function makeStepHandler(text: string, first: boolean, last: boolean) {
   const stepHandler = new Composer<BotContext>();
@@ -44,6 +44,8 @@ function makeStepHandler(text: string, first: boolean, last: boolean) {
   });
 
   stepHandler.use(ctx => {
+    kickHandler(ctx);
+
     if (first) {
       ctx.replyWithHTML(text, keyboard());
       ctx.wizard.next();

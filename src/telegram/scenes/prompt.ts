@@ -7,7 +7,7 @@ import { toText } from "../../lib/common";
 import { clearInlineKeyboard, dunno, sliceButtons } from "../../lib/telegram";
 import { backToCustomPrompt, getOrAddUser, newCustomPrompt, setPrompt } from "../../services/userService";
 import { getPromptByCode, getPrompts } from "../../entities/prompt";
-import { getOtherCommandHandlers } from "../handlers";
+import { getOtherCommandHandlers, kickHandler } from "../handlers";
 
 export const promptScene = getPromptScene(scenes.prompt, true);
 export const strictPromptScene = getPromptScene(scenes.strictPrompt, false);
@@ -215,6 +215,7 @@ function getPromptScene(name: string, allowCancel: boolean) {
   });
 
   scene.use(ctx => {
+    kickHandler(ctx);
     dunno(ctx);
   });
 

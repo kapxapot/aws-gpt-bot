@@ -34,3 +34,13 @@ function tutorialHandler(ctx: any) {
 function promptHandler(ctx: any) {
   return ctx.scene.enter(scenes.prompt);
 }
+
+export function kickHandler(ctx: any) {
+  const myChatMember = ctx.myChatMember;
+
+  if (myChatMember) {
+    if (["kicked", "left"].includes(myChatMember.new_chat_member.status)) {
+      ctx.session = {};
+    }
+  }
+}
