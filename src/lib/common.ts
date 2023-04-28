@@ -11,3 +11,7 @@ export function toText(strings: string[]): string {
 
 `);
 }
+
+export function isDebugMode(): boolean {
+  return process.env.DEBUG === "true";
+}

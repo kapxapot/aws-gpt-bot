@@ -1,9 +1,9 @@
 import { Composer, Markup } from "telegraf";
 import { WizardScene } from "telegraf/scenes";
 import { BotContext } from "../context";
-import { clearInlineKeyboard, dunno } from "../../lib/telegram";
+import { clearInlineKeyboard } from "../../lib/telegram";
 import { commands, messages, scenes } from "../../lib/constants";
-import { getOtherCommandHandlers, kickHandler } from "../handlers";
+import { dunnoHandler, getOtherCommandHandlers, kickHandler } from "../handlers";
 
 function makeStepHandler(text: string, first: boolean, last: boolean) {
   const stepHandler = new Composer<BotContext>();
@@ -16,41 +16,39 @@ function makeStepHandler(text: string, first: boolean, last: boolean) {
   }
 
   getOtherCommandHandlers(commands.tutorial).forEach(tuple => {
-    stepHandler.command(tuple[0], ctx => {
-      clearInlineKeyboard(ctx);
-      ctx.scene.leave();
-
-      return tuple[1](ctx);
+    stepHandler.command(tuple[0], async (ctx) => {
+      await clearInlineKeyboard(ctx);
+      await ctx.scene.leave();
+      await tuple[1](ctx);
     });
   });
 
-  stepHandler.action("next", async ctx => {
-    clearInlineKeyboard(ctx);
+  stepHandler.action("next", async (ctx) => {
+    await clearInlineKeyboard(ctx);
 
     if (last) {
       await ctx.replyWithHTML(text);
-      return ctx.scene.leave();
+      await ctx.scene.leave();
+    } else {
+      await ctx.replyWithHTML(text, keyboard());
+      ctx.wizard.next();
     }
-
-    await ctx.replyWithHTML(text, keyboard());
-    ctx.wizard.next();
   });
 
-  stepHandler.action("exit", async ctx => {
-    clearInlineKeyboard(ctx);
-
+  stepHandler.action("exit", async (ctx) => {
+    await clearInlineKeyboard(ctx);
     await ctx.reply(messages.backToAI)
-    return ctx.scene.leave();
+    await ctx.scene.leave();
   });
 
-  stepHandler.use(ctx => {
-    kickHandler(ctx);
+  stepHandler.use(async (ctx) => {
+    await kickHandler(ctx);
 
     if (first) {
-      ctx.replyWithHTML(text, keyboard());
+      await ctx.replyWithHTML(text, keyboard());
       ctx.wizard.next();
     } else {
-      dunno(ctx);
+      await dunnoHandler(ctx);
     }
   });
 
@@ -127,5 +125,5 @@ ChatGPT не просто копирует информацию из интер�
 export const tutorialScene = new WizardScene<BotContext>(
   scenes.tutorial,
   ...steps.map((step, index) => makeStepHandler(step, index === 0, index === steps.length - 1)),
-  ctx => ctx.scene.leave()
+  async (ctx) => await ctx.scene.leave()
 );

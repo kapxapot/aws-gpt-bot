@@ -4,16 +4,14 @@ export function userName(user: User): string {
   return user.first_name ?? user.last_name ?? user.username ?? "anonymous";
 }
 
-export function clearInlineKeyboard(ctx: any) {
+export const clearInlineKeyboard = async (ctx: any) => {
   try {
-    ctx.editMessageReplyMarkup({ inline_keyboard: [] });
-  }
-  catch {
-  }
-}
+    await ctx.answerCbQuery();
+  } catch {}
 
-export function dunno(ctx: any) {
-  ctx.reply("Я не понял ваш запрос. Используйте меню диалога. 👆");
+  try {
+    await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
+  } catch {}
 }
 
 export function sliceButtons<T>(buttons: T[], limit: number = 2): T[][] {

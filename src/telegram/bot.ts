@@ -3,7 +3,7 @@ import { message } from "telegraf/filters";
 import { isCompletion, isCompletionError } from "../entities/message";
 import { TelegramRequest } from "../entities/telegramRequest";
 import { chatCompletion } from "../gpt/chatCompletion";
-import { timestamp, toText } from "../lib/common";
+import { isDebugMode, timestamp, toText } from "../lib/common";
 import { userName } from "../lib/telegram";
 import { addMessageToUser, getCurrentContext, getOrAddUser } from "../services/userService";
 import { storeMessage } from "../storage/messages";
@@ -31,12 +31,12 @@ export default function processTelegramRequest(tgRequest: TelegramRequest) {
     const newUser = !user.context;
 
     if (newUser) {
-      ctx.replyWithHTML(toText([
+      await ctx.replyWithHTML(toText([
         `Добро пожаловать, <b>${userName(ctx.from)}</b>! Здесь можно пообщаться с <b>ИИ GPT-3</b>. 🤖`,
         `Рекомендуем начать с обучения /${commands.tutorial} и настройки промта /${commands.prompt}`
       ]));
     } else {
-      ctx.replyWithHTML(toText([
+      await ctx.replyWithHTML(toText([
         `С возвращеним, <b>${userName(ctx.from)}</b>! Продолжаем общение с <b>ИИ GPT-3</b>. 🤖`,
         `Для настройки промта используйте команду /${commands.prompt}`
       ]));
@@ -48,7 +48,7 @@ export default function processTelegramRequest(tgRequest: TelegramRequest) {
   bot.on(message("text"), async ctx => {
     const user = await getOrAddUser(ctx.from);
 
-    ctx.sendChatAction("typing");
+    await ctx.sendChatAction("typing");
 
     const question = ctx.message.text;
 
@@ -59,7 +59,7 @@ export default function processTelegramRequest(tgRequest: TelegramRequest) {
       ? answer.error
       : answer.reply;
 
-    ctx.reply(reply ?? "Нет ответа от GPT. 😣");
+    await ctx.reply(reply ?? "Нет ответа от GPT. 😣");
 
     const message = await storeMessage(
       user,
@@ -71,7 +71,7 @@ export default function processTelegramRequest(tgRequest: TelegramRequest) {
 
     await addMessageToUser(user, message);
 
-    if (process.env.DEBUG === "true") {
+    if (isDebugMode()) {
       const chunks = [];
 
       if (user.context) {
@@ -83,7 +83,7 @@ export default function processTelegramRequest(tgRequest: TelegramRequest) {
         chunks.push(`токены: ${usg.totalTokens} (${usg.promptTokens} + ${usg.completionTokens})`);
       }
 
-      ctx.reply(chunks.join(", "));
+      await ctx.reply(chunks.join(", "));
     }
   });
 
