@@ -9,6 +9,7 @@ package:
 custom:
   tables:
     messages: 'messages-${sls:stage}'
+    payments: 'payments-${sls:stage}'
     sessions: 'sessions-${sls:stage}'
     telegramRequests: 'telegram-requests-${sls:stage}'
     users: 'users-${sls:stage}'
@@ -32,11 +33,13 @@ provider:
             - dynamodb:DeleteItem
           Resource:
             - Fn::GetAtt: [MessagesTable, Arn]
+            - Fn::GetAtt: [PaymentsTable, Arn]
             - Fn::GetAtt: [TelegramRequestsTable, Arn]
             - Fn::GetAtt: [SessionsTable, Arn]
             - Fn::GetAtt: [UsersTable, Arn]
   environment:
     MESSAGES_TABLE: ${self:custom.tables.messages}
+    PAYMENTS_TABLE: ${self:custom.tables.payments}
     SESSIONS_TABLE: ${self:custom.tables.sessions}
     TELEGRAM_REQUESTS_TABLE: ${self:custom.tables.telegramRequests}
     USERS_TABLE: ${self:custom.tables.users}
@@ -73,6 +76,17 @@ resources:
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:custom.tables.messages}
+    PaymentsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.tables.payments}
     SessionsTable:
       Type: AWS::DynamoDB::Table
       Properties:

@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "description": "AWS ChatGPT Telegram bot",
   "scripts": {
+    "deploy": "sls deploy",
     "deploy-bot": "sls deploy function -f bot"
   },
   "repository": {
