@@ -6,10 +6,8 @@ export function timestampToString(epoch: number): string {
   return new Date(epoch).toISOString();
 }
 
-export function toText(strings: string[]): string {
-  return strings.join(`
-
-`);
+export function toText(...strings: string[]): string {
+  return strings.join("\n\n");
 }
 
 export function isDebugMode(): boolean {

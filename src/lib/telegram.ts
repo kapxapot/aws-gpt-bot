@@ -1,4 +1,5 @@
 import { User } from "telegraf/types";
+import { toText } from "./common";
 
 export function userName(user: User): string {
   return user.first_name ?? user.last_name ?? user.username ?? "anonymous";
@@ -24,4 +25,8 @@ export function sliceButtons<T>(buttons: T[], limit: number = 2): T[][] {
   }
 
   return result;
+}
+
+export async function reply(ctx: any, ...lines: string[]) {
+  await ctx.replyWithHTML(toText(...lines));
 }

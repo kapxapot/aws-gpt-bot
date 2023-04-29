@@ -1,12 +1,9 @@
 {
   "name": "aws-gpt-bot",
   "version": "0.0.1",
-  "description": "AWS GPT Telegram bot",
+  "description": "AWS ChatGPT Telegram bot",
   "scripts": {
-    "serverless": "serverless",
-    "release": "serverless deploy",
-    "purge": "serverless remove",
-    "set-webhook": "telegraf -m setWebhook"
+    "deploy-bot": "sls deploy function -f bot"
   },
   "repository": {
     "type": "git",
@@ -15,6 +12,8 @@
   "keywords": [
     "AWS",
     "GPT",
+    "GPT-3.5",
+    "ChatGPT",
     "Telegram",
     "Bot"
   ],

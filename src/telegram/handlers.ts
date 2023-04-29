@@ -1,6 +1,7 @@
-import { isDebugMode, toText } from "../lib/common";
+import { isDebugMode } from "../lib/common";
 import { commands, scenes } from "../lib/constants";
 import { inspect } from "util";
+import { reply } from "../lib/telegram";
 
 export type HandlerTuple = [command: string, handler: (ctx: any) => Promise<void>];
 
@@ -14,6 +15,7 @@ export function getCommandHandlers(): HandlerTuple[] {
     [commands.support, supportHandler],
     [commands.tutorial, tutorialHandler],
     [commands.prompt, promptHandler],
+    [commands.premium, premiumHandler],
   ];
 }
 
@@ -22,10 +24,11 @@ async function termsHandler(ctx: any) {
 }
 
 async function supportHandler(ctx: any) {
-  await ctx.reply(toText([
+  await reply(
+    ctx,
     "Напишите в техподдержку, чтобы получить ответ на ваш вопрос или обсудить идеи по развитию чат-бота под ваши задачи.",
     process.env.SUPPORT_URL!
-  ]));
+  );
 }
 
 async function tutorialHandler(ctx: any) {
@@ -34,6 +37,10 @@ async function tutorialHandler(ctx: any) {
 
 async function promptHandler(ctx: any) {
   await ctx.scene.enter(scenes.prompt);
+}
+
+async function premiumHandler(ctx: any) {
+  await ctx.scene.enter(scenes.premium);
 }
 
 export const kickHandler = async (ctx: any) => {

@@ -4,190 +4,168 @@ import { message } from "telegraf/filters";
 import { BotContext } from "../context";
 import { commands, messages, scenes } from "../../lib/constants";
 import { toText } from "../../lib/common";
-import { clearInlineKeyboard, sliceButtons } from "../../lib/telegram";
+import { clearInlineKeyboard, reply, sliceButtons } from "../../lib/telegram";
 import { backToCustomPrompt, getOrAddUser, newCustomPrompt, setPrompt } from "../../services/userService";
 import { getPromptByCode, getPrompts } from "../../entities/prompt";
 import { dunnoHandler, getOtherCommandHandlers, kickHandler } from "../handlers";
 
-export const promptScene = getPromptScene(scenes.prompt, true);
-export const strictPromptScene = getPromptScene(scenes.strictPrompt, false);
+const scene = new BaseScene<BotContext>(scenes.prompt);
 
-function getPromptScene(name: string, allowCancel: boolean) {
-  var scene = new BaseScene<BotContext>(name);
+const customPromptAction = "custom-prompt";
+const backToCustomPromptAction = "back-to-custom-prompt";
+const promptSelectionAction = "select-prompt";
+const cancelAction = "cancel";
 
-  const customPromptAction = "custom-prompt";
-  const backToCustomPromptAction = "back-to-custom-prompt";
-  const promptSelectionAction = "select-prompt";
-  const cancelAction = "cancel";
+const customPromptInputStage = "customPromptInput";
+const promptSelectionStage = "promptSelection";
 
-  const customPromptInputStage = "customPromptInput";
-  const promptSelectionStage = "promptSelection";
+scene.enter(async (ctx) => {
+  ctx.session.promptData = {};
 
-  scene.enter(async (ctx) => {
-    ctx.session.promptData = {};
+  if (!ctx.from) {
+    await ctx.scene.leave();
+    return;
+  }
 
-    if (!ctx.from) {
-      await ctx.scene.leave();
-      return;
+  const user = await getOrAddUser(ctx.from);
+
+  const messages = [];
+  let customPromptMode = true;
+  let roleMode = false;
+
+  let hasCustomPrompt = false;
+
+  if (user.context) {
+    const customPrompt = user.context.customPrompt;
+    hasCustomPrompt = !!customPrompt;
+
+    const promptCode = user.context.promptCode;
+    const prompt = getPromptByCode(promptCode);
+
+    if (prompt) {
+      customPromptMode = false;
+      roleMode = true;
+
+      messages.push(`Текущая роль: <b>«${prompt.name}»</b>`);
     }
 
-    const user = await getOrAddUser(ctx.from);
-
-    const messages = [];
-    let customPromptMode = true;
-    let roleMode = false;
-
-    let hasCustomPrompt = false;
-
-    if (user.context) {
-      const customPrompt = user.context.customPrompt;
-      hasCustomPrompt = !!customPrompt;
-
-      const promptCode = user.context.promptCode;
-      const prompt = getPromptByCode(promptCode);
-
-      if (prompt) {
-        customPromptMode = false;
-        roleMode = true;
-
-        messages.push(`Текущая роль: <b>«${prompt.name}»</b>`);
-      }
-
-      if (hasCustomPrompt) {
-        messages.push(
-          prompt ? "Также у вас есть свой промт:" : "Текущий промт:",
-          `<i>${customPrompt}</i>`
-        );
-      }
-    }
-
-    if (customPromptMode) {
+    if (hasCustomPrompt) {
       messages.push(
-        hasCustomPrompt
-          ? "Вы можете поменять промт или выбрать предустановленную роль. 👇"
-          : "Вы можете задать свой промт или выбрать предустановленную роль. 👇"
-      );
-    } else if (roleMode) {
-      messages.push(
-        hasCustomPrompt
-          ? "Вы можете вернуться к своему промту, задать другой промт или выбрать другую роль. 👇"
-          : "Вы можете задать свой промт или выбрать другую роль. 👇"
+        prompt ? "Также у вас есть свой промт:" : "Текущий промт:",
+        `<i>${customPrompt}</i>`
       );
     }
+  }
 
-    messages.push(`Если вы затрудняетесь в выборе, рекомендуем пройти обучение: /${commands.tutorial}`);
+  if (customPromptMode) {
+    messages.push(
+      hasCustomPrompt
+        ? "Вы можете поменять промт или выбрать предустановленную роль. 👇"
+        : "Вы можете задать свой промт или выбрать предустановленную роль. 👇"
+    );
+  } else if (roleMode) {
+    messages.push(
+      hasCustomPrompt
+        ? "Вы можете вернуться к своему промту, задать другой промт или выбрать другую роль. 👇"
+        : "Вы можете задать свой промт или выбрать другую роль. 👇"
+    );
+  }
 
-    // to do: если выбрана роль, должна быть возможность вернуться к своему промту или ввести новый
+  messages.push(`Если вы затрудняетесь в выборе, рекомендуем пройти обучение: /${commands.tutorial}`);
 
-    const buttons = [];
+  // to do: если выбрана роль, должна быть возможность вернуться к своему промту или ввести новый
 
-    if (customPromptMode) {
+  const buttons = [];
+
+  if (customPromptMode) {
+    buttons.push(
+      Markup.button.callback(
+        hasCustomPrompt ? "Поменять промт" : "Задать промт",
+        customPromptAction
+      )
+    );
+  } else if (roleMode) {
+    if (hasCustomPrompt) {
       buttons.push(
-        Markup.button.callback(
-          hasCustomPrompt ? "Поменять промт" : "Задать промт",
-          customPromptAction
-        )
-      );
-    } else if (roleMode) {
-      if (hasCustomPrompt) {
-        buttons.push(
-          Markup.button.callback("Вернуться к промту", backToCustomPromptAction)
-        );
-      }
-
-      buttons.push(
-        Markup.button.callback("Задать промт", customPromptAction)
+        Markup.button.callback("Вернуться к промту", backToCustomPromptAction)
       );
     }
 
     buttons.push(
-      Markup.button.callback("Выбрать роль", promptSelectionAction)
+      Markup.button.callback("Задать промт", customPromptAction)
     );
+  }
 
-    if (allowCancel) {
-      buttons.push(
-        Markup.button.callback("Отмена", cancelAction)
-      );
-    }
+  buttons.push(
+    Markup.button.callback("Выбрать роль", promptSelectionAction),
+    Markup.button.callback("Отмена", cancelAction)
+  );
 
-    await ctx.replyWithHTML(
-      toText(messages),
-      Markup.inlineKeyboard(sliceButtons(buttons))
-    );
-  });
+  await ctx.replyWithHTML(
+    toText(...messages),
+    Markup.inlineKeyboard(sliceButtons(buttons))
+  );
+});
 
-  getOtherCommandHandlers(commands.prompt).forEach(tuple => {
-    scene.command(tuple[0], async (ctx) => {
-      await clearInlineKeyboard(ctx);
-      await ctx.scene.leave();
-      await tuple[1](ctx);
-    });
-  });
-
-  scene.action(cancelAction, async (ctx) => {
+getOtherCommandHandlers(commands.prompt).forEach(tuple => {
+  scene.command(tuple[0], async (ctx) => {
     await clearInlineKeyboard(ctx);
-    await ctx.reply(messages.backToAI);
     await ctx.scene.leave();
+    await tuple[1](ctx);
   });
+});
 
-  scene.action(customPromptAction, async (ctx) => {
-    await clearInlineKeyboard(ctx);
+scene.action(cancelAction, async (ctx) => {
+  await clearInlineKeyboard(ctx);
+  await ctx.reply(messages.backToAI);
+  await ctx.scene.leave();
+});
 
-    ctx.session.promptData = {
-      stage: customPromptInputStage
-    };
+scene.action(customPromptAction, async (ctx) => {
+  await clearInlineKeyboard(ctx);
 
-    await ctx.reply("Введите новый промт:");
-  });
+  ctx.session.promptData = {
+    stage: customPromptInputStage
+  };
 
-  scene.action(promptSelectionAction, async (ctx) => {
-    await clearInlineKeyboard(ctx);
+  await ctx.reply("Введите новый промт:");
+});
 
-    ctx.session.promptData = {
-      stage: promptSelectionStage
-    };
+scene.action(promptSelectionAction, async (ctx) => {
+  await clearInlineKeyboard(ctx);
 
-    const buttons = getPrompts()
-      .map(p => Markup.button.callback(p.name, p.code));
+  ctx.session.promptData = {
+    stage: promptSelectionStage
+  };
 
-    await ctx.reply(
-      "Выберите роль:",
-      Markup.inlineKeyboard(
-        sliceButtons(buttons)
-      )
-    );
-  });
+  const buttons = getPrompts()
+    .map(p => Markup.button.callback(p.name, p.code));
 
-  getPrompts().forEach(prompt => {
-    scene.action(prompt.code, async (ctx) => {
-      const promptData = ctx.session.promptData;
+  await ctx.reply(
+    "Выберите роль:",
+    Markup.inlineKeyboard(
+      sliceButtons(buttons)
+    )
+  );
+});
 
-      if (promptData.stage === promptSelectionStage && ctx.from) {
-        await clearInlineKeyboard(ctx);
+getPrompts().forEach(prompt => {
+  scene.action(prompt.code, async (ctx) => {
+    const promptData = ctx.session.promptData;
 
-        // set prompt
-        const user = await getOrAddUser(ctx.from);
-        await setPrompt(user, prompt);
-
-        await ctx.replyWithHTML(`Вы выбрали роль <b>«${prompt.name}»</b>. ${messages.backToAI}`);
-        await ctx.scene.leave();
-
-        return;
-      }
-
-      await dunnoHandler(ctx);
-    });
-  });
-
-  scene.action(backToCustomPromptAction, async (ctx) => {
-    if (ctx.from) {
+    if (promptData.stage === promptSelectionStage && ctx.from) {
       await clearInlineKeyboard(ctx);
 
-      // switch to old custom prompt
+      // set prompt
       const user = await getOrAddUser(ctx.from);
-      await backToCustomPrompt(user);
+      await setPrompt(user, prompt);
 
-      await ctx.reply(`Возвращаемся к вашему промту. ${messages.backToAI}`);
+      await reply(
+        ctx,
+        `Вы выбрали роль <b>«${prompt.name}»</b>.`,
+        messages.backToAI
+      );
+
       await ctx.scene.leave();
 
       return;
@@ -195,26 +173,53 @@ function getPromptScene(name: string, allowCancel: boolean) {
 
     await dunnoHandler(ctx);
   });
+});
 
-  scene.on(message("text"), async (ctx) => {
-    const promptData = ctx.session.promptData;
+scene.action(backToCustomPromptAction, async (ctx) => {
+  if (ctx.from) {
+    await clearInlineKeyboard(ctx);
 
-    if (promptData.stage === customPromptInputStage) {
-      // switch to new custom prompt
-      const customPrompt = ctx.message.text;
+    // switch to old custom prompt
+    const user = await getOrAddUser(ctx.from);
+    await backToCustomPrompt(user);
 
-      const user = await getOrAddUser(ctx.from);
-      await newCustomPrompt(user, customPrompt);
+    await reply(
+      ctx,
+      "Возвращаемся к вашему промту.",
+      messages.backToAI
+    );
 
-      await ctx.reply(`Ваш новый промт сохранен. ${messages.backToAI}`);
-      await ctx.scene.leave();
-    }
-  });
+    await ctx.scene.leave();
 
-  scene.use(async ctx => {
-    await kickHandler(ctx);
-    await dunnoHandler(ctx);
-  });
+    return;
+  }
 
-  return scene;
-};
+  await dunnoHandler(ctx);
+});
+
+scene.on(message("text"), async (ctx) => {
+  const promptData = ctx.session.promptData;
+
+  if (promptData.stage === customPromptInputStage) {
+    // switch to new custom prompt
+    const customPrompt = ctx.message.text;
+
+    const user = await getOrAddUser(ctx.from);
+    await newCustomPrompt(user, customPrompt);
+
+    await reply(
+      ctx,
+      "Ваш новый промт сохранен.",
+      messages.backToAI
+    );
+
+    await ctx.scene.leave();
+  }
+});
+
+scene.use(async ctx => {
+  await kickHandler(ctx);
+  await dunnoHandler(ctx);
+});
+
+export const promptScene = scene;

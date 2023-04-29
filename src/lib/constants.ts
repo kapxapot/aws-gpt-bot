@@ -2,7 +2,8 @@ export const commands = {
   tutorial: "tutorial",
   prompt: "prompt",
   support: "support",
-  terms: "terms"
+  terms: "terms",
+  premium: "premium"
 };
 
 export const messages = {
@@ -11,6 +12,6 @@ export const messages = {
 
 export const scenes = {
   prompt: "PROMPT_SCENE",
-  strictPrompt: "STRICT_PROMPT_SCENE",
-  tutorial: "TUTORIAL_SCENE"
+  tutorial: "TUTORIAL_SCENE",
+  premium: "PREMIUM_SCENE"
 };

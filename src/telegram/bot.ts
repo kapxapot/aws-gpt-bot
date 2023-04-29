@@ -3,16 +3,17 @@ import { message } from "telegraf/filters";
 import { isCompletion, isCompletionError } from "../entities/message";
 import { TelegramRequest } from "../entities/telegramRequest";
 import { chatCompletion } from "../gpt/chatCompletion";
-import { isDebugMode, timestamp, toText } from "../lib/common";
-import { userName } from "../lib/telegram";
+import { isDebugMode, timestamp } from "../lib/common";
+import { reply, userName } from "../lib/telegram";
 import { addMessageToUser, getCurrentContext, getOrAddUser } from "../services/userService";
 import { storeMessage } from "../storage/messages";
 import { sessionStore } from "./session";
 import { tutorialScene } from "./scenes/tutorial";
 import { BotContext } from "./context";
-import { promptScene, strictPromptScene } from "./scenes/prompt";
+import { promptScene } from "./scenes/prompt";
 import { commands } from "../lib/constants";
 import { getCommandHandlers, kickHandler } from "./handlers";
+import { premiumScene } from "./scenes/premium";
 
 export default function processTelegramRequest(tgRequest: TelegramRequest) {
   const token = process.env.BOT_TOKEN!;
@@ -22,7 +23,7 @@ export default function processTelegramRequest(tgRequest: TelegramRequest) {
     store: sessionStore()
   }));
 
-  const stage = new Scenes.Stage<BotContext>([tutorialScene, promptScene, strictPromptScene]);
+  const stage = new Scenes.Stage<BotContext>([tutorialScene, promptScene, premiumScene]);
 
   bot.use(stage.middleware());
 
@@ -31,15 +32,17 @@ export default function processTelegramRequest(tgRequest: TelegramRequest) {
     const newUser = !user.context;
 
     if (newUser) {
-      await ctx.replyWithHTML(toText([
-        `Добро пожаловать, <b>${userName(ctx.from)}</b>! Здесь можно пообщаться с <b>ИИ GPT-3</b>. 🤖`,
+      await reply(
+        ctx,
+        `Добро пожаловать, <b>${userName(ctx.from)}</b>! Здесь можно пообщаться с <b>ChatGPT</b>. 🤖 Мы используем модель <b>gpt-3.5-turbo</b>.`,
         `Рекомендуем начать с обучения /${commands.tutorial} и настройки промта /${commands.prompt}`
-      ]));
+      );
     } else {
-      await ctx.replyWithHTML(toText([
-        `С возвращеним, <b>${userName(ctx.from)}</b>! Продолжаем общение с <b>ИИ GPT-3</b>. 🤖`,
+      await reply(
+        ctx,
+        `С возвращеним, <b>${userName(ctx.from)}</b>! Продолжаем общение с <b>ChatGPT</b>. 🤖 Мы используем модель <b>gpt-3.5-turbo</b>.`,
         `Для настройки промта используйте команду /${commands.prompt}`
-      ]));
+      );
     }
   });
 
@@ -59,7 +62,7 @@ export default function processTelegramRequest(tgRequest: TelegramRequest) {
       ? answer.error
       : answer.reply;
 
-    await ctx.reply(reply ?? "Нет ответа от GPT. 😣");
+    await ctx.reply(reply ?? "Нет ответа от ChatGPT. 😣");
 
     const message = await storeMessage(
       user,
