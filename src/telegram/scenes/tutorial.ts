@@ -1,41 +1,36 @@
-import { Composer, Markup } from "telegraf";
+import { Composer } from "telegraf";
 import { WizardScene } from "telegraf/scenes";
 import { BotContext } from "../context";
-import { clearInlineKeyboard } from "../../lib/telegram";
+import { clearInlineKeyboard, inlineKeyboard } from "../../lib/telegram";
 import { commands, messages, scenes } from "../../lib/constants";
-import { dunnoHandler, getOtherCommandHandlers, kickHandler } from "../handlers";
+import { addOtherCommandHandlers, dunnoHandler, kickHandler } from "../handlers";
 
 function makeStepHandler(text: string, first: boolean, last: boolean) {
   const stepHandler = new Composer<BotContext>();
 
-  function keyboard() {
-    return Markup.inlineKeyboard([
-      Markup.button.callback("Дальше", "next"),
-      Markup.button.callback("Закончить", "exit")
-    ]);
-  }
+  const nextAction = "next";
+  const exitAction = "exit";
 
-  getOtherCommandHandlers(commands.tutorial).forEach(tuple => {
-    stepHandler.command(tuple[0], async (ctx) => {
-      await clearInlineKeyboard(ctx);
-      await ctx.scene.leave();
-      await tuple[1](ctx);
-    });
-  });
+  const keyboard = inlineKeyboard(
+    ["Дальше", nextAction],
+    ["Закончить", exitAction]
+  );
 
-  stepHandler.action("next", async (ctx) => {
+  addOtherCommandHandlers(stepHandler, commands.tutorial);
+
+  stepHandler.action(nextAction, async (ctx) => {
     await clearInlineKeyboard(ctx);
 
     if (last) {
       await ctx.replyWithHTML(text);
       await ctx.scene.leave();
     } else {
-      await ctx.replyWithHTML(text, keyboard());
+      await ctx.replyWithHTML(text, keyboard);
       ctx.wizard.next();
     }
   });
 
-  stepHandler.action("exit", async (ctx) => {
+  stepHandler.action(exitAction, async (ctx) => {
     await clearInlineKeyboard(ctx);
     await ctx.reply(messages.backToAI)
     await ctx.scene.leave();
@@ -45,7 +40,7 @@ function makeStepHandler(text: string, first: boolean, last: boolean) {
     await kickHandler(ctx);
 
     if (first) {
-      await ctx.replyWithHTML(text, keyboard());
+      await ctx.replyWithHTML(text, keyboard);
       ctx.wizard.next();
     } else {
       await dunnoHandler(ctx);

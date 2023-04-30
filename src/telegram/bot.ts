@@ -2,8 +2,8 @@ import { Scenes, Telegraf, session } from "telegraf";
 import { message } from "telegraf/filters";
 import { isCompletion, isCompletionError } from "../entities/message";
 import { TelegramRequest } from "../entities/telegramRequest";
-import { chatCompletion } from "../gpt/chatCompletion";
-import { isDebugMode, timestamp } from "../lib/common";
+import { gptChatCompletion } from "../external/gptChatCompletion";
+import { isDebugMode } from "../lib/common";
 import { reply, userName } from "../lib/telegram";
 import { addMessageToUser, getCurrentContext, getOrAddUser } from "../services/userService";
 import { storeMessage } from "../storage/messages";
@@ -14,10 +14,13 @@ import { promptScene } from "./scenes/prompt";
 import { commands } from "../lib/constants";
 import { getCommandHandlers, kickHandler } from "./handlers";
 import { premiumScene } from "./scenes/premium";
+import { ts } from "../entities/at";
+import { User } from "../entities/user";
 
-export default function processTelegramRequest(tgRequest: TelegramRequest) {
-  const token = process.env.BOT_TOKEN!;
-  const bot = new Telegraf<BotContext>(token);
+const botToken = process.env.BOT_TOKEN!; 
+
+export function processTelegramRequest(tgRequest: TelegramRequest) {
+  const bot = new Telegraf<BotContext>(botToken);
 
   bot.use(session({
     store: sessionStore()
@@ -54,9 +57,8 @@ export default function processTelegramRequest(tgRequest: TelegramRequest) {
     await ctx.sendChatAction("typing");
 
     const question = ctx.message.text;
-
     const { prompt, latestMessages } = getCurrentContext(user);
-    const answer = await chatCompletion(question, prompt, latestMessages);
+    const answer = await gptChatCompletion(question, prompt, latestMessages);
 
     const reply = isCompletionError(answer)
       ? answer.error
@@ -69,7 +71,7 @@ export default function processTelegramRequest(tgRequest: TelegramRequest) {
       question,
       answer,
       tgRequest.createdAt,
-      timestamp()
+      ts()
     );
 
     await addMessageToUser(user, message);
@@ -97,4 +99,16 @@ export default function processTelegramRequest(tgRequest: TelegramRequest) {
   });
 
   bot.handleUpdate(tgRequest.request);
+}
+
+export async function sendTelegramMessage(user: User, message: string) {
+  const bot = new Telegraf(botToken);
+
+  await bot.telegram.sendMessage(
+    user.telegramId,
+    message,
+    {
+      parse_mode: "HTML"
+    }
+  );
 }

@@ -1,11 +1,20 @@
 import { User } from "telegraf/types";
 import { toText } from "./common";
+import { Markup } from "telegraf";
 
 export function userName(user: User): string {
   return user.first_name ?? user.last_name ?? user.username ?? "anonymous";
 }
 
-export const clearInlineKeyboard = async (ctx: any) => {
+export function inlineKeyboard(...buttonData: string[][]) {
+  const buttons = buttonData.map(data => Markup.button.callback(data[0], data[1]));
+
+  return Markup.inlineKeyboard(
+    sliceButtons(buttons)
+  );
+}
+
+export async function clearInlineKeyboard(ctx: any) {
   try {
     await ctx.answerCbQuery();
   } catch {}

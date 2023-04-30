@@ -1,13 +1,20 @@
+import axios from "axios";
 import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from "openai";
 import { Completion, CompletionError, Message, isCompletion } from "../entities/message";
 
-const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
+const apiConfig = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY
 });
 
-const openai = new OpenAIApi(configuration);
+const config = {
+  apiTimeout: process.env.GPT_TIMEOUT ?? "0",
+  model: "gpt-3.5-turbo",
+  temperature: 0.6
+};
 
-export async function chatCompletion(
+const openai = new OpenAIApi(apiConfig);
+
+export async function gptChatCompletion(
   userMessage: string,
   prompt: string | null,
   latestMessages: Message[] | null
@@ -45,12 +52,12 @@ export async function chatCompletion(
   try {
     const response = await openai.createChatCompletion(
       {
-        model: "gpt-3.5-turbo",
-        messages: messages,
-        temperature: 0.6
+        model: config.model,
+        temperature: config.temperature,
+        messages: messages
       },
       {
-        timeout: parseInt(process.env.GPT_TIMEOUT!) * 1000,
+        timeout: parseInt(config.apiTimeout) * 1000,
         timeoutErrorMessage: "Мы не дождались ответа. 😥"
       }
     );
@@ -67,19 +74,18 @@ export async function chatCompletion(
         }
         : null
     };
-  } catch (error: any) {
-    if (error.response) {
-      console.error(error.response.status, error.response.data);
+  } catch (error) {
+    console.error(error);
+
+    if (axios.isAxiosError(error)) {
+      const message = error.response?.data.error.message ?? error.message;
 
       return {
-        error: `Ошибка GPT: ${error.response.data.error.message}`
+        error: `Ошибка OpenAI API: ${message}`
       };
     } else {
-      const errorMessage = `Ошибка запроса к GPT: ${error.message}`;
-      console.error(errorMessage);
-
       return {
-        error: errorMessage
+        error: "Ошибка обращения к OpenAI API."
       };
     }
   }

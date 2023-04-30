@@ -1,6 +1,7 @@
 import { putItem } from "../lib/database";
 import { Completion, CompletionError, Message } from "../entities/message";
 import { User } from "../entities/user";
+import { at } from "../entities/at";
 
 const messagesTable = process.env.MESSAGES_TABLE!;
 
@@ -16,7 +17,7 @@ export const storeMessage = async (
     userId: user.id,
     request,
     response,
-    requestedAt,
-    respondedAt
+    requestedAt: at(requestedAt),
+    respondedAt: at(respondedAt)
   }
 );

@@ -1,3 +1,5 @@
+import { At, Timestamps } from "./at";
+
 export interface Usage {
   promptTokens: number;
   completionTokens: number;
@@ -13,13 +15,13 @@ export interface CompletionError {
   error: string;
 }
 
-export interface Message {
+export interface Message extends Timestamps {
   id: string;
   userId: string;
   request: string;
   response: Completion | CompletionError;
-  createdAt: number;
-  updatedAt: number;
+  requestedAt: At;
+  respondedAt: At;
 }
 
 export function isCompletion(message: Completion | CompletionError): message is Completion {

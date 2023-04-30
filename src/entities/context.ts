@@ -1,8 +1,12 @@
 import { Message } from "./message";
-import { History } from "./history";
 import { customPromptCode } from "./prompt";
 
 const userMessageCacheSize = 3;
+
+export interface History {
+  promptCode: string;
+  messages: Message[];
+}
 
 export interface IContext {
   customPrompt: string | null;
@@ -10,7 +14,7 @@ export interface IContext {
   history: History[];
 }
 
-export class Context {
+export class Context implements IContext {
   public customPrompt: string | null;
   public promptCode: string;
   public history: History[];

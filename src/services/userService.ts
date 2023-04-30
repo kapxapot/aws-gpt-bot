@@ -1,10 +1,10 @@
 import { User as TelegrafUser } from "telegraf/types";
 import { Message } from "../entities/message";
-import { User } from "../entities/user";
-import { timestamp } from "../lib/common";
+import { User, UserEvent } from "../entities/user";
 import { getUserByTelegramId, storeUser, updateUser } from "../storage/users";
 import { Context, IContext } from "../entities/context";
 import { Prompt, customPromptCode, getPromptByCode } from "../entities/prompt";
+import { updatedTimestamps } from "../entities/at";
 
 export const getOrAddUser = async (userData: TelegrafUser): Promise<User> => {
   return await getUserByTelegramId(userData.id)
@@ -56,7 +56,7 @@ async function updateContext(user: User, context: IContext): Promise<User> {
     user,
     {
       "context": context,
-      "updatedAt": timestamp(),
+      ...updatedTimestamps()
     }
   );
 }
@@ -81,4 +81,17 @@ export function getCurrentContext(user: User): CurrentContext {
     prompt,
     latestMessages: context.getCurrentHistory().messages
   };
+}
+
+export async function addUserEvent(user: User, event: UserEvent): Promise<User> {
+  const events = user.events ?? [];
+
+  events.push(event);
+
+  return await updateUser(
+    user,
+    {
+      events
+    }
+  );
 }

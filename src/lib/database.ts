@@ -1,7 +1,7 @@
 import { DeleteCommand, DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, QueryCommandInput, ScanCommand, ScanCommandInput, UpdateCommand, UpdateCommandInput } from "@aws-sdk/lib-dynamodb";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { timestamp } from "../lib/common";
 import { v4 as uuidv4 } from "uuid";
+import { timestamps } from "../entities/at";
 
 export function getDynamoDbClient() {
   const marshallOptions = {
@@ -25,15 +25,12 @@ export function getDynamoDbClient() {
 }
 
 export const putItem = async <T>(table: string, item: any): Promise<T> => {
-  const now = timestamp();
-
   const params = {
     TableName: table,
     Item: {
       ...item,
       id: item.id ?? uuidv4(),
-      createdAt: now,
-      updatedAt: now
+      ...timestamps()
     }
   };
 
@@ -141,19 +138,37 @@ export const scanItem = async <T>(
 export const updateItem = async <T>(
   table: string,
   key: Record<string, any>,
-  expression: string,
-  attributes?: Record<string, any>
+  attributes: Record<string, any>
 ): Promise<T> => {
   const params: UpdateCommandInput = {
     TableName: table,
     Key: key,
-    UpdateExpression: expression,
+    UpdateExpression: recordToSetExpression(attributes),
     ReturnValues: "ALL_NEW"
   };
 
   if (attributes) {
-    params.ExpressionAttributeValues = attributes;
+    params.ExpressionAttributeNames = recordToAttributeNames(attributes);
+    params.ExpressionAttributeValues = recordToAttributeValues(attributes);
   }
+
+  const dbClient = getDynamoDbClient();
+  const result = await dbClient.send(new UpdateCommand(params));
+
+  return result.Attributes as T;
+}
+
+export const removeFromItem = async <T>(
+  table: string,
+  key: Record<string, any>,
+  attributes: string[]
+): Promise<T> => {
+  const params: UpdateCommandInput = {
+    TableName: table,
+    Key: key,
+    UpdateExpression: attributesToRemoveExpression(attributes),
+    ReturnValues: "ALL_NEW"
+  };
 
   const dbClient = getDynamoDbClient();
   const result = await dbClient.send(new UpdateCommand(params));
@@ -179,11 +194,11 @@ function fromItem<T>(item: Record<string, any> | undefined): T | null {
   return item ? item as T : null;
 }
 
-export function recordToSetExpression(record: Record<string, any>): string {
+function recordToSetExpression(record: Record<string, any>): string {
   const chunks = [];
 
   for (const [key, value] of Object.entries(record)) {
-    chunks.push(`${key} = :${key}`);
+    chunks.push(`#${key} = :${key}`);
   }
 
   if (!chunks.length) {
@@ -193,7 +208,17 @@ export function recordToSetExpression(record: Record<string, any>): string {
   return "set " + chunks.join(", ");
 }
 
-export function recordToAttributes(record: Record<string, any>): Record<string, any> {
+function recordToAttributeNames(record: Record<string, any>): Record<string, string> {
+  let result: Record<string, string> = {};
+
+  for (const [key, value] of Object.entries(record)) {
+    result[`#${key}`] = key;
+  }
+
+  return result;
+}
+
+function recordToAttributeValues(record: Record<string, any>): Record<string, any> {
   let result: Record<string, any> = {};
 
   for (const [key, value] of Object.entries(record)) {
@@ -203,6 +228,6 @@ export function recordToAttributes(record: Record<string, any>): Record<string, 
   return result;
 }
 
-export function attributesToRemoveExpression(attributes: string[]): string {
-  return "remove " + attributes.join(", ");
+function attributesToRemoveExpression(attributes: string[]): string {
+  return `remove ${attributes.join(", ")}`;
 }

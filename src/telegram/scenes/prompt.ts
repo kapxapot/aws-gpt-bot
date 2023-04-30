@@ -1,13 +1,12 @@
-import { Markup } from "telegraf";
 import { BaseScene } from "telegraf/scenes";
 import { message } from "telegraf/filters";
 import { BotContext } from "../context";
 import { commands, messages, scenes } from "../../lib/constants";
 import { toText } from "../../lib/common";
-import { clearInlineKeyboard, reply, sliceButtons } from "../../lib/telegram";
+import { clearInlineKeyboard, inlineKeyboard, reply } from "../../lib/telegram";
 import { backToCustomPrompt, getOrAddUser, newCustomPrompt, setPrompt } from "../../services/userService";
 import { getPromptByCode, getPrompts } from "../../entities/prompt";
-import { dunnoHandler, getOtherCommandHandlers, kickHandler } from "../handlers";
+import { addOtherCommandHandlers, dunnoHandler, kickHandler } from "../handlers";
 
 const scene = new BaseScene<BotContext>(scenes.prompt);
 
@@ -78,42 +77,30 @@ scene.enter(async (ctx) => {
   const buttons = [];
 
   if (customPromptMode) {
-    buttons.push(
-      Markup.button.callback(
-        hasCustomPrompt ? "Поменять промт" : "Задать промт",
-        customPromptAction
-      )
-    );
+    buttons.push([
+      hasCustomPrompt ? "Поменять промт" : "Задать промт",
+      customPromptAction
+    ]);
   } else if (roleMode) {
     if (hasCustomPrompt) {
-      buttons.push(
-        Markup.button.callback("Вернуться к промту", backToCustomPromptAction)
-      );
+      buttons.push(["Вернуться к промту", backToCustomPromptAction]);
     }
 
-    buttons.push(
-      Markup.button.callback("Задать промт", customPromptAction)
-    );
+    buttons.push(["Задать промт", customPromptAction]);
   }
 
   buttons.push(
-    Markup.button.callback("Выбрать роль", promptSelectionAction),
-    Markup.button.callback("Отмена", cancelAction)
+    ["Выбрать роль", promptSelectionAction],
+    ["Отмена", cancelAction]
   );
 
   await ctx.replyWithHTML(
     toText(...messages),
-    Markup.inlineKeyboard(sliceButtons(buttons))
+    inlineKeyboard(...buttons)
   );
 });
 
-getOtherCommandHandlers(commands.prompt).forEach(tuple => {
-  scene.command(tuple[0], async (ctx) => {
-    await clearInlineKeyboard(ctx);
-    await ctx.scene.leave();
-    await tuple[1](ctx);
-  });
-});
+addOtherCommandHandlers(scene, commands.prompt);
 
 scene.action(cancelAction, async (ctx) => {
   await clearInlineKeyboard(ctx);
@@ -138,14 +125,11 @@ scene.action(promptSelectionAction, async (ctx) => {
     stage: promptSelectionStage
   };
 
-  const buttons = getPrompts()
-    .map(p => Markup.button.callback(p.name, p.code));
+  const buttons = getPrompts().map(p => [p.name, p.code]);
 
   await ctx.reply(
     "Выберите роль:",
-    Markup.inlineKeyboard(
-      sliceButtons(buttons)
-    )
+    inlineKeyboard(...buttons)
   );
 });
 

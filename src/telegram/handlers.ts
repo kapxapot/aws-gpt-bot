@@ -1,11 +1,23 @@
 import { isDebugMode } from "../lib/common";
 import { commands, scenes } from "../lib/constants";
 import { inspect } from "util";
-import { reply } from "../lib/telegram";
+import { clearInlineKeyboard, reply } from "../lib/telegram";
+import { BotContext } from "./context";
+import { Composer } from "telegraf";
 
-export type HandlerTuple = [command: string, handler: (ctx: any) => Promise<void>];
+type HandlerTuple = [command: string, handler: (ctx: any) => Promise<void>];
 
-export function getOtherCommandHandlers(command: string): HandlerTuple[] {
+export function addOtherCommandHandlers(scene: Composer<BotContext>, exceptCommand: string) {
+  getOtherCommandHandlers(exceptCommand).forEach(tuple => {
+    scene.command(tuple[0], async (ctx) => {
+      await clearInlineKeyboard(ctx);
+      await ctx.scene.leave();
+      await tuple[1](ctx);
+    });
+  });
+}
+
+function getOtherCommandHandlers(command: string): HandlerTuple[] {
   return getCommandHandlers().filter(tuple => tuple[0] !== command);
 }
 
@@ -43,7 +55,7 @@ async function premiumHandler(ctx: any) {
   await ctx.scene.enter(scenes.premium);
 }
 
-export const kickHandler = async (ctx: any) => {
+export async function kickHandler(ctx: any) {
   const myChatMember = ctx.myChatMember;
 
   if (myChatMember) {
@@ -53,7 +65,7 @@ export const kickHandler = async (ctx: any) => {
   }
 }
 
-export const dunnoHandler = async (ctx: any) => {
+export async function dunnoHandler(ctx: any) {
   if (isDebugMode()) {
     await ctx.reply(inspect(ctx));
   }
