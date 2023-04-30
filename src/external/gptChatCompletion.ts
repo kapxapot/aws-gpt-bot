@@ -1,6 +1,7 @@
 import axios from "axios";
 import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from "openai";
-import { Completion, CompletionError, Message, isCompletion } from "../entities/message";
+import { Completion, Message, isCompletion } from "../entities/message";
+import { Result } from "../lib/error";
 
 const apiConfig = new Configuration({
   apiKey: process.env.OPENAI_API_KEY
@@ -18,7 +19,7 @@ export async function gptChatCompletion(
   userMessage: string,
   prompt: string | null,
   latestMessages: Message[] | null
-): Promise<Completion | CompletionError> {
+): Promise<Result<Completion>> {
   const messages: ChatCompletionRequestMessage[] = [];
 
   if (prompt) {
@@ -80,13 +81,9 @@ export async function gptChatCompletion(
     if (axios.isAxiosError(error)) {
       const message = error.response?.data.error.message ?? error.message;
 
-      return {
-        error: `Ошибка OpenAI API: ${message}`
-      };
-    } else {
-      return {
-        error: "Ошибка обращения к OpenAI API."
-      };
+      return new Error(`Ошибка OpenAI API: ${message}`);
     }
+
+    return new Error("Ошибка обращения к OpenAI API.");
   }
 }

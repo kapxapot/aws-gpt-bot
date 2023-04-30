@@ -1,4 +1,5 @@
 import { at, ts } from "../entities/at";
+import { getProductDisplayName } from "../entities/product";
 import { isDebugMode, toText } from "../lib/common";
 import { addUserEvent } from "../services/userService";
 import { getPayment, updatePayment } from "../storage/payments";
@@ -19,7 +20,6 @@ export async function youMoneyHook(requestData: any) {
   const data = requestData.object;
 
   // get the payment
-
   const paymentId = data.id;
   let payment = await getPayment(paymentId);
 
@@ -31,7 +31,6 @@ export async function youMoneyHook(requestData: any) {
   // add new event to the payment
   // update the payment status to "succeeded"
   const events = payment.events;
-
   const payedAt = at(ts(data.captured_at));
 
   events.push({
@@ -69,7 +68,7 @@ export async function youMoneyHook(requestData: any) {
     await sendTelegramMessage(
       user,
       toText(
-        `Мы успешно получили ваш платеж. Вы приобрели <b>${product.displayNameAccusative}</b>.`,
+        `Мы успешно получили ваш платеж. Вы приобрели <b>${getProductDisplayName(product, "Acc")}</b>.`,
         "Благодарим за покупку! ♥"
       )
     );

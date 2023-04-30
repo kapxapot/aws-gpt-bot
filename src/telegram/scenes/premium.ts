@@ -6,9 +6,10 @@ import { clearInlineKeyboard, inlineKeyboard, reply } from "../../lib/telegram";
 import { PaymentEvent, PaymentType } from "../../entities/payment";
 import { getOrAddUser } from "../../services/userService";
 import { storePayment } from "../../storage/payments";
-import { PaymentResponse, isPaymentError, yooMoneyPayment } from "../../external/yooMoneyPayment";
+import { yooMoneyPayment } from "../../external/yooMoneyPayment";
 import { now } from "../../entities/at";
 import { monthlyPremiumSubscription } from "../../entities/product";
+import { isError } from "../../lib/error";
 
 const scene = new BaseScene<BotContext>(scenes.premium);
 
@@ -44,7 +45,7 @@ scene.action(payAction, async (ctx) => {
 
   const response = await yooMoneyPayment(requestData);
 
-  if (isPaymentError(response)) {
+  if (isError(response)) {
     await reply(
       ctx,
       "Произошла ошибка, оплата временно недоступна. Приносим извинения.",
@@ -52,9 +53,11 @@ scene.action(payAction, async (ctx) => {
     );
 
     await ctx.scene.leave();
+
+    return;
   }
 
-  const data = (response as PaymentResponse).data;
+  const data = response.data;
 
   const event: PaymentEvent = {
     type: "created",

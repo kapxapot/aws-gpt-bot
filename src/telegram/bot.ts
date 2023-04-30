@@ -1,6 +1,5 @@
 import { Scenes, Telegraf, session } from "telegraf";
 import { message } from "telegraf/filters";
-import { isCompletion, isCompletionError } from "../entities/message";
 import { TelegramRequest } from "../entities/telegramRequest";
 import { gptChatCompletion } from "../external/gptChatCompletion";
 import { isDebugMode } from "../lib/common";
@@ -16,6 +15,7 @@ import { getCommandHandlers, kickHandler } from "./handlers";
 import { premiumScene } from "./scenes/premium";
 import { ts } from "../entities/at";
 import { User } from "../entities/user";
+import { isError, isSuccess } from "../lib/error";
 
 const botToken = process.env.BOT_TOKEN!; 
 
@@ -60,8 +60,8 @@ export function processTelegramRequest(tgRequest: TelegramRequest) {
     const { prompt, latestMessages } = getCurrentContext(user);
     const answer = await gptChatCompletion(question, prompt, latestMessages);
 
-    const reply = isCompletionError(answer)
-      ? answer.error
+    const reply = isError(answer)
+      ? answer.message
       : answer.reply;
 
     await ctx.reply(reply ?? "Нет ответа от ChatGPT. 😣");
@@ -83,7 +83,7 @@ export function processTelegramRequest(tgRequest: TelegramRequest) {
         chunks.push(`промт: ${user.context.promptCode}`);
       }
 
-      if (isCompletion(answer) && answer.usage) {
+      if (isSuccess(answer) && answer.usage) {
         const usg = answer.usage;
         chunks.push(`токены: ${usg.totalTokens} (${usg.promptTokens} + ${usg.completionTokens})`);
       }

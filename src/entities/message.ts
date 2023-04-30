@@ -1,3 +1,4 @@
+import { Result } from "../lib/error";
 import { At, Timestamps } from "./at";
 
 export interface Usage {
@@ -11,23 +12,11 @@ export interface Completion {
   usage: Usage | null;
 }
 
-export interface CompletionError {
-  error: string;
-}
-
 export interface Message extends Timestamps {
   id: string;
   userId: string;
   request: string;
-  response: Completion | CompletionError;
+  response: Result<Completion>;
   requestedAt: At;
   respondedAt: At;
-}
-
-export function isCompletion(message: Completion | CompletionError): message is Completion {
-  return "reply" in message;
-}
-
-export function isCompletionError(message: Completion | CompletionError): message is CompletionError {
-  return "error" in message;
 }

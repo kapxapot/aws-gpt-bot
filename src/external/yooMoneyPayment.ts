@@ -1,6 +1,7 @@
 import axios from "axios";
 import { v4 as uuidv4 } from "uuid";
 import { Money } from "../entities/money";
+import { Result } from "../lib/error";
 
 export interface YooMoneyPaymentData {
   total: Money;
@@ -11,14 +12,6 @@ export interface PaymentResponse {
   data: any;
 }
 
-export interface PaymentError {
-  error: string;
-}
-
-export function isPaymentError(result: PaymentResponse | PaymentError): result is PaymentError {
-  return "error" in result;
-}
-
 const config = {
   botUrl: process.env.BOT_URL,
   apiUrl: "https://api.yookassa.ru/v3/payments",
@@ -26,7 +19,7 @@ const config = {
   apiKey: process.env.YOOMONEY_API_KEY!
 };
 
-export async function yooMoneyPayment(paymentData: YooMoneyPaymentData): Promise<PaymentResponse | PaymentError> {
+export async function yooMoneyPayment(paymentData: YooMoneyPaymentData): Promise<Result<PaymentResponse>> {
   const paymentRequest = {
     "amount": {
       "value": paymentData.total.amount.toFixed(2),
@@ -67,13 +60,9 @@ export async function yooMoneyPayment(paymentData: YooMoneyPaymentData): Promise
     if (axios.isAxiosError(error)) {
       const message = error.response?.data.error.message ?? error.message;
 
-      return {
-        error: `Ошибка YooMoney API: ${message}`
-      };
+      return new Error(`Ошибка YooMoney API: ${message}`);
     }
 
-    return {
-      error: "Ошибка обращения к YooMoney API."
-    };
+    return new Error("Ошибка обращения к YooMoney API.");
   }
 }
