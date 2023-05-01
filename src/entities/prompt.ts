@@ -1,4 +1,5 @@
 export const customPromptCode = "_custom";
+export const customPromptName = "свой промт";
 
 export interface Prompt {
   language: "ru" | "en"
@@ -34,4 +35,12 @@ export function getPrompts(): Prompt[] {
 
 export function getPromptByCode(code: string): Prompt | null {
   return prompts.find(p => p.code === code) ?? null;
+}
+
+export function getPromptName(code: string): string | null {
+  if (code === customPromptCode) {
+    return customPromptName;
+  }
+
+  return getPromptByCode(code)?.name ?? null;
 }

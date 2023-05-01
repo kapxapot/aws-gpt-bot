@@ -1,14 +1,15 @@
 import { putItem } from "../lib/database";
-import { Completion, CompletionError, Message } from "../entities/message";
+import { Completion, Message } from "../entities/message";
 import { User } from "../entities/user";
 import { at } from "../entities/at";
+import { Result } from "../lib/error";
 
 const messagesTable = process.env.MESSAGES_TABLE!;
 
 export const storeMessage = async (
   user: User,
   request: string,
-  response: Completion | CompletionError,
+  response: Result<Completion>,
   requestedAt: number,
   respondedAt: number
 ) => await putItem<Message>(

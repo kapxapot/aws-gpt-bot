@@ -15,6 +15,10 @@ export function addOtherCommandHandlers(scene: Composer<BotContext>, exceptComma
       await tuple[1](ctx);
     });
   });
+
+  scene.command(exceptCommand, async (ctx) => {
+    await ctx.reply("Вы уже находитесь в диалоге этой команды.");
+  });
 }
 
 function getOtherCommandHandlers(command: string): HandlerTuple[] {

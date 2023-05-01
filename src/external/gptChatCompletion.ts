@@ -1,7 +1,7 @@
 import axios from "axios";
 import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from "openai";
-import { Completion, Message, isCompletion } from "../entities/message";
-import { Result } from "../lib/error";
+import { Completion, Message } from "../entities/message";
+import { Result, isSuccess } from "../lib/error";
 
 const apiConfig = new Configuration({
   apiKey: process.env.OPENAI_API_KEY
@@ -36,7 +36,7 @@ export async function gptChatCompletion(
         content: message.request
       });
 
-      if (isCompletion(message.response) && message.response.reply) {
+      if (isSuccess(message.response) && message.response.reply) {
         messages.push({
           role: "assistant",
           content: message.response.reply

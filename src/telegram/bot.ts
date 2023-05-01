@@ -16,6 +16,9 @@ import { premiumScene } from "./scenes/premium";
 import { ts } from "../entities/at";
 import { User } from "../entities/user";
 import { isError, isSuccess } from "../lib/error";
+import { Context } from "../entities/context";
+import { inspect } from "util";
+import { getPromptName } from "../entities/prompt";
 
 const botToken = process.env.BOT_TOKEN!; 
 
@@ -60,11 +63,11 @@ export function processTelegramRequest(tgRequest: TelegramRequest) {
     const { prompt, latestMessages } = getCurrentContext(user);
     const answer = await gptChatCompletion(question, prompt, latestMessages);
 
-    const reply = isError(answer)
+    const replyText = isError(answer)
       ? answer.message
       : answer.reply;
 
-    await ctx.reply(reply ?? "Нет ответа от ChatGPT. 😣");
+    await ctx.reply(replyText ?? "Нет ответа от ChatGPT. 😣");
 
     const message = await storeMessage(
       user,
@@ -79,8 +82,12 @@ export function processTelegramRequest(tgRequest: TelegramRequest) {
     if (isDebugMode()) {
       const chunks = [];
 
-      if (user.context) {
-        chunks.push(`промт: ${user.context.promptCode}`);
+      const context = user.context
+        ? Context.fromInterface(user.context)
+        : null;
+
+      if (context) {
+        chunks.push(`промт: <b>${getPromptName(context.promptCode)}</b>`);
       }
 
       if (isSuccess(answer) && answer.usage) {
@@ -88,14 +95,35 @@ export function processTelegramRequest(tgRequest: TelegramRequest) {
         chunks.push(`токены: ${usg.totalTokens} (${usg.promptTokens} + ${usg.completionTokens})`);
       }
 
-      await ctx.reply(chunks.join(", "));
+      if (context) {
+        const messages = context.getCurrentHistory().messages;
+
+        if (messages.length) {
+          chunks.push(`история: ${messages.map(m => `[${m.request.substring(0, 20)}...]`).join(", ")}`)
+        } else {
+          chunks.push("история пуста");
+        }
+      }
+
+      await reply(
+        ctx,
+        chunks.join(", ")
+      );
     }
   });
 
   bot.use(kickHandler);
 
-  bot.catch((err, ctx) => {
+  bot.catch(async (err, ctx) => {
     console.log(`Bot error (${ctx.updateType}).`, err);
+
+    if (isDebugMode()) {
+      await reply(
+        ctx,
+        "Ошибка:",
+        inspect(err)
+      )
+    }
   });
 
   bot.handleUpdate(tgRequest.request);

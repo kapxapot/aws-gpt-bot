@@ -83,7 +83,7 @@ scene.enter(async (ctx) => {
     ]);
   } else if (roleMode) {
     if (hasCustomPrompt) {
-      buttons.push(["Вернуться к промту", backToCustomPromptAction]);
+      buttons.push(["Вернуться к своему промту", backToCustomPromptAction]);
     }
 
     buttons.push(["Задать промт", customPromptAction]);

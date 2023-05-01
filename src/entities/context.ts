@@ -37,8 +37,14 @@ export class Context implements IContext {
   }
 
   getOrCreateHistory(promptCode: string): History {
-    return this.history.find(h => h.promptCode === promptCode)
-      ?? this.createHistory(promptCode);
+    let historyEntry = this.history.find(h => h.promptCode === promptCode);
+
+    if (!historyEntry) {
+      historyEntry = this.createHistory(promptCode);
+      this.history.push(historyEntry);
+    }
+
+    return historyEntry;
   }
 
   createHistory(promptCode: string) {
