@@ -1,5 +1,5 @@
 export const customPromptCode = "_custom";
-export const customPromptName = "свой промт";
+export const customPromptName = "Свой промт";
 
 export interface Prompt {
   language: "ru" | "en"

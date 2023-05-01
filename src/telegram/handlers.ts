@@ -1,5 +1,5 @@
 import { isDebugMode } from "../lib/common";
-import { commands, scenes } from "../lib/constants";
+import { commands, messages, scenes } from "../lib/constants";
 import { inspect } from "util";
 import { clearInlineKeyboard, reply } from "../lib/telegram";
 import { BotContext } from "./context";
@@ -17,7 +17,7 @@ export function addOtherCommandHandlers(scene: Composer<BotContext>, exceptComma
   });
 
   scene.command(exceptCommand, async (ctx) => {
-    await ctx.reply("Вы уже находитесь в диалоге этой команды.");
+    await ctx.reply(`Вы уже находитесь в диалоге этой команды. ${messages.useTheKeyboard}`);
   });
 }
 
@@ -74,5 +74,5 @@ export async function dunnoHandler(ctx: any) {
     await ctx.reply(inspect(ctx));
   }
 
-  await ctx.reply("Я не понял ваш запрос. Используйте меню диалога. 👆");
+  await ctx.reply(`Я не понял ваш запрос. ${messages.useTheKeyboard}`);
 }

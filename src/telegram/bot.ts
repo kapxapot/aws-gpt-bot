@@ -2,7 +2,7 @@ import { Scenes, Telegraf, session } from "telegraf";
 import { message } from "telegraf/filters";
 import { TelegramRequest } from "../entities/telegramRequest";
 import { gptChatCompletion } from "../external/gptChatCompletion";
-import { isDebugMode } from "../lib/common";
+import { isDebugMode, truncate } from "../lib/common";
 import { reply, userName } from "../lib/telegram";
 import { addMessageToUser, getCurrentContext, getOrAddUser } from "../services/userService";
 import { storeMessage } from "../storage/messages";
@@ -99,7 +99,7 @@ export function processTelegramRequest(tgRequest: TelegramRequest) {
         const messages = context.getCurrentHistory().messages;
 
         if (messages.length) {
-          chunks.push(`история: ${messages.map(m => `[${m.request.substring(0, 20)}...]`).join(", ")}`)
+          chunks.push(`история: ${messages.map(m => `[${truncate(m.request, 20)}]`).join(", ")}`)
         } else {
           chunks.push("история пуста");
         }

@@ -1,4 +1,4 @@
-import { User } from "telegraf/types";
+import { InlineKeyboardButton, User } from "telegraf/types";
 import { toText } from "./common";
 import { Markup } from "telegraf";
 
@@ -6,8 +6,10 @@ export function userName(user: User): string {
   return user.first_name ?? user.last_name ?? user.username ?? "anonymous";
 }
 
+type Button = InlineKeyboardButton.CallbackButton;
+
 export function inlineKeyboard(...buttonData: string[][]) {
-  const buttons = buttonData.map(data => Markup.button.callback(data[0], data[1]));
+  const buttons: Button[] = buttonData.map(data => Markup.button.callback(data[0], data[1]));
 
   return Markup.inlineKeyboard(
     sliceButtons(buttons)
@@ -24,14 +26,35 @@ export async function clearInlineKeyboard(ctx: any) {
   } catch {}
 }
 
-export function sliceButtons<T>(buttons: T[], limit: number = 2): T[][] {
+export function sliceButtons<T extends Button>(buttons: T[], limit: number = 2, maxLength: number = 18): T[][] {
   const result = [];
+  let accumulator: T[] = [];
 
-  for (let i = 0; i < buttons.length; i += limit) {
-    result.push(
-      buttons.slice(i, i + limit)
-    );
+  function flush() {
+    if (!accumulator.length) {
+      return;
+    }
+
+    result.push(accumulator);
+    accumulator = [];
   }
+
+  for (const button of buttons) {
+    if (button.text.length > maxLength) {
+      flush();
+      result.push([button]);
+
+      continue;
+    }
+
+    accumulator.push(button);
+
+    if (accumulator.length == limit) {
+      flush();
+    }
+  }
+
+  flush();
 
   return result;
 }

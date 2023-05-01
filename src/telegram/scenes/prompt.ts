@@ -1,6 +1,6 @@
 import { BaseScene } from "telegraf/scenes";
 import { message } from "telegraf/filters";
-import { BotContext } from "../context";
+import { BotContext, PromptStage, SessionData } from "../context";
 import { commands, messages, scenes } from "../../lib/constants";
 import { toText } from "../../lib/common";
 import { clearInlineKeyboard, inlineKeyboard, reply } from "../../lib/telegram";
@@ -15,11 +15,12 @@ const backToCustomPromptAction = "back-to-custom-prompt";
 const promptSelectionAction = "select-prompt";
 const cancelAction = "cancel";
 
-const customPromptInputStage = "customPromptInput";
-const promptSelectionStage = "promptSelection";
+const cancelButton = ["Отмена", cancelAction];
 
-scene.enter(async (ctx) => {
-  ctx.session.promptData = {};
+scene.enter(startHandler);
+
+async function startHandler(ctx: BotContext) {
+  setStage(ctx.session, "start");
 
   if (!ctx.from) {
     await ctx.scene.leave();
@@ -57,28 +58,22 @@ scene.enter(async (ctx) => {
   }
 
   if (customPromptMode) {
-    messages.push(
-      hasCustomPrompt
-        ? "Вы можете поменять промт или выбрать предустановленную роль. 👇"
-        : "Вы можете задать свой промт или выбрать предустановленную роль. 👇"
-    );
+    messages.push(`Вы можете ${hasCustomPrompt ? "поменять" : "задать"} свой промт или выбрать предустановленную роль. 👇`);
   } else if (roleMode) {
     messages.push(
       hasCustomPrompt
-        ? "Вы можете вернуться к своему промту, задать другой промт или выбрать другую роль. 👇"
+        ? "Вы можете вернуться к своему промту, задать новый промт или выбрать другую роль. 👇"
         : "Вы можете задать свой промт или выбрать другую роль. 👇"
     );
   }
 
   messages.push(`Если вы затрудняетесь в выборе, рекомендуем пройти обучение: /${commands.tutorial}`);
 
-  // to do: если выбрана роль, должна быть возможность вернуться к своему промту или ввести новый
-
   const buttons = [];
 
   if (customPromptMode) {
     buttons.push([
-      hasCustomPrompt ? "Поменять промт" : "Задать промт",
+      hasCustomPrompt ? "Поменять свой промт" : "Задать свой промт",
       customPromptAction
     ]);
   } else if (roleMode) {
@@ -86,46 +81,63 @@ scene.enter(async (ctx) => {
       buttons.push(["Вернуться к своему промту", backToCustomPromptAction]);
     }
 
-    buttons.push(["Задать промт", customPromptAction]);
+    buttons.push(["Задать новый промт", customPromptAction]);
   }
 
   buttons.push(
     ["Выбрать роль", promptSelectionAction],
-    ["Отмена", cancelAction]
+    cancelButton
   );
 
   await ctx.replyWithHTML(
     toText(...messages),
     inlineKeyboard(...buttons)
   );
-});
+}
 
 addOtherCommandHandlers(scene, commands.prompt);
 
 scene.action(cancelAction, async (ctx) => {
   await clearInlineKeyboard(ctx);
-  await ctx.reply(messages.backToAI);
-  await ctx.scene.leave();
+
+  if (isStage(ctx.session, "start")) {
+    await ctx.reply(messages.backToAI);
+    await ctx.scene.leave();
+  } else {
+    await startHandler(ctx);
+  }
 });
 
 scene.action(customPromptAction, async (ctx) => {
   await clearInlineKeyboard(ctx);
 
-  ctx.session.promptData = {
-    stage: customPromptInputStage
-  };
+  setStage(ctx.session, "customPromptInput");
 
-  await ctx.reply("Введите новый промт:");
+  await ctx.reply(
+    "Введите новый промт:",
+    inlineKeyboard(cancelButton)
+  );
 });
 
 scene.action(promptSelectionAction, async (ctx) => {
   await clearInlineKeyboard(ctx);
 
-  ctx.session.promptData = {
-    stage: promptSelectionStage
-  };
+  setStage(ctx.session, "promptSelection");
 
-  const buttons = getPrompts().map(p => [p.name, p.code]);
+  if (!ctx.from) {
+    await ctx.scene.leave();
+    return;
+  }
+
+  const user = await getOrAddUser(ctx.from);
+
+  const promptCode = user.context?.promptCode;
+
+  const buttons = getPrompts()
+    .filter(p => p.code !== promptCode)
+    .map(p => [p.name, p.code]);
+
+  buttons.push(cancelButton);
 
   await ctx.reply(
     "Выберите роль:",
@@ -135,9 +147,7 @@ scene.action(promptSelectionAction, async (ctx) => {
 
 getPrompts().forEach(prompt => {
   scene.action(prompt.code, async (ctx) => {
-    const promptData = ctx.session.promptData;
-
-    if (promptData.stage === promptSelectionStage && ctx.from) {
+    if (isStage(ctx.session, "promptSelection") && ctx.from) {
       await clearInlineKeyboard(ctx);
 
       // set prompt
@@ -182,9 +192,7 @@ scene.action(backToCustomPromptAction, async (ctx) => {
 });
 
 scene.on(message("text"), async (ctx) => {
-  const promptData = ctx.session.promptData;
-
-  if (promptData.stage === customPromptInputStage) {
+  if (isStage(ctx.session, "customPromptInput")) {
     // switch to new custom prompt
     const customPrompt = ctx.message.text;
 
@@ -207,3 +215,11 @@ scene.use(async ctx => {
 });
 
 export const promptScene = scene;
+
+function setStage(session: SessionData, stage: PromptStage) {
+  session.promptData = { stage };
+}
+
+function isStage(session: SessionData, stage: PromptStage): boolean {
+  return session.promptData?.stage === stage;
+}
