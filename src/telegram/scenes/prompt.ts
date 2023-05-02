@@ -3,7 +3,7 @@ import { message } from "telegraf/filters";
 import { BotContext, PromptStage, SessionData } from "../context";
 import { commands, messages, scenes } from "../../lib/constants";
 import { toText } from "../../lib/common";
-import { clearInlineKeyboard, inlineKeyboard, reply } from "../../lib/telegram";
+import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { backToCustomPrompt, getOrAddUser, newCustomPrompt, setPrompt } from "../../services/userService";
 import { getPromptByCode, getPrompts } from "../../entities/prompt";
 import { addOtherCommandHandlers, dunnoHandler, kickHandler } from "../handlers";
@@ -89,9 +89,10 @@ async function startHandler(ctx: BotContext) {
     cancelButton
   );
 
-  await ctx.replyWithHTML(
-    toText(...messages),
-    inlineKeyboard(...buttons)
+  await replyWithKeyboard(
+    ctx,
+    inlineKeyboard(...buttons),
+    ...messages
   );
 }
 
@@ -101,7 +102,7 @@ scene.action(cancelAction, async (ctx) => {
   await clearInlineKeyboard(ctx);
 
   if (isStage(ctx.session, "start")) {
-    await ctx.reply(messages.backToAI);
+    await reply(ctx, messages.backToAI);
     await ctx.scene.leave();
   } else {
     await startHandler(ctx);
@@ -113,9 +114,10 @@ scene.action(customPromptAction, async (ctx) => {
 
   setStage(ctx.session, "customPromptInput");
 
-  await ctx.reply(
-    "Введите новый промт:",
-    inlineKeyboard(cancelButton)
+  await replyWithKeyboard(
+    ctx,
+    inlineKeyboard(cancelButton),
+    "Введите новый промт:"
   );
 });
 
@@ -139,9 +141,10 @@ scene.action(promptSelectionAction, async (ctx) => {
 
   buttons.push(cancelButton);
 
-  await ctx.reply(
-    "Выберите роль:",
-    inlineKeyboard(...buttons)
+  await replyWithKeyboard(
+    ctx,
+    inlineKeyboard(...buttons),
+    "Выберите роль:"
   );
 });
 
@@ -207,6 +210,10 @@ scene.on(message("text"), async (ctx) => {
 
     await ctx.scene.leave();
   }
+});
+
+scene.leave(async ctx => {
+  delete ctx.session.promptData;
 });
 
 scene.use(async ctx => {

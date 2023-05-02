@@ -2,7 +2,7 @@ import { BaseScene } from "telegraf/scenes";
 import { BotContext } from "../context";
 import { commands, messages, scenes } from "../../lib/constants";
 import { addOtherCommandHandlers, dunnoHandler, kickHandler } from "../handlers";
-import { clearInlineKeyboard, inlineKeyboard, reply } from "../../lib/telegram";
+import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { PaymentEvent, PaymentType } from "../../entities/payment";
 import { getOrAddUser } from "../../services/userService";
 import { storePayment } from "../../storage/payments";
@@ -17,12 +17,13 @@ const payAction = "pay";
 const noPayAction = "no_pay";
 
 scene.enter(async (ctx) => {
-  await ctx.reply(
-    "Здесь вы можете дать нам денег. 💰 Мы очень рады вашему душевному порыву. 😊",
+  await replyWithKeyboard(
+    ctx,
     inlineKeyboard(
       ["Дать денег 😍", payAction],
       ["Не дать денег ☹", noPayAction]
-    )
+    ),
+    "Здесь вы можете дать нам денег. 💰 Мы очень рады вашему душевному порыву. 😊"
   );
 });
 
@@ -70,7 +71,7 @@ scene.action(payAction, async (ctx) => {
 
   const user = await getOrAddUser(ctx.from);
 
-  const paymentData = {
+  await storePayment({
     id: paymentId,
     userId: user.id,
     type: PaymentType.YooMoney,
@@ -82,9 +83,7 @@ scene.action(payAction, async (ctx) => {
     requestData: requestData,
     responseData: data,
     events: [event]
-  };
-
-  await storePayment(paymentData);
+  });
 
   await reply(
     ctx,

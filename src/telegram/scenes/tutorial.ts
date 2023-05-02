@@ -1,7 +1,7 @@
 import { Composer } from "telegraf";
 import { WizardScene } from "telegraf/scenes";
 import { BotContext } from "../context";
-import { clearInlineKeyboard, inlineKeyboard } from "../../lib/telegram";
+import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { commands, messages, scenes } from "../../lib/constants";
 import { addOtherCommandHandlers, dunnoHandler, kickHandler } from "../handlers";
 
@@ -16,36 +16,37 @@ function makeStepHandler(text: string, first: boolean, last: boolean) {
     ["Закончить", exitAction]
   );
 
-  addOtherCommandHandlers(stepHandler, commands.tutorial);
-
   stepHandler.action(nextAction, async (ctx) => {
     await clearInlineKeyboard(ctx);
 
     if (last) {
-      await ctx.replyWithHTML(text);
+      await reply(ctx, text);
       await ctx.scene.leave();
     } else {
-      await ctx.replyWithHTML(text, keyboard);
+      await replyWithKeyboard(ctx, keyboard, text);
       ctx.wizard.next();
     }
   });
 
   stepHandler.action(exitAction, async (ctx) => {
     await clearInlineKeyboard(ctx);
-    await ctx.reply(messages.backToAI)
+    await reply(ctx, messages.backToAI)
     await ctx.scene.leave();
   });
 
-  stepHandler.use(async (ctx) => {
-    await kickHandler(ctx);
-
-    if (first) {
-      await ctx.replyWithHTML(text, keyboard);
+  if (first) {
+    stepHandler.use(async (ctx) => {
+      await replyWithKeyboard(ctx, keyboard, text);
       ctx.wizard.next();
-    } else {
+    });
+  } else {
+    addOtherCommandHandlers(stepHandler, commands.tutorial);
+
+    stepHandler.use(async (ctx) => {
+      await kickHandler(ctx);
       await dunnoHandler(ctx);
-    }
-  });
+    });
+  }
 
   return stepHandler;
 }

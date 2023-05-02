@@ -1,9 +1,10 @@
 import { getItem, putItem, updateItem } from "../lib/database";
-import { Payment, PaymentData } from "../entities/payment";
+import { Payment } from "../entities/payment";
+import { Timestampless } from "../entities/at";
 
 const paymentsTable = process.env.PAYMENTS_TABLE!;
 
-export const storePayment = async (payment: PaymentData) => await putItem<Payment>(
+export const storePayment = async (payment: Timestampless<Payment>) => await putItem<Payment>(
   paymentsTable,
   payment
 );

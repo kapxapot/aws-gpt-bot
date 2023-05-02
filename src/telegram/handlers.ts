@@ -17,7 +17,10 @@ export function addOtherCommandHandlers(scene: Composer<BotContext>, exceptComma
   });
 
   scene.command(exceptCommand, async (ctx) => {
-    await ctx.reply(`Вы уже находитесь в диалоге этой команды. ${messages.useTheKeyboard}`);
+    await reply(
+      ctx,
+      `Вы уже находитесь в диалоге этой команды. ${messages.useTheKeyboard}`
+    );
   });
 }
 
@@ -36,7 +39,7 @@ export function getCommandHandlers(): HandlerTuple[] {
 }
 
 async function termsHandler(ctx: any) {
-  await ctx.reply(process.env.TERMS_URL!);
+  await reply(ctx, process.env.TERMS_URL!);
 }
 
 async function supportHandler(ctx: any) {
@@ -71,8 +74,8 @@ export async function kickHandler(ctx: any) {
 
 export async function dunnoHandler(ctx: any) {
   if (isDebugMode()) {
-    await ctx.reply(inspect(ctx));
+    await reply(ctx, inspect(ctx));
   }
 
-  await ctx.reply(`Я не понял ваш запрос. ${messages.useTheKeyboard}`);
+  await reply(ctx, `Я не понял ваш запрос. ${messages.useTheKeyboard}`);
 }

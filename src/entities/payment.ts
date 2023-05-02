@@ -12,7 +12,7 @@ export interface PaymentEvent {
   at: At;
 }
 
-export interface PaymentData {
+export interface Payment extends Timestamps {
   id: string;
   userId: string;
   type: PaymentType;
@@ -24,7 +24,4 @@ export interface PaymentData {
   requestData: any;
   responseData: any;
   events: PaymentEvent[];
-}
-
-export interface Payment extends PaymentData, Timestamps {
 }

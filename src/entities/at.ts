@@ -16,6 +16,8 @@ interface UpdatedAt {
 export interface Timestamps extends CreatedAt, UpdatedAt {
 }
 
+export type Timestampless<T extends Timestamps> = Omit<T, keyof Timestamps>;
+
 export function iso(ts: number): string {
   return new Date(ts).toISOString();
 }

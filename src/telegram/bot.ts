@@ -67,7 +67,10 @@ export function processTelegramRequest(tgRequest: TelegramRequest) {
       ? answer.message
       : answer.reply;
 
-    await ctx.reply(replyText ?? "Нет ответа от ChatGPT. 😣");
+    await reply(
+      ctx,
+      replyText ?? "Нет ответа от ChatGPT. 😣"
+    );
 
     const message = await storeMessage(
       user,
