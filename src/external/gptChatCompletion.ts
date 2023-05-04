@@ -8,9 +8,11 @@ const apiConfig = new Configuration({
 });
 
 const config = {
-  apiTimeout: process.env.GPT_TIMEOUT ?? "0",
+  apiTimeout: parseInt(process.env.GPT_TIMEOUT ?? "0") * 1000,
   model: "gpt-3.5-turbo",
-  temperature: 0.6
+  temperature: 0.6,
+  promptMaxLength: 500,
+  historyMessageMaxLength: 200
 };
 
 const openai = new OpenAIApi(apiConfig);
@@ -25,7 +27,7 @@ export async function gptChatCompletion(
   if (prompt) {
     messages.push({
       role: "system",
-      content: prompt
+      content: prompt.substring(0, config.promptMaxLength)
     });
   }
 
@@ -33,13 +35,13 @@ export async function gptChatCompletion(
     latestMessages.forEach(message => {
       messages.push({
         role: "user",
-        content: message.request
+        content: message.request.substring(0, config.historyMessageMaxLength)
       });
 
       if (isSuccess(message.response) && message.response.reply) {
         messages.push({
           role: "assistant",
-          content: message.response.reply
+          content: message.response.reply.substring(0, config.historyMessageMaxLength)
         });
       }
     });
@@ -58,7 +60,7 @@ export async function gptChatCompletion(
         messages: messages
       },
       {
-        timeout: parseInt(config.apiTimeout) * 1000,
+        timeout: config.apiTimeout,
         timeoutErrorMessage: "Мы не дождались ответа. 😥"
       }
     );

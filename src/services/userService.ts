@@ -1,7 +1,7 @@
 import { User as TelegrafUser } from "telegraf/types";
 import { Message } from "../entities/message";
 import { User, UserEvent } from "../entities/user";
-import { getUserByTelegramId, storeUser, updateUser } from "../storage/users";
+import { getUserByTelegramId, storeUser, updateUser } from "../storage/userStorage";
 import { Context, IContext } from "../entities/context";
 import { Prompt, customPromptCode, getPromptByCode } from "../entities/prompt";
 import { updatedTimestamps } from "../entities/at";

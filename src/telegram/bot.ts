@@ -1,29 +1,36 @@
 import { Scenes, Telegraf, session } from "telegraf";
 import { message } from "telegraf/filters";
 import { TelegramRequest } from "../entities/telegramRequest";
-import { gptChatCompletion } from "../external/gptChatCompletion";
-import { isDebugMode, truncate } from "../lib/common";
+import { isDebugMode } from "../lib/common";
 import { reply, userName } from "../lib/telegram";
-import { addMessageToUser, getCurrentContext, getOrAddUser } from "../services/userService";
-import { storeMessage } from "../storage/messages";
+import { getOrAddUser } from "../services/userService";
 import { sessionStore } from "./session";
-import { tutorialScene } from "./scenes/tutorial";
+import { tutorialScene } from "./scenes/tutorialScene";
 import { BotContext } from "./context";
-import { promptScene } from "./scenes/prompt";
+import { promptScene } from "./scenes/promptScene";
 import { commands } from "../lib/constants";
 import { getCommandHandlers, kickHandler } from "./handlers";
-import { premiumScene } from "./scenes/premium";
-import { ts } from "../entities/at";
+import { premiumScene } from "./scenes/premiumScene";
 import { User } from "../entities/user";
-import { isError, isSuccess } from "../lib/error";
-import { Context } from "../entities/context";
 import { inspect } from "util";
-import { getPromptName } from "../entities/prompt";
+import { sendMessageToGpt } from "../services/messageService";
 
-const botToken = process.env.BOT_TOKEN!; 
+const config = {
+  botToken: process.env.BOT_TOKEN!,
+  timeout: parseInt(process.env.TELEGRAF_TIMEOUT ?? "0") * 1000
+};
+
+function getBot() {
+  return new Telegraf<BotContext>(
+    config.botToken,
+    {
+      handlerTimeout: config.timeout
+    }
+  );
+}
 
 export function processTelegramRequest(tgRequest: TelegramRequest) {
-  const bot = new Telegraf<BotContext>(botToken);
+  const bot = getBot();
 
   bot.use(session({
     store: sessionStore()
@@ -57,62 +64,7 @@ export function processTelegramRequest(tgRequest: TelegramRequest) {
   bot.on(message("text"), async ctx => {
     const user = await getOrAddUser(ctx.from);
 
-    await ctx.sendChatAction("typing");
-
-    const question = ctx.message.text;
-    const { prompt, latestMessages } = getCurrentContext(user);
-    const answer = await gptChatCompletion(question, prompt, latestMessages);
-
-    const replyText = isError(answer)
-      ? answer.message
-      : answer.reply;
-
-    await reply(
-      ctx,
-      replyText ?? "Нет ответа от ChatGPT. 😣"
-    );
-
-    const message = await storeMessage(
-      user,
-      question,
-      answer,
-      tgRequest.createdAt,
-      ts()
-    );
-
-    await addMessageToUser(user, message);
-
-    if (isDebugMode()) {
-      const chunks = [];
-
-      const context = user.context
-        ? Context.fromInterface(user.context)
-        : null;
-
-      if (context) {
-        chunks.push(`промт: <b>${getPromptName(context.promptCode)}</b>`);
-      }
-
-      if (isSuccess(answer) && answer.usage) {
-        const usg = answer.usage;
-        chunks.push(`токены: ${usg.totalTokens} (${usg.promptTokens} + ${usg.completionTokens})`);
-      }
-
-      if (context) {
-        const messages = context.getCurrentHistory().messages;
-
-        if (messages.length) {
-          chunks.push(`история: ${messages.map(m => `[${truncate(m.request, 20)}]`).join(", ")}`)
-        } else {
-          chunks.push("история пуста");
-        }
-      }
-
-      await reply(
-        ctx,
-        chunks.join(", ")
-      );
-    }
+    await sendMessageToGpt(ctx, user, ctx.message.text, tgRequest.createdAt);
   });
 
   bot.use(kickHandler);
@@ -133,7 +85,7 @@ export function processTelegramRequest(tgRequest: TelegramRequest) {
 }
 
 export async function sendTelegramMessage(user: User, message: string) {
-  const bot = new Telegraf(botToken);
+  const bot = getBot();
 
   await bot.telegram.sendMessage(
     user.telegramId,

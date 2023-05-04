@@ -1,4 +1,4 @@
-import { InlineKeyboardButton, InlineKeyboardMarkup, User } from "telegraf/types";
+import { InlineKeyboardButton, InlineKeyboardMarkup, Message, User } from "telegraf/types";
 import { toText } from "./common";
 import { Markup } from "telegraf";
 
@@ -61,12 +61,18 @@ export function sliceButtons<T extends Button>(buttons: T[], limit: number = 2, 
   return result;
 }
 
-export async function reply(ctx: any, ...lines: string[]) {
+export async function reply(ctx: any, ...lines: string[]): Promise<Message.TextMessage[]> {
   const slices = sliceText(toText(...lines), maxMessageLength);
 
+  const messages = [];
+
   for (const slice of slices) {
-    await ctx.replyWithHTML(slice);
+    messages.push(
+      await ctx.replyWithHTML(slice)
+    );
   }
+
+  return messages;
 }
 
 export async function replyWithKeyboard(

@@ -5,7 +5,7 @@ import { addOtherCommandHandlers, dunnoHandler, kickHandler } from "../handlers"
 import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { PaymentEvent, PaymentType } from "../../entities/payment";
 import { getOrAddUser } from "../../services/userService";
-import { storePayment } from "../../storage/payments";
+import { storePayment } from "../../storage/paymentStorage";
 import { yooMoneyPayment } from "../../external/yooMoneyPayment";
 import { now } from "../../entities/at";
 import { monthlyPremiumSubscription } from "../../entities/product";

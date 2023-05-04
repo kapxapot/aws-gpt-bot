@@ -1,4 +1,4 @@
-import { deleteSession, getSession, putSession } from "../storage/sessions";
+import { deleteSession, getSession, putSession } from "../storage/sessionStorage";
 
 export type MaybePromise<T> = T | Promise<T>;
 

@@ -7,6 +7,7 @@ import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from ".
 import { backToCustomPrompt, getOrAddUser, newCustomPrompt, setPrompt } from "../../services/userService";
 import { getPromptByCode, getPrompts } from "../../entities/prompt";
 import { addOtherCommandHandlers, dunnoHandler, kickHandler } from "../handlers";
+import { sendMessageToGpt } from "../../services/messageService";
 
 const scene = new BaseScene<BotContext>(scenes.prompt);
 
@@ -160,7 +161,7 @@ getPrompts().forEach(prompt => {
       await reply(
         ctx,
         `Вы выбрали роль <b>«${prompt.name}»</b>.`,
-        messages.backToAI
+        prompt.intro
       );
 
       await ctx.scene.leave();
@@ -196,6 +197,8 @@ scene.action(backToCustomPromptAction, async (ctx) => {
 
 scene.on(message("text"), async (ctx) => {
   if (isStage(ctx.session, "customPromptInput")) {
+    await clearInlineKeyboard(ctx);
+
     // switch to new custom prompt
     const customPrompt = ctx.message.text;
 
@@ -204,11 +207,12 @@ scene.on(message("text"), async (ctx) => {
 
     await reply(
       ctx,
-      "Ваш новый промт сохранен.",
-      messages.backToAI
+      `Ваш новый промт сохранен. ${messages.backToAI}`
     );
 
     await ctx.scene.leave();
+
+    await sendMessageToGpt(ctx, user, customPrompt);
   }
 });
 
