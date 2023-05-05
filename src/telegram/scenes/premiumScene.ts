@@ -3,7 +3,7 @@ import { BotContext } from "../context";
 import { commands, messages, scenes } from "../../lib/constants";
 import { addOtherCommandHandlers, dunnoHandler, kickHandler } from "../handlers";
 import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
-import { PaymentEvent, PaymentType } from "../../entities/payment";
+import { PaymentEvent } from "../../entities/payment";
 import { getOrAddUser } from "../../services/userService";
 import { storePayment } from "../../storage/paymentStorage";
 import { yooMoneyPayment } from "../../external/yooMoneyPayment";
@@ -74,7 +74,7 @@ scene.action(payAction, async (ctx) => {
   await storePayment({
     id: paymentId,
     userId: user.id,
-    type: PaymentType.YooMoney,
+    type: "YooMoney",
     cart: [product],
     status: data.status,
     total: requestData.total,

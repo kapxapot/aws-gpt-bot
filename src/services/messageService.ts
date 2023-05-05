@@ -10,7 +10,7 @@ import { storeMessage } from "../storage/messageStorage";
 import { addMessageToUser, getCurrentContext } from "./userService";
 
 export async function sendMessageToGpt(ctx: any, user: User, question: string, requestedAt?: number) {
-  const messages = await reply(ctx, "Думаю над ответом, подождите...");
+  const messages = await reply(ctx, "💬 Думаю над ответом, подождите...");
 
   requestedAt = requestedAt ?? ts();
 
@@ -43,7 +43,7 @@ export async function sendMessageToGpt(ctx: any, user: User, question: string, r
       errorMessage = "Вы шлете сообщения слишком часто. Подождите несколько секунд.";
     }
 
-    await reply(ctx, errorMessage);
+    await reply(ctx, `❌ ${errorMessage}`);
   }
 
   if (isDebugMode()) {
@@ -63,7 +63,7 @@ export async function showDebugInfo(ctx: any, user: User, usage: any) {
     : null;
 
   if (context) {
-    chunks.push(`промт: <b>${getPromptName(context.promptCode)}</b>`);
+    chunks.push(`🟢 промт: <b>${getPromptName(context.promptCode)}</b>`);
   }
 
   if (usage) {

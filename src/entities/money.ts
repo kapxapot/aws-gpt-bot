@@ -7,7 +7,7 @@ export interface Money {
 
 export function rub(amount: number): Money {
   return {
-    currency: Currency.RUB,
+    currency: "RUB",
     amount
   };
 }

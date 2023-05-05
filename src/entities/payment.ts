@@ -2,9 +2,7 @@ import { At, Timestamps } from "./at";
 import { Money } from "./money";
 import { Product } from "./product";
 
-export enum PaymentType {
-  YooMoney = "YooMoney"
-}
+export type PaymentType = "YooMoney";
 
 export interface PaymentEvent {
   type: "created" | "succeeded"

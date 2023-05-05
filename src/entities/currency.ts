@@ -1,3 +1,1 @@
-export enum Currency {
-  RUB = "RUB"
-}
+export type Currency = "RUB";
