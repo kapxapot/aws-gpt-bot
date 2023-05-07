@@ -1,13 +1,4 @@
-import { Currency } from "./currency";
-
 export interface Money {
-  currency: Currency;
+  currency: "RUB";
   amount: number;
-}
-
-export function rub(amount: number): Money {
-  return {
-    currency: "RUB",
-    amount
-  };
 }

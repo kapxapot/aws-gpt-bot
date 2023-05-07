@@ -4,6 +4,8 @@ import { inspect } from "util";
 import { clearInlineKeyboard, reply } from "../lib/telegram";
 import { BotContext } from "./context";
 import { Composer } from "telegraf";
+import { historySizeHandler } from "./handlers/historySizeHandler";
+import { temperatureHandler } from "./handlers/temperatureHandler";
 
 type HandlerTuple = [command: string, handler: (ctx: any) => Promise<void>];
 
@@ -35,6 +37,8 @@ export function getCommandHandlers(): HandlerTuple[] {
     [commands.tutorial, tutorialHandler],
     [commands.prompt, promptHandler],
     [commands.premium, premiumHandler],
+    [commands.historySize, historySizeHandler],
+    [commands.temperature, temperatureHandler],
   ];
 }
 
@@ -73,9 +77,5 @@ export async function kickHandler(ctx: any) {
 }
 
 export async function dunnoHandler(ctx: any) {
-  if (isDebugMode()) {
-    await reply(ctx, inspect(ctx));
-  }
-
   await reply(ctx, `Я не понял ваш запрос. ${messages.useTheKeyboard}`);
 }

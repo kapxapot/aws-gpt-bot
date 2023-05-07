@@ -1,6 +1,6 @@
 import { now } from "./at";
 import { Case } from "./case";
-import { Money, rub } from "./money";
+import { Money } from "./money";
 
 export interface Product {
   code: string;
@@ -18,7 +18,10 @@ export function monthlyPremiumSubscription(): Product {
       "Nom": "Премиум-подписка на 30 дней",
       "Acc": "Премиум-подписку на 30 дней"
     },
-    price: rub(290),
+    price: {
+      currency: "RUB",
+      amount: 290
+    },
     details: {
       type: "subscription",
       plan: "premium",

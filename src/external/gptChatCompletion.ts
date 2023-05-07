@@ -1,7 +1,10 @@
 import axios from "axios";
 import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from "openai";
-import { Completion, Message } from "../entities/message";
+import { Completion } from "../entities/message";
 import { Result, isSuccess } from "../lib/error";
+import { User } from "../entities/user";
+import { getCurrentContext } from "../services/userService";
+import { getUserTemperature } from "../services/userSettingsService";
 
 const apiConfig = new Configuration({
   apiKey: process.env.OPENAI_API_KEY
@@ -10,19 +13,16 @@ const apiConfig = new Configuration({
 const config = {
   apiTimeout: parseInt(process.env.GPT_TIMEOUT ?? "0") * 1000,
   model: "gpt-3.5-turbo",
-  temperature: 0.6,
   promptMaxLength: 500,
   historyMessageMaxLength: 200
 };
 
 const openai = new OpenAIApi(apiConfig);
 
-export async function gptChatCompletion(
-  userMessage: string,
-  prompt: string | null,
-  latestMessages: Message[] | null
-): Promise<Result<Completion>> {
+export async function gptChatCompletion(user: User, userMessage: string): Promise<Result<Completion>> {
   const messages: ChatCompletionRequestMessage[] = [];
+
+  const { prompt, latestMessages } = getCurrentContext(user);
 
   if (prompt) {
     messages.push({
@@ -56,7 +56,7 @@ export async function gptChatCompletion(
     const response = await openai.createChatCompletion(
       {
         model: config.model,
-        temperature: config.temperature,
+        temperature: getUserTemperature(user),
         messages: messages
       },
       {

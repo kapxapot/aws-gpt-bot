@@ -2,7 +2,6 @@ import { BaseScene } from "telegraf/scenes";
 import { message } from "telegraf/filters";
 import { BotContext, PromptStage, SessionData } from "../context";
 import { commands, messages, scenes } from "../../lib/constants";
-import { toText } from "../../lib/common";
 import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { backToCustomPrompt, getOrAddUser, newCustomPrompt, setPrompt } from "../../services/userService";
 import { getPromptByCode, getPrompts } from "../../entities/prompt";
@@ -165,34 +164,28 @@ getPrompts().forEach(prompt => {
       );
 
       await ctx.scene.leave();
-
-      return;
     }
-
-    await dunnoHandler(ctx);
   });
 });
 
 scene.action(backToCustomPromptAction, async (ctx) => {
-  if (ctx.from) {
-    await clearInlineKeyboard(ctx);
-
-    // switch to old custom prompt
-    const user = await getOrAddUser(ctx.from);
-    await backToCustomPrompt(user);
-
-    await reply(
-      ctx,
-      "Возвращаемся к вашему промту.",
-      messages.backToAI
-    );
-
-    await ctx.scene.leave();
-
+  if (!ctx.from) {
     return;
   }
 
-  await dunnoHandler(ctx);
+  await clearInlineKeyboard(ctx);
+
+  // switch to old custom prompt
+  const user = await getOrAddUser(ctx.from);
+  await backToCustomPrompt(user);
+
+  await reply(
+    ctx,
+    "Возвращаемся к вашему промту.",
+    messages.backToAI
+  );
+
+  await ctx.scene.leave();
 });
 
 scene.on(message("text"), async (ctx) => {
@@ -214,6 +207,8 @@ scene.on(message("text"), async (ctx) => {
 
     await sendMessageToGpt(ctx, user, customPrompt);
   }
+
+  await dunnoHandler(ctx);
 });
 
 scene.leave(async ctx => {

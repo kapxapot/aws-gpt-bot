@@ -1,62 +1,52 @@
 import { Message } from "./message";
-import { customPromptCode } from "./prompt";
-
-const userMessageCacheSize = 3;
+import { getDefaultPromptCode } from "./prompt";
 
 export interface History {
   promptCode: string;
   messages: Message[];
 }
 
-export interface IContext {
+export interface Context {
   customPrompt: string | null;
   promptCode: string;
   history: History[];
 }
 
-export class Context implements IContext {
-  public customPrompt: string | null;
-  public promptCode: string;
-  public history: History[];
+export function createContext(): Context {
+  const promptCode = getDefaultPromptCode();
 
-  constructor();
-  constructor(customPrompt: string | null, promptCode: string, history: History[]);
-  constructor(customPrompt?: string | null, promptCode?: string, history?: History[])
-  {
-    this.customPrompt = customPrompt ?? null;
-    this.promptCode = promptCode ?? customPromptCode;
-    this.history = history ?? [this.createHistory(this.promptCode)];
+  return {
+    customPrompt: null,
+    promptCode: promptCode,
+    history: [createHistory(promptCode)]
+  };
+}
+
+export function addMessageToHistory(context: Context, message: Message, historySize: number) {
+  const history = getCurrentHistory(context);
+  history.messages.push(message);
+  history.messages = history.messages.slice(historySize * -1);
+}
+
+export function getCurrentHistory(context: Context): History {
+  return getOrCreateHistory(context);
+}
+
+function getOrCreateHistory(context: Context): History {
+  const promptCode = context.promptCode;
+  let historyEntry = context.history.find(h => h.promptCode === promptCode);
+
+  if (!historyEntry) {
+    historyEntry = createHistory(promptCode);
+    context.history.push(historyEntry);
   }
 
-  static fromInterface(context: IContext): Context {
-    return new Context(context.customPrompt, context.promptCode, context.history);
-  }
+  return historyEntry;
+}
 
-  getCurrentHistory(): History {
-    return this.getOrCreateHistory(this.promptCode);
-  }
-
-  getOrCreateHistory(promptCode: string): History {
-    let historyEntry = this.history.find(h => h.promptCode === promptCode);
-
-    if (!historyEntry) {
-      historyEntry = this.createHistory(promptCode);
-      this.history.push(historyEntry);
-    }
-
-    return historyEntry;
-  }
-
-  createHistory(promptCode: string) {
-    return {
-      promptCode,
-      messages: []
-    };
-  }
-
-  addMessage(message: Message) {
-    const history = this.getCurrentHistory();
-    history.messages.push(message);
-    history.messages = history.messages.slice(userMessageCacheSize * -1);
-  }
+function createHistory(promptCode: string) {
+  return {
+    promptCode,
+    messages: []
+  };
 }

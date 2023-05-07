@@ -2,9 +2,10 @@ import { User as TelegrafUser } from "telegraf/types";
 import { Message } from "../entities/message";
 import { User, UserEvent } from "../entities/user";
 import { getUserByTelegramId, storeUser, updateUser } from "../storage/userStorage";
-import { Context, IContext } from "../entities/context";
+import { Context,  addMessageToHistory, createContext, getCurrentHistory } from "../entities/context";
 import { Prompt, customPromptCode, getPromptByCode } from "../entities/prompt";
 import { updatedTimestamps } from "../entities/at";
+import { getUserHistorySize } from "./userSettingsService";
 
 export const getOrAddUser = async (userData: TelegrafUser): Promise<User> => {
   return await getUserByTelegramId(userData.id)
@@ -16,7 +17,7 @@ export const getOrAddUser = async (userData: TelegrafUser): Promise<User> => {
  */
 export const addMessageToUser = async (user: User, message: Message): Promise<User> => {
   const context = getContext(user);
-  context.addMessage(message);
+  addMessageToHistory(context, message, getUserHistorySize(user));
 
   return await updateContext(user, context);
 }
@@ -46,12 +47,10 @@ export const setPrompt = async (user: User, prompt: Prompt): Promise<User> => {
 }
 
 function getContext(user: User): Context {
-  return user.context
-    ? Context.fromInterface(user.context)
-    : new Context();
+  return user.context ?? createContext();
 }
 
-async function updateContext(user: User, context: IContext): Promise<User> {
+async function updateContext(user: User, context: Context): Promise<User> {
   return await updateUser(
     user,
     {
@@ -67,11 +66,11 @@ export interface CurrentContext {
 }
 
 export function getCurrentContext(user: User): CurrentContext {
-  if (!user.context) {
+  const context = user.context;
+
+  if (!context) {
     return { prompt: null, latestMessages: null };
   }
-
-  const context = Context.fromInterface(user.context);
 
   const prompt = (context.promptCode === customPromptCode)
     ? context.customPrompt
@@ -79,7 +78,7 @@ export function getCurrentContext(user: User): CurrentContext {
 
   return {
     prompt,
-    latestMessages: context.getCurrentHistory().messages
+    latestMessages: getCurrentHistory(context).messages
   };
 }
 

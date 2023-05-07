@@ -1,21 +1,18 @@
 import { ts } from "../entities/at";
-import { Context } from "../entities/context";
+import { getCurrentHistory } from "../entities/context";
 import { getPromptName } from "../entities/prompt";
 import { User } from "../entities/user";
 import { gptChatCompletion } from "../external/gptChatCompletion";
 import { isDebugMode, truncate } from "../lib/common";
-import { isError, isSuccess } from "../lib/error";
+import { isSuccess } from "../lib/error";
 import { reply } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
-import { addMessageToUser, getCurrentContext } from "./userService";
+import { addMessageToUser } from "./userService";
 
 export async function sendMessageToGpt(ctx: any, user: User, question: string, requestedAt?: number) {
   const messages = await reply(ctx, "💬 Думаю над ответом, подождите...");
 
-  requestedAt = requestedAt ?? ts();
-
-  const { prompt, latestMessages } = getCurrentContext(user);
-  const answer = await gptChatCompletion(question, prompt, latestMessages);
+  const answer = await gptChatCompletion(user, question);
 
   await ctx.deleteMessage(messages[0].message_id);
 
@@ -23,7 +20,7 @@ export async function sendMessageToGpt(ctx: any, user: User, question: string, r
     user,
     question,
     answer,
-    requestedAt,
+    requestedAt ?? ts(),
     ts()
   );
 
@@ -58,12 +55,10 @@ export async function sendMessageToGpt(ctx: any, user: User, question: string, r
 export async function showDebugInfo(ctx: any, user: User, usage: any) {
   const chunks = [];
 
-  const context = user.context
-    ? Context.fromInterface(user.context)
-    : null;
+  const context = user.context;
 
   if (context) {
-    chunks.push(`🟢 промт: <b>${getPromptName(context.promptCode)}</b>`);
+    chunks.push(`👉 промт: <b>${getPromptName(context.promptCode)}</b>`);
   }
 
   if (usage) {
@@ -71,7 +66,7 @@ export async function showDebugInfo(ctx: any, user: User, usage: any) {
   }
 
   if (context) {
-    const messages = context.getCurrentHistory().messages;
+    const messages = getCurrentHistory(context).messages;
 
     if (messages.length) {
       chunks.push(`история: ${messages.map(m => `[${truncate(m.request, 20)}]`).join(", ")}`)

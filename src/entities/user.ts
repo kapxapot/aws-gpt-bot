@@ -1,10 +1,15 @@
 import { At, Timestamps } from "./at";
-import { IContext } from "./context";
+import { Context } from "./context";
 
 export interface UserEvent {
   type: "purchase"
   details: any;
   at: At;
+}
+
+export interface UserSettings {
+  historySize?: number;
+  temperature?: number;
 }
 
 export interface User extends Timestamps {
@@ -13,6 +18,7 @@ export interface User extends Timestamps {
   firstName?: string;
   lastName?: string;
   username?: string;
-  context?: IContext;
-  events?: UserEvent[]
+  context?: Context;
+  events?: UserEvent[];
+  settings?: UserSettings;
 }

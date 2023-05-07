@@ -54,3 +54,7 @@ export function getPromptName(code: string): string | null {
 
   return getPromptByCode(code)?.name ?? null;
 }
+
+export function getDefaultPromptCode() {
+  return customPromptCode;
+}
