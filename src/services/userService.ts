@@ -2,8 +2,8 @@ import { User as TelegrafUser } from "telegraf/types";
 import { Message } from "../entities/message";
 import { User, UserEvent } from "../entities/user";
 import { getUserByTelegramId, storeUser, updateUser } from "../storage/userStorage";
-import { Context,  addMessageToHistory, createContext, getCurrentHistory } from "../entities/context";
-import { Prompt, customPromptCode, getPromptByCode } from "../entities/prompt";
+import { Context,  addMessageToHistory, createContext, getCurrentHistory, getCurrentPrompt } from "../entities/context";
+import { ModeCode, Prompt, customPromptCode, getPromptByCode, noPromptCode } from "../entities/prompt";
 import { updatedTimestamps } from "../entities/at";
 import { getUserHistorySize } from "./userSettingsService";
 
@@ -25,14 +25,17 @@ export const addMessageToUser = async (user: User, message: Message): Promise<Us
 export const newCustomPrompt = async (user: User, customPrompt: string): Promise<User> => {
   const context = getContext(user);
 
-  context.customPrompt = customPrompt;
+  context.modeCode = "prompt";
   context.promptCode = customPromptCode;
+  context.customPrompt = customPrompt;
 
   return await updateContext(user, context);
 }
 
 export const backToCustomPrompt = async (user: User): Promise<User> => {
   const context = getContext(user);
+
+  context.modeCode = "prompt";
   context.promptCode = customPromptCode;
 
   return await updateContext(user, context);
@@ -41,7 +44,17 @@ export const backToCustomPrompt = async (user: User): Promise<User> => {
 export const setPrompt = async (user: User, prompt: Prompt): Promise<User> => {
   const context = getContext(user);
 
+  context.modeCode = "role";
   context.promptCode = prompt.code;
+
+  return await updateContext(user, context);
+}
+
+export const setFreeMode = async (user: User): Promise<User> => {
+  const context = getContext(user);
+
+  context.modeCode = "free";
+  context.promptCode = noPromptCode;
 
   return await updateContext(user, context);
 }
@@ -72,12 +85,8 @@ export function getCurrentContext(user: User): CurrentContext {
     return { prompt: null, latestMessages: null };
   }
 
-  const prompt = (context.promptCode === customPromptCode)
-    ? context.customPrompt
-    : getPromptByCode(context.promptCode)?.content ?? null;
-
   return {
-    prompt,
+    prompt: getCurrentPrompt(context),
     latestMessages: getCurrentHistory(context).messages
   };
 }

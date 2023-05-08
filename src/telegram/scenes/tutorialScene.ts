@@ -1,6 +1,6 @@
 import { Composer } from "telegraf";
 import { WizardScene } from "telegraf/scenes";
-import { BotContext } from "../context";
+import { BotContext } from "../botContext";
 import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { commands, messages, scenes } from "../../lib/constants";
 import { addOtherCommandHandlers, dunnoHandler, kickHandler } from "../handlers";
@@ -30,7 +30,7 @@ function makeStepHandler(text: string, first: boolean, last: boolean) {
 
   stepHandler.action(exitAction, async (ctx) => {
     await clearInlineKeyboard(ctx);
-    await reply(ctx, messages.backToAI)
+    await reply(ctx, messages.backToDialog)
     await ctx.scene.leave();
   });
 

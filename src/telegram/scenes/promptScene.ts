@@ -1,6 +1,6 @@
 import { BaseScene } from "telegraf/scenes";
 import { message } from "telegraf/filters";
-import { BotContext, PromptStage, SessionData } from "../context";
+import { BotContext, PromptStage, SessionData } from "../botContext";
 import { commands, messages, scenes } from "../../lib/constants";
 import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { backToCustomPrompt, getOrAddUser, newCustomPrompt, setPrompt } from "../../services/userService";
@@ -102,7 +102,7 @@ scene.action(cancelAction, async (ctx) => {
   await clearInlineKeyboard(ctx);
 
   if (isStage(ctx.session, "start")) {
-    await reply(ctx, messages.backToAI);
+    await reply(ctx, messages.backToDialog);
     await ctx.scene.leave();
   } else {
     await startHandler(ctx);
@@ -182,7 +182,7 @@ scene.action(backToCustomPromptAction, async (ctx) => {
   await reply(
     ctx,
     "Возвращаемся к вашему промту.",
-    messages.backToAI
+    messages.backToDialog
   );
 
   await ctx.scene.leave();
@@ -200,7 +200,7 @@ scene.on(message("text"), async (ctx) => {
 
     await reply(
       ctx,
-      `Ваш новый промт сохранен. ${messages.backToAI}`
+      `Ваш новый промт сохранен. ${messages.backToDialog}`
     );
 
     await ctx.scene.leave();

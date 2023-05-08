@@ -1,5 +1,5 @@
 import { Message } from "./message";
-import { getDefaultPromptCode } from "./prompt";
+import { ModeCode, customPromptCode, getDefaults, getPromptByCode, noPromptCode } from "./prompt";
 
 export interface History {
   promptCode: string;
@@ -7,15 +7,17 @@ export interface History {
 }
 
 export interface Context {
+  modeCode: ModeCode;
   customPrompt: string | null;
   promptCode: string;
   history: History[];
 }
 
 export function createContext(): Context {
-  const promptCode = getDefaultPromptCode();
+  const { modeCode, promptCode } = getDefaults();
 
   return {
+    modeCode,
     customPrompt: null,
     promptCode: promptCode,
     history: [createHistory(promptCode)]
@@ -26,6 +28,20 @@ export function addMessageToHistory(context: Context, message: Message, historyS
   const history = getCurrentHistory(context);
   history.messages.push(message);
   history.messages = history.messages.slice(historySize * -1);
+}
+
+export function getCurrentPrompt(context: Context): string | null {
+  const code = context.promptCode;
+
+  if (code === noPromptCode) {
+    return null;
+  }
+
+  if (code == customPromptCode) {
+    return context.customPrompt;
+  }
+
+  return getPromptByCode(code)?.content ?? null;
 }
 
 export function getCurrentHistory(context: Context): History {

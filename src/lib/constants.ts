@@ -5,18 +5,20 @@ export const commands = {
   terms: "terms",
   premium: "premium",
   historySize: "history",
-  temperature: "temp"
+  temperature: "temp",
+  mode: "mode"
 } as const;
 
 export const messages = {
-  backToAI: "Возвращаемся к диалогу...",
+  backToDialog: "Возвращаемся к диалогу...",
   useTheKeyboard: "Используйте кнопки диалога. 👆"
 } as const;
 
 export const scenes = {
   prompt: "PROMPT_SCENE",
   tutorial: "TUTORIAL_SCENE",
-  premium: "PREMIUM_SCENE"
+  premium: "PREMIUM_SCENE",
+  mode: "MODE_SCENE"
 } as const;
 
 export const settings = {

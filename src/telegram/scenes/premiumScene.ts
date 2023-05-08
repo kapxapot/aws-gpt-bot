@@ -1,5 +1,5 @@
 import { BaseScene } from "telegraf/scenes";
-import { BotContext } from "../context";
+import { BotContext } from "../botContext";
 import { commands, messages, scenes } from "../../lib/constants";
 import { addOtherCommandHandlers, dunnoHandler, kickHandler } from "../handlers";
 import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
@@ -50,7 +50,7 @@ scene.action(payAction, async (ctx) => {
     await reply(
       ctx,
       "Произошла ошибка, оплата временно недоступна. Приносим извинения.",
-      messages.backToAI
+      messages.backToDialog
     );
 
     await ctx.scene.leave();
@@ -90,7 +90,7 @@ scene.action(payAction, async (ctx) => {
     `Для оплаты пройдите по ссылке: ${paymentUrl}`,
     `⚠ Время действия ссылки ограничено. Если вы не произведете оплату вовремя, получите новую ссылку с помощью команды /${commands.premium}`,
     "Мы сообщим вам, когда получим оплату.",
-    messages.backToAI
+    messages.backToDialog
   );
 
   await ctx.scene.leave();
@@ -102,7 +102,7 @@ scene.action(noPayAction, async (ctx) => {
   await reply(
     ctx,
     "Жадина-говядина!",
-    messages.backToAI
+    messages.backToDialog
   );
 
   await ctx.scene.leave();

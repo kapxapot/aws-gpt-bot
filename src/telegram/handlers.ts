@@ -1,13 +1,12 @@
-import { isDebugMode } from "../lib/common";
-import { commands, messages, scenes } from "../lib/constants";
-import { inspect } from "util";
-import { clearInlineKeyboard, reply } from "../lib/telegram";
-import { BotContext } from "./context";
 import { Composer } from "telegraf";
+import { BotContext } from "./botContext";
+import { commands, messages, scenes } from "../lib/constants";
+import { clearInlineKeyboard, reply } from "../lib/telegram";
 import { historySizeHandler } from "./handlers/historySizeHandler";
 import { temperatureHandler } from "./handlers/temperatureHandler";
 
-type HandlerTuple = [command: string, handler: (ctx: any) => Promise<void>];
+type Handler = (ctx: any) => Promise<void>;
+type HandlerTuple = [command: string, handler: Handler];
 
 export function addOtherCommandHandlers(scene: Composer<BotContext>, exceptCommand: string) {
   getOtherCommandHandlers(exceptCommand).forEach(tuple => {
@@ -34,12 +33,17 @@ export function getCommandHandlers(): HandlerTuple[] {
   return [
     [commands.terms, termsHandler],
     [commands.support, supportHandler],
-    [commands.tutorial, tutorialHandler],
-    [commands.prompt, promptHandler],
-    [commands.premium, premiumHandler],
+    [commands.tutorial, sceneHandler(scenes.tutorial)],
+    [commands.prompt, sceneHandler(scenes.prompt)],
+    [commands.premium, sceneHandler(scenes.premium)],
     [commands.historySize, historySizeHandler],
     [commands.temperature, temperatureHandler],
+    [commands.mode, sceneHandler(scenes.mode)],
   ];
+}
+
+function sceneHandler(scene: string): Handler {
+  return async (ctx: any) => await ctx.scene.enter(scene);
 }
 
 async function termsHandler(ctx: any) {
@@ -52,18 +56,6 @@ async function supportHandler(ctx: any) {
     "Напишите в техподдержку, чтобы получить ответ на ваш вопрос или обсудить идеи по развитию чат-бота под ваши задачи.",
     process.env.SUPPORT_URL!
   );
-}
-
-async function tutorialHandler(ctx: any) {
-  await ctx.scene.enter(scenes.tutorial);
-}
-
-async function promptHandler(ctx: any) {
-  await ctx.scene.enter(scenes.prompt);
-}
-
-async function premiumHandler(ctx: any) {
-  await ctx.scene.enter(scenes.premium);
 }
 
 export async function kickHandler(ctx: any) {

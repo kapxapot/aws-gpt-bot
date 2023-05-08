@@ -6,7 +6,7 @@ import { reply, userName } from "../lib/telegram";
 import { getOrAddUser } from "../services/userService";
 import { sessionStore } from "./session";
 import { tutorialScene } from "./scenes/tutorialScene";
-import { BotContext } from "./context";
+import { BotContext } from "./botContext";
 import { promptScene } from "./scenes/promptScene";
 import { commands } from "../lib/constants";
 import { getCommandHandlers, kickHandler } from "./handlers";
@@ -14,6 +14,7 @@ import { premiumScene } from "./scenes/premiumScene";
 import { User } from "../entities/user";
 import { inspect } from "util";
 import { sendMessageToGpt } from "../services/messageService";
+import { modeScene } from "./scenes/modeScene";
 
 const config = {
   botToken: process.env.BOT_TOKEN!,
@@ -36,7 +37,7 @@ export function processTelegramRequest(tgRequest: TelegramRequest) {
     store: sessionStore()
   }));
 
-  const stage = new Scenes.Stage<BotContext>([tutorialScene, promptScene, premiumScene]);
+  const stage = new Scenes.Stage<BotContext>([tutorialScene, promptScene, premiumScene, modeScene]);
 
   bot.use(stage.middleware());
 

@@ -6,6 +6,7 @@ export interface BotContext extends WizardContext {
 
 export interface SessionData {
   promptData?: StageData<PromptStage>;
+  modeData?: StageData<ModeStage>;
 }
 
 export interface StageData<T extends string> {
@@ -13,3 +14,4 @@ export interface StageData<T extends string> {
 }
 
 export type PromptStage = "start" | "customPromptInput" | "promptSelection";
+export type ModeStage = "modeSelection" | "roleSelection" | "customPromptInput";

@@ -1,6 +1,7 @@
 import { ts } from "../entities/at";
+import he from "he";
 import { getCurrentHistory } from "../entities/context";
-import { getPromptName } from "../entities/prompt";
+import { getModeName } from "../entities/prompt";
 import { User } from "../entities/user";
 import { gptChatCompletion } from "../external/gptChatCompletion";
 import { isDebugMode, truncate } from "../lib/common";
@@ -29,7 +30,9 @@ export async function sendMessageToGpt(ctx: any, user: User, question: string, r
   if (isSuccess(answer)) {
     await reply(
       ctx,
-      answer.reply ?? "Нет ответа от ChatGPT. 😣"
+      answer.reply
+        ? he.encode(answer.reply)
+        : "Нет ответа от ChatGPT. 😣"
     );
   } else {
     let errorMessage = answer.message;
@@ -55,15 +58,13 @@ export async function sendMessageToGpt(ctx: any, user: User, question: string, r
 export async function showDebugInfo(ctx: any, user: User, usage: any) {
   const chunks = [];
 
-  const context = user.context;
-
-  if (context) {
-    chunks.push(`👉 промт: <b>${getPromptName(context.promptCode)}</b>`);
-  }
+  chunks.push(`👉 режим: <b>${getModeName(user)}</b>`);
 
   if (usage) {
     chunks.push(`токены: ${usage.totalTokens} (${usage.promptTokens} + ${usage.completionTokens})`);
   }
+
+  const context = user.context;
 
   if (context) {
     const messages = getCurrentHistory(context).messages;
