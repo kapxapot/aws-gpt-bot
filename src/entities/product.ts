@@ -3,7 +3,7 @@ import { Case } from "./case";
 import { Money } from "./money";
 
 export interface Product {
-  code: string;
+  code: "subscription-premium-30-days";
   name: string;
   displayNames: Partial<Record<Case, string>>;
   price: Money;

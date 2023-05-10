@@ -1,3 +1,4 @@
+import { Product } from "../entities/product";
 import { User } from "../entities/user";
 import { updateUsageStats } from "./userService";
 
@@ -12,7 +13,7 @@ export async function messageLimitExceeded(user: User): Promise<boolean> {
   const startOfDay = startOfToday();
 
   if (stats.startOfDay === startOfDay) {
-    return stats.messageCount < getMessageLimit(user);
+    return stats.messageCount >= getMessageLimit(user);
   }
 
   return false;
@@ -34,7 +35,27 @@ export async function incMessageUsage(user: User): Promise<User> {
 }
 
 function getMessageLimit(user: User): number {
+  const subscription = getActiveSubscription(user);
+
+  if (subscription && subscription.code === "subscription-premium-30-days") {
+    return Number.POSITIVE_INFINITY;
+  }
+
   return 10;
+}
+
+function getActiveSubscription(user: User): Product | null {
+  if (!user.events) {
+    return null;
+  }
+
+  const purchaseEvent = user.events.find(e => e.type === "purchase");
+
+  if (!purchaseEvent) {
+    return null;
+  }
+
+  return purchaseEvent.details;
 }
 
 function isToday(ts: number): boolean {

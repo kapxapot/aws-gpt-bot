@@ -1,9 +1,10 @@
 import { At, Timestamps } from "./at";
 import { Context } from "./context";
+import { Product } from "./product";
 
 export interface UserEvent {
-  type: "purchase"
-  details: any;
+  type: "purchase";
+  details: Product;
   at: At;
 }
 

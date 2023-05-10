@@ -44,9 +44,9 @@ export async function sendMessageToGpt(ctx: any, user: User, question: string, r
     ts()
   );
 
-  await addMessageToUser(user, message);
-
   if (isSuccess(answer)) {
+    await addMessageToUser(user, message);
+
     await reply(
       ctx,
       answer.reply
