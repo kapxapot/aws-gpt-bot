@@ -1,3 +1,4 @@
+import { At } from "../entities/at";
 import { Product } from "../entities/product";
 import { User } from "../entities/user";
 import { updateUsageStats } from "./userService";
@@ -19,7 +20,7 @@ export async function messageLimitExceeded(user: User): Promise<boolean> {
   return false;
 }
 
-export async function incMessageUsage(user: User): Promise<User> {
+export async function incMessageUsage(user: User, requestedAt: At): Promise<User> {
   const startOfDay = startOfToday();
 
   const messageCount = (user.usageStats?.startOfDay === startOfDay)
@@ -28,7 +29,8 @@ export async function incMessageUsage(user: User): Promise<User> {
 
   user.usageStats = {
     messageCount,
-    startOfDay
+    startOfDay,
+    lastMessageAt: requestedAt
   };
 
   return await updateUsageStats(user, user.usageStats);

@@ -2,7 +2,12 @@ import { User, UserSettings } from "../entities/user";
 import { settings } from "../lib/constants";
 import { updateUser } from "../storage/userStorage";
 
-export async function updateUserSettings(user: User, settings: UserSettings): Promise<User> {
+export async function updateUserSettings(user: User, changes: Partial<UserSettings>): Promise<User> {
+  const settings = {
+    ...(user.settings ?? {}),
+    ...changes
+  };
+
   return await updateUser(user, { settings });
 }
 

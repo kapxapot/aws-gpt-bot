@@ -1,6 +1,5 @@
 import he from "he";
 import { ts } from "../entities/at";
-import { getCurrentHistory } from "../entities/context";
 import { getModeName } from "../entities/prompt";
 import { User } from "../entities/user";
 import { gptChatCompletion } from "../external/gptChatCompletion";
@@ -11,6 +10,10 @@ import { storeMessage } from "../storage/messageStorage";
 import { addMessageToUser, gotGptAnswer, waitForGptAnswer } from "./userService";
 import { commands } from "../lib/constants";
 import { incMessageUsage, messageLimitExceeded } from "./planService";
+import { getCurrentHistory } from "./contextService";
+import { getCaseByNumber } from "../lib/cases";
+
+const messageInterval = 60; // seconds
 
 export async function sendMessageToGpt(ctx: any, user: User, question: string, requestedAt?: number) {
   if (user.waitingForGptAnswer) {
@@ -26,6 +29,20 @@ export async function sendMessageToGpt(ctx: any, user: User, question: string, r
     );
 
     return;
+  }
+
+  if (user.usageStats?.lastMessageAt) {
+    const elapsed = (ts() - user.usageStats.lastMessageAt.timestamp) / 1000;
+    const diff = Math.round(messageInterval - elapsed);
+
+    if (diff > 0) {
+      await reply(
+        ctx,
+        `Вы отправляете сообщения слишком часто. Подождите ${diff} ${getCaseByNumber("секунда", diff)}...`
+      );
+
+      return;
+    }
   }
 
   const messages = await reply(ctx, "💬 Думаю над ответом, подождите...");
@@ -54,7 +71,7 @@ export async function sendMessageToGpt(ctx: any, user: User, question: string, r
         : "Нет ответа от ChatGPT. 😣"
     );
 
-    await incMessageUsage(user);
+    await incMessageUsage(user, message.requestedAt);
   } else {
     let errorMessage = answer.message;
 

@@ -11,6 +11,7 @@ export interface UserEvent {
 export interface UsageStats {
   messageCount: number;
   startOfDay: number;
+  lastMessageAt?: At;
 }
 
 export interface UserSettings {

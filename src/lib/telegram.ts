@@ -3,6 +3,7 @@ import { toText } from "./common";
 import { Markup } from "telegraf";
 
 const maxMessageLength = 4096;
+const maxButtonTextLength = 14;
 
 export function userName(user: User): string {
   return user.first_name ?? user.last_name ?? user.username ?? "anonymous";
@@ -28,7 +29,7 @@ export async function clearInlineKeyboard(ctx: any) {
   } catch {}
 }
 
-export function sliceButtons<T extends Button>(buttons: T[], limit: number = 2, maxLength: number = 18): T[][] {
+export function sliceButtons<T extends Button>(buttons: T[], limit: number = 2, maxLength: number = maxButtonTextLength): T[][] {
   const result = [];
   let accumulator: T[] = [];
 

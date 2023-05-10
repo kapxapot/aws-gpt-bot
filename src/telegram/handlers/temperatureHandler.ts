@@ -10,7 +10,6 @@ export async function temperatureHandler(ctx: any) {
   const badInput = `Укажите желаемую температуру через пробел в виде дробного числа от ${minTemperature} до ${maxTemperature}.`;
 
   const user = await getOrAddUser(ctx.from);
-  const userSettings = user.settings ?? {};
 
   const text: string = ctx.update.message.text;
   const parts = text.split(' ');
@@ -27,9 +26,7 @@ export async function temperatureHandler(ctx: any) {
     return;
   }
 
-  userSettings.temperature = temp;
-
-  await updateUserSettings(user, userSettings);
+  await updateUserSettings(user, { temperature: temp });
 
   reply(ctx, "Температура успешно изменена.");
 }

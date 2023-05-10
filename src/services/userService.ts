@@ -2,10 +2,10 @@ import { User as TelegrafUser } from "telegraf/types";
 import { Message } from "../entities/message";
 import { UsageStats, User, UserEvent } from "../entities/user";
 import { getUserByTelegramId, storeUser, updateUser } from "../storage/userStorage";
-import { Context,  addMessageToHistory, createContext, getCurrentHistory, getCurrentPrompt } from "../entities/context";
+import { Context } from "../entities/context";
 import { Prompt, customPromptCode, noPromptCode } from "../entities/prompt";
-import { updatedTimestamps } from "../entities/at";
 import { getUserHistorySize } from "./userSettingsService";
+import { addMessageToHistory, createContext, cutoffMessages, getCurrentHistory, getCurrentPrompt } from "./contextService";
 
 export const getOrAddUser = async (userData: TelegrafUser): Promise<User> => {
   return await getUserByTelegramId(userData.id)
@@ -17,7 +17,9 @@ export const getOrAddUser = async (userData: TelegrafUser): Promise<User> => {
  */
 export const addMessageToUser = async (user: User, message: Message): Promise<User> => {
   const context = getContext(user);
-  addMessageToHistory(context, message, getUserHistorySize(user));
+  const historySize = getUserHistorySize(user);
+
+  addMessageToHistory(context, message, historySize);
 
   return await updateContext(user, context);
 }
@@ -79,9 +81,13 @@ export function getCurrentContext(user: User): CurrentContext {
     return { prompt: null, latestMessages: null };
   }
 
+  const history = getCurrentHistory(context);
+  const historySize = getUserHistorySize(user);
+  const latestMessages = cutoffMessages(history, historySize);
+
   return {
     prompt: getCurrentPrompt(context),
-    latestMessages: getCurrentHistory(context).messages
+    latestMessages
   };
 }
 

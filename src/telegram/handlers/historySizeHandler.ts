@@ -10,7 +10,6 @@ export async function historySizeHandler(ctx: any) {
   const badInput = `Укажите желаемый размер истории через пробел в виде целого числа от ${minHistorySize} до ${maxHistorySize}.`;
 
   const user = await getOrAddUser(ctx.from);
-  const userSettings = user.settings ?? {};
 
   const text: string = ctx.update.message.text;
   const parts = text.split(' ');
@@ -27,9 +26,7 @@ export async function historySizeHandler(ctx: any) {
     return;
   }
 
-  userSettings.historySize = size;
-
-  await updateUserSettings(user, userSettings);
+  await updateUserSettings(user, { historySize: size });
 
   reply(ctx, "Размер истории успешно изменен.");
 }
