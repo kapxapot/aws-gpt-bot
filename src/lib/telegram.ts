@@ -24,7 +24,7 @@ export async function clearInlineKeyboard(ctx: any) {
   } catch {}
 
   try {
-    await ctx.editMessageReplyMarkup({ inline_keyboard: [] });
+    await ctx.editMessageReplyMarkup();
   } catch {}
 }
 

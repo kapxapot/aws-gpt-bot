@@ -206,6 +206,8 @@ scene.on(message("text"), async (ctx) => {
     await ctx.scene.leave();
 
     await sendMessageToGpt(ctx, user, customPrompt);
+
+    return;
   }
 
   await dunnoHandler(ctx);

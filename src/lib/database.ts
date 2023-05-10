@@ -1,7 +1,7 @@
 import { DeleteCommand, DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, QueryCommandInput, ScanCommand, ScanCommandInput, UpdateCommand, UpdateCommandInput } from "@aws-sdk/lib-dynamodb";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { v4 as uuidv4 } from "uuid";
-import { timestamps } from "../entities/at";
+import { timestamps, updatedTimestamps } from "../entities/at";
 
 export function getDynamoDbClient() {
   const marshallOptions = {
@@ -140,17 +140,20 @@ export const updateItem = async <T>(
   key: Record<string, any>,
   attributes: Record<string, any>
 ): Promise<T> => {
+  const updatedAttributes = {
+    ...attributes,
+    ...updatedTimestamps()
+  };
+
   const params: UpdateCommandInput = {
     TableName: table,
     Key: key,
-    UpdateExpression: recordToSetExpression(attributes),
+    UpdateExpression: recordToSetExpression(updatedAttributes),
     ReturnValues: "ALL_NEW"
   };
 
-  if (attributes) {
-    params.ExpressionAttributeNames = recordToAttributeNames(attributes);
-    params.ExpressionAttributeValues = recordToAttributeValues(attributes);
-  }
+  params.ExpressionAttributeNames = recordToAttributeNames(updatedAttributes);
+  params.ExpressionAttributeValues = recordToAttributeValues(updatedAttributes);
 
   const dbClient = getDynamoDbClient();
   const result = await dbClient.send(new UpdateCommand(params));

@@ -1,9 +1,11 @@
+import { inspect } from "util";
 import { Composer } from "telegraf";
 import { BotContext } from "./botContext";
 import { commands, messages, scenes } from "../lib/constants";
 import { clearInlineKeyboard, reply } from "../lib/telegram";
 import { historySizeHandler } from "./handlers/historySizeHandler";
 import { temperatureHandler } from "./handlers/temperatureHandler";
+import { isDebugMode } from "../lib/common";
 
 type Handler = (ctx: any) => Promise<void>;
 type HandlerTuple = [command: string, handler: Handler];
@@ -69,5 +71,9 @@ export async function kickHandler(ctx: any) {
 }
 
 export async function dunnoHandler(ctx: any) {
+  if (isDebugMode()) {
+    console.log(inspect(ctx));
+  }
+
   await reply(ctx, `Я не понял ваш запрос. ${messages.useTheKeyboard}`);
 }

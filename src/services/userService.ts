@@ -1,9 +1,9 @@
 import { User as TelegrafUser } from "telegraf/types";
 import { Message } from "../entities/message";
-import { User, UserEvent } from "../entities/user";
+import { UsageStats, User, UserEvent } from "../entities/user";
 import { getUserByTelegramId, storeUser, updateUser } from "../storage/userStorage";
 import { Context,  addMessageToHistory, createContext, getCurrentHistory, getCurrentPrompt } from "../entities/context";
-import { ModeCode, Prompt, customPromptCode, getPromptByCode, noPromptCode } from "../entities/prompt";
+import { Prompt, customPromptCode, noPromptCode } from "../entities/prompt";
 import { updatedTimestamps } from "../entities/at";
 import { getUserHistorySize } from "./userSettingsService";
 
@@ -64,13 +64,7 @@ function getContext(user: User): Context {
 }
 
 async function updateContext(user: User, context: Context): Promise<User> {
-  return await updateUser(
-    user,
-    {
-      "context": context,
-      ...updatedTimestamps()
-    }
-  );
+  return await updateUser(user, { context });
 }
 
 export interface CurrentContext {
@@ -96,10 +90,27 @@ export async function addUserEvent(user: User, event: UserEvent): Promise<User> 
 
   events.push(event);
 
+  return await updateUser(user, { events });
+}
+
+export async function waitForGptAnswer(user: User): Promise<User> {
   return await updateUser(
     user,
     {
-      events
+      waitingForGptAnswer: true
     }
   );
+}
+
+export async function gotGptAnswer(user: User): Promise<User> {
+  return await updateUser(
+    user,
+    {
+      waitingForGptAnswer: false
+    }
+  );
+}
+
+export async function updateUsageStats(user: User, usageStats: UsageStats): Promise<User> {
+  return await updateUser(user, { usageStats });
 }

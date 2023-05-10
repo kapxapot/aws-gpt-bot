@@ -7,6 +7,11 @@ export interface UserEvent {
   at: At;
 }
 
+export interface UsageStats {
+  messageCount: number;
+  startOfDay: number;
+}
+
 export interface UserSettings {
   historySize?: number;
   temperature?: number;
@@ -20,5 +25,7 @@ export interface User extends Timestamps {
   username?: string;
   context?: Context;
   events?: UserEvent[];
+  waitingForGptAnswer?: boolean;
+  usageStats?: UsageStats;
   settings?: UserSettings;
 }

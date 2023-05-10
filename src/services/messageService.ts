@@ -1,5 +1,5 @@
-import { ts } from "../entities/at";
 import he from "he";
+import { ts } from "../entities/at";
 import { getCurrentHistory } from "../entities/context";
 import { getModeName } from "../entities/prompt";
 import { User } from "../entities/user";
@@ -8,12 +8,31 @@ import { isDebugMode, truncate } from "../lib/common";
 import { isSuccess } from "../lib/error";
 import { reply } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
-import { addMessageToUser } from "./userService";
+import { addMessageToUser, gotGptAnswer, waitForGptAnswer } from "./userService";
+import { commands } from "../lib/constants";
+import { incMessageUsage, messageLimitExceeded } from "./planService";
 
 export async function sendMessageToGpt(ctx: any, user: User, question: string, requestedAt?: number) {
+  if (user.waitingForGptAnswer) {
+    await reply(ctx, "Я обрабатываю ваше предыдущее сообщение, подождите!");
+    return;
+  }
+
+  if (await messageLimitExceeded(user)) {
+    await reply(
+      ctx,
+      `Вы превысили лимит сообщений на сегодня. 😥`,
+      `Приходите завтра или перейдите на тариф с более высоким лимитом: /${commands.premium}`
+    );
+
+    return;
+  }
+
   const messages = await reply(ctx, "💬 Думаю над ответом, подождите...");
 
+  await waitForGptAnswer(user);
   const answer = await gptChatCompletion(user, question);
+  await gotGptAnswer(user);
 
   await ctx.deleteMessage(messages[0].message_id);
 
@@ -31,9 +50,11 @@ export async function sendMessageToGpt(ctx: any, user: User, question: string, r
     await reply(
       ctx,
       answer.reply
-        ? he.encode(answer.reply)
+        ? `🤖 ${he.encode(answer.reply)}`
         : "Нет ответа от ChatGPT. 😣"
     );
+
+    await incMessageUsage(user);
   } else {
     let errorMessage = answer.message;
 
@@ -41,6 +62,8 @@ export async function sendMessageToGpt(ctx: any, user: User, question: string, r
       errorMessage = "Вы отправили слишком длинное сообщение, попробуйте его сократить.";
     } else if (errorMessage.includes("Rate limit reached")) {
       errorMessage = "Вы шлете сообщения слишком часто. Подождите несколько секунд.";
+    } else if (errorMessage.includes("model is currently overloaded")) {
+      errorMessage = "Ой, что-то мне поплохело... Слишком большая нагрузка. Дайте отдышаться.";
     }
 
     await reply(ctx, `❌ ${errorMessage}`);
@@ -74,6 +97,10 @@ export async function showDebugInfo(ctx: any, user: User, usage: any) {
     } else {
       chunks.push("история пуста");
     }
+  }
+
+  if (user.usageStats) {
+    chunks.push(`сообщений сегодня: ${user.usageStats.messageCount}`);
   }
 
   await reply(
