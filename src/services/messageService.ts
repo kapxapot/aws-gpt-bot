@@ -104,12 +104,12 @@ export async function showLastHistoryMessage(ctx: any, user: User) {
     return;
   }
 
-  const response = latestMessages[0].response;
+  const answer = latestMessages[0].response;
 
-  if (isSuccess(response) && response.reply) {
+  if (isSuccess(answer) && answer.reply) {
     await reply(
       ctx,
-      response.reply
+      `🤖 ${he.encode(answer.reply)}`
     );
   }
 }
