@@ -1,16 +1,12 @@
 import { at, ts } from "../entities/at";
 import { getProductDisplayName } from "../entities/product";
-import { isDebugMode, toText } from "../lib/common";
+import { toText } from "../lib/common";
 import { addUserEvent } from "../services/userService";
 import { getPayment, updatePayment } from "../storage/paymentStorage";
 import { getUser } from "../storage/userStorage";
 import { sendTelegramMessage } from "../telegram/bot";
 
 export async function youMoneyHook(requestData: any) {
-  if (isDebugMode()) {
-    console.log(requestData);
-  }
-
   const event = requestData.event;
 
   if (event !== "payment.succeeded") {

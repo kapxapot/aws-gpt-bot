@@ -14,4 +14,4 @@ export interface StageData<T extends string> {
 }
 
 export type PromptStage = "start" | "customPromptInput" | "promptSelection";
-export type ModeStage = "modeSelection" | "roleSelection" | "customPromptInput";
+export type ModeStage = "modeSelection" | "roleSelection" | "customPromptInput" | "promptSelection";

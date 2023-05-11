@@ -74,7 +74,7 @@ export interface CurrentContext {
   latestMessages: Message[] | null;
 }
 
-export function getCurrentContext(user: User): CurrentContext {
+export function getCurrentContext(user: User, historySize: number): CurrentContext {
   const context = user.context;
 
   if (!context) {
@@ -82,7 +82,6 @@ export function getCurrentContext(user: User): CurrentContext {
   }
 
   const history = getCurrentHistory(context);
-  const historySize = getUserHistorySize(user);
   const latestMessages = cutoffMessages(history, historySize);
 
   return {

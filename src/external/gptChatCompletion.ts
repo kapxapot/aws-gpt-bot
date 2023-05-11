@@ -4,7 +4,7 @@ import { Completion } from "../entities/message";
 import { Result, isSuccess } from "../lib/error";
 import { User } from "../entities/user";
 import { getCurrentContext } from "../services/userService";
-import { getUserTemperature } from "../services/userSettingsService";
+import { getUserHistorySize, getUserTemperature } from "../services/userSettingsService";
 
 const apiConfig = new Configuration({
   apiKey: process.env.OPENAI_API_KEY
@@ -22,7 +22,8 @@ const openai = new OpenAIApi(apiConfig);
 export async function gptChatCompletion(user: User, userMessage: string): Promise<Result<Completion>> {
   const messages: ChatCompletionRequestMessage[] = [];
 
-  const { prompt, latestMessages } = getCurrentContext(user);
+  const historySize = getUserHistorySize(user);
+  const { prompt, latestMessages } = getCurrentContext(user, historySize);
 
   if (prompt) {
     messages.push({

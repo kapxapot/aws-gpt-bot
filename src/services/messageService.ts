@@ -7,17 +7,19 @@ import { isDebugMode, truncate } from "../lib/common";
 import { isSuccess } from "../lib/error";
 import { reply } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
-import { addMessageToUser, gotGptAnswer, waitForGptAnswer } from "./userService";
+import { addMessageToUser, getCurrentContext, gotGptAnswer, waitForGptAnswer } from "./userService";
 import { commands } from "../lib/constants";
 import { incMessageUsage, messageLimitExceeded } from "./planService";
 import { getCurrentHistory } from "./contextService";
 import { getCaseByNumber } from "../lib/cases";
 
-const messageInterval = 60; // seconds
+const config = {
+  messageInterval: parseInt(process.env.THROTTLE_TIMEOUT ?? "30") // seconds
+};
 
 export async function sendMessageToGpt(ctx: any, user: User, question: string, requestedAt?: number) {
   if (user.waitingForGptAnswer) {
-    await reply(ctx, "Я обрабатываю ваше предыдущее сообщение, подождите!");
+    await reply(ctx, "Я обрабатываю ваше предыдущее сообщение, подождите... ⏳");
     return;
   }
 
@@ -31,21 +33,21 @@ export async function sendMessageToGpt(ctx: any, user: User, question: string, r
     return;
   }
 
-  if (user.usageStats?.lastMessageAt) {
+  if (config.messageInterval > 0 && user.usageStats?.lastMessageAt) {
     const elapsed = (ts() - user.usageStats.lastMessageAt.timestamp) / 1000;
-    const diff = Math.round(messageInterval - elapsed);
+    const diff = Math.round(config.messageInterval - elapsed);
 
     if (diff > 0) {
       await reply(
         ctx,
-        `Вы отправляете сообщения слишком часто. Подождите ${diff} ${getCaseByNumber("секунда", diff)}...`
+        `Вы отправляете сообщения слишком часто. Подождите ${diff} ${getCaseByNumber("секунда", diff)}... ⏳`
       );
 
       return;
     }
   }
 
-  const messages = await reply(ctx, "💬 Думаю над ответом, подождите...");
+  const messages = await reply(ctx, "🤔 Думаю над ответом, подождите... ⏳");
 
   await waitForGptAnswer(user);
   const answer = await gptChatCompletion(user, question);
@@ -78,19 +80,36 @@ export async function sendMessageToGpt(ctx: any, user: User, question: string, r
     if (errorMessage.includes("Please reduce the length of the messages.")) {
       errorMessage = "Вы отправили слишком длинное сообщение, попробуйте его сократить.";
     } else if (errorMessage.includes("Rate limit reached")) {
-      errorMessage = "Вы шлете сообщения слишком часто. Подождите несколько секунд.";
+      errorMessage = "Вы шлете сообщения слишком часто. Подождите несколько секунд... ⏳";
     } else if (errorMessage.includes("model is currently overloaded")) {
-      errorMessage = "Ой, что-то мне поплохело... Слишком большая нагрузка. Дайте отдышаться.";
+      errorMessage = "Ой, что-то мне поплохело... 😵 Слишком большая нагрузка. Дайте отдышаться... ⏳";
     }
 
     await reply(ctx, `❌ ${errorMessage}`);
   }
 
-  if (isDebugMode()) {
+  if (isDebugMode(user)) {
     showDebugInfo(
       ctx,
       user,
       isSuccess(answer) ? answer.usage : null
+    );
+  }
+}
+
+export async function showLastHistoryMessage(ctx: any, user: User) {
+  const { latestMessages } = getCurrentContext(user, 1);
+
+  if (!latestMessages?.length) {
+    return;
+  }
+
+  const response = latestMessages[0].response;
+
+  if (isSuccess(response) && response.reply) {
+    await reply(
+      ctx,
+      response.reply
     );
   }
 }

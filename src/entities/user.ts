@@ -17,6 +17,7 @@ export interface UsageStats {
 export interface UserSettings {
   historySize?: number;
   temperature?: number;
+  isDebugMode?: boolean;
 }
 
 export interface User extends Timestamps {

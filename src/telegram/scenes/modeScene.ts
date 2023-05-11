@@ -6,7 +6,7 @@ import { backToCustomPrompt, getOrAddUser, newCustomPrompt, setFreeMode, setProm
 import { getModeName, getModes, getPrompts } from "../../entities/prompt";
 import { addOtherCommandHandlers, dunnoHandler, kickHandler } from "../handlers";
 import { message } from "telegraf/filters";
-import { sendMessageToGpt } from "../../services/messageService";
+import { sendMessageToGpt, showLastHistoryMessage } from "../../services/messageService";
 
 const scene = new BaseScene<BotContext>(scenes.mode);
 
@@ -91,6 +91,8 @@ getModes().forEach(mode => {
           break;
 
         case "prompt":
+          setStage(ctx.session, "promptSelection");
+
           const user = await getOrAddUser(ctx.from);
           const customPrompt = user.context?.customPrompt;
 
@@ -156,6 +158,7 @@ getPrompts().forEach(prompt => {
       );
 
       await ctx.scene.leave();
+      await showLastHistoryMessage(ctx, user);
     }
   });
 });
@@ -189,6 +192,7 @@ scene.action(backToCustomPromptAction, async (ctx) => {
   );
 
   await ctx.scene.leave();
+  await showLastHistoryMessage(ctx, user);
 });
 
 scene.on(message("text"), async (ctx) => {
@@ -207,7 +211,6 @@ scene.on(message("text"), async (ctx) => {
     );
 
     await ctx.scene.leave();
-
     await sendMessageToGpt(ctx, user, customPrompt);
 
     return;

@@ -24,7 +24,9 @@ export function addMessageToHistory(context: Context, message: Message, historyS
 }
 
 export function cutoffMessages(history: History, size: number): Message[] {
-  return history.messages.slice(size * -1);
+  return size >= 1
+    ? history.messages.slice(size * -1)
+    : [];
 }
 
 export function getCurrentPrompt(context: Context): string | null {

@@ -73,13 +73,17 @@ export function processTelegramRequest(tgRequest: TelegramRequest) {
   bot.catch(async (err, ctx) => {
     console.log(`Bot error (${ctx.updateType}).`, err);
 
-    if (isDebugMode()) {
-      await reply(
-        ctx,
-        "Ошибка:",
-        inspect(err)
-      )
-    }
+    if (ctx.from) {
+      const user = await getOrAddUser(ctx.from);
+
+      if (isDebugMode(user)) {
+        await reply(
+          ctx,
+          "Ошибка:",
+          inspect(err)
+        )
+      }
+     }
   });
 
   bot.handleUpdate(tgRequest.request);
