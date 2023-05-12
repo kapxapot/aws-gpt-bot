@@ -7,6 +7,7 @@ import { historySizeHandler } from "./handlers/historySizeHandler";
 import { temperatureHandler } from "./handlers/temperatureHandler";
 import { isDebugMode } from "../lib/common";
 import { getOrAddUser } from "../services/userService";
+import { showStatus } from "../services/messageService";
 
 type Handler = (ctx: any) => Promise<void>;
 type HandlerTuple = [command: string, handler: Handler];
@@ -34,14 +35,14 @@ function getOtherCommandHandlers(command: string): HandlerTuple[] {
 
 export function getCommandHandlers(): HandlerTuple[] {
   return [
+    [commands.tutorial, sceneHandler(scenes.tutorial)],
+    [commands.mode, sceneHandler(scenes.mode)],
+    [commands.premium, sceneHandler(scenes.premium)],
     [commands.terms, termsHandler],
     [commands.support, supportHandler],
-    [commands.tutorial, sceneHandler(scenes.tutorial)],
-    [commands.prompt, sceneHandler(scenes.prompt)],
-    [commands.premium, sceneHandler(scenes.premium)],
     [commands.historySize, historySizeHandler],
     [commands.temperature, temperatureHandler],
-    [commands.mode, sceneHandler(scenes.mode)],
+    [commands.status, statusHandler],
   ];
 }
 
@@ -61,14 +62,27 @@ async function supportHandler(ctx: any) {
   );
 }
 
-export async function kickHandler(ctx: any) {
+async function statusHandler(ctx: any) {
+  if (!ctx.from) {
+    return;
+  }
+
+  const user = await getOrAddUser(ctx.from);
+
+  await showStatus(ctx, user);
+}
+
+export async function kickHandler(ctx: any, next: any) {
   const myChatMember = ctx.myChatMember;
 
   if (myChatMember) {
     if (["kicked", "left"].includes(myChatMember.new_chat_member.status)) {
       ctx.session = {};
+      return;
     }
   }
+
+  await next();
 }
 
 export async function dunnoHandler(ctx: any) {

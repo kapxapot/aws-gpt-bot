@@ -1,12 +1,12 @@
 export const commands = {
   tutorial: "tutorial",
-  prompt: "prompt",
+  mode: "mode",
   support: "support",
   terms: "terms",
   premium: "premium",
   historySize: "history",
   temperature: "temp",
-  mode: "mode"
+  status: "status"
 } as const;
 
 export const messages = {
@@ -15,10 +15,9 @@ export const messages = {
 } as const;
 
 export const scenes = {
-  prompt: "PROMPT_SCENE",
   tutorial: "TUTORIAL_SCENE",
-  premium: "PREMIUM_SCENE",
-  mode: "MODE_SCENE"
+  mode: "MODE_SCENE",
+  premium: "PREMIUM_SCENE"
 } as const;
 
 export const settings = {
@@ -31,5 +30,9 @@ export const settings = {
     min: 0,
     max: 2,
     default: 0.6
-  }
+  },
+  maxPromptLength: 1000,
+  maxHistoryMessageLength: 200,
+  systemTimeZone: "Europe/Moscow",
+  defaultPlanName: "Бесплатный"
 } as const;

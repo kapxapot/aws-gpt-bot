@@ -5,6 +5,7 @@ import { Result, isSuccess } from "../lib/error";
 import { User } from "../entities/user";
 import { getCurrentContext } from "../services/userService";
 import { getUserHistorySize, getUserTemperature } from "../services/userSettingsService";
+import { settings } from "../lib/constants";
 
 const apiConfig = new Configuration({
   apiKey: process.env.OPENAI_API_KEY
@@ -13,8 +14,8 @@ const apiConfig = new Configuration({
 const config = {
   apiTimeout: parseInt(process.env.GPT_TIMEOUT ?? "0") * 1000,
   model: "gpt-3.5-turbo",
-  promptMaxLength: 500,
-  historyMessageMaxLength: 200
+  maxPromptLength: settings.maxPromptLength,
+  maxHistoryMessageLength: settings.maxHistoryMessageLength
 };
 
 const openai = new OpenAIApi(apiConfig);
@@ -28,7 +29,7 @@ export async function gptChatCompletion(user: User, userMessage: string): Promis
   if (prompt) {
     messages.push({
       role: "system",
-      content: prompt.substring(0, config.promptMaxLength)
+      content: prompt.substring(0, config.maxPromptLength)
     });
   }
 
@@ -36,13 +37,13 @@ export async function gptChatCompletion(user: User, userMessage: string): Promis
     latestMessages.forEach(message => {
       messages.push({
         role: "user",
-        content: message.request.substring(0, config.historyMessageMaxLength)
+        content: message.request.substring(0, config.maxHistoryMessageLength)
       });
 
       if (isSuccess(message.response) && message.response.reply) {
         messages.push({
           role: "assistant",
-          content: message.response.reply.substring(0, config.historyMessageMaxLength)
+          content: message.response.reply.substring(0, config.maxHistoryMessageLength)
         });
       }
     });

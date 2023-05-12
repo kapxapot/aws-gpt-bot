@@ -8,36 +8,61 @@ import { getOrAddUser } from "../../services/userService";
 import { storePayment } from "../../storage/paymentStorage";
 import { yooMoneyPayment } from "../../external/yooMoneyPayment";
 import { now } from "../../entities/at";
-import { monthlyPremiumSubscription } from "../../entities/product";
+import { Product, getProductDisplayName, monthlyPremiumSubscription, monthlyUnlimitedSubscription } from "../../entities/product";
 import { isError } from "../../lib/error";
+import { getCurrentPlanName } from "../../services/planService";
 
 const scene = new BaseScene<BotContext>(scenes.premium);
 
-const payAction = "pay";
-const noPayAction = "no_pay";
+const buyPremiumAction = "buy-premium";
+const buyUnlimitedAction = "buy-unlimited";
+const cancelAction = "cancel";
 
 scene.enter(async (ctx) => {
+  if (!ctx.from) {
+    await ctx.scene.leave();
+    return;
+  }
+
+  const user = await getOrAddUser(ctx.from);
+
   await replyWithKeyboard(
     ctx,
     inlineKeyboard(
-      ["Дать денег 😍", payAction],
-      ["Не дать денег ☹", noPayAction]
+      ["Купить Премиум", buyPremiumAction],
+      ["Купить Безлимит", buyUnlimitedAction],
+      ["Отмена", cancelAction]
     ),
-    "Здесь вы можете дать нам денег. 💰 Мы очень рады вашему душевному порыву. 😊"
+    `Текущий тариф: <b>${getCurrentPlanName(user)}</b>`,
+    "Для увеличения доступного количества ежедневных запросов к ChatGPT оформите подписку на один из платных тарифов:",
+    `💚 Тариф «Премиум»:
+◽ до 100 запросов в сутки
+◽ 290 рублей на 30 дней`,
+    `💛 Тариф «Безлимит»:
+◽ неограниченное количество запросов
+◽ 390 рублей на 30 дней`
   );
 });
 
 addOtherCommandHandlers(scene, commands.premium);
 
-scene.action(payAction, async (ctx) => {
+scene.action(buyPremiumAction, async (ctx) => {
+  const product = monthlyPremiumSubscription();
+  await buyProduct(ctx, product);
+});
+
+scene.action(buyUnlimitedAction, async (ctx) => {
+  const product = monthlyUnlimitedSubscription();
+  await buyProduct(ctx, product);
+});
+
+async function buyProduct(ctx: BotContext, product: Product) {
   await clearInlineKeyboard(ctx);
 
   if (!ctx.from) {
     await ctx.scene.leave();
     return;
   }
-
-  const product = monthlyPremiumSubscription();
 
   const requestData = {
     total: product.price,
@@ -87,30 +112,22 @@ scene.action(payAction, async (ctx) => {
 
   await reply(
     ctx,
-    `Для оплаты пройдите по ссылке: ${paymentUrl}`,
+    `Для оплаты <b>${getProductDisplayName(product, "Gen")}</b> пройдите по ссылке: ${paymentUrl}`,
     `⚠ Время действия ссылки ограничено. Если вы не произведете оплату вовремя, получите новую ссылку с помощью команды /${commands.premium}`,
     "Мы сообщим вам, когда получим оплату.",
     messages.backToDialog
   );
 
   await ctx.scene.leave();
-});
+}
 
-scene.action(noPayAction, async (ctx) => {
+scene.action(cancelAction, async (ctx) => {
   await clearInlineKeyboard(ctx);
-
-  await reply(
-    ctx,
-    "Жадина-говядина!",
-    messages.backToDialog
-  );
-
   await ctx.scene.leave();
+  await reply(ctx, messages.backToDialog);
 });
 
-scene.use(async ctx => {
-  await kickHandler(ctx);
-  await dunnoHandler(ctx);
-});
+scene.use(kickHandler);
+scene.use(dunnoHandler);
 
 export const premiumScene = scene;

@@ -7,13 +7,12 @@ import { getOrAddUser } from "../services/userService";
 import { sessionStore } from "./session";
 import { tutorialScene } from "./scenes/tutorialScene";
 import { BotContext } from "./botContext";
-import { promptScene } from "./scenes/promptScene";
 import { commands } from "../lib/constants";
 import { getCommandHandlers, kickHandler } from "./handlers";
 import { premiumScene } from "./scenes/premiumScene";
 import { User } from "../entities/user";
 import { inspect } from "util";
-import { sendMessageToGpt } from "../services/messageService";
+import { sendMessageToGpt, showStatus } from "../services/messageService";
 import { modeScene } from "./scenes/modeScene";
 
 const config = {
@@ -37,7 +36,7 @@ export function processTelegramRequest(tgRequest: TelegramRequest) {
     store: sessionStore()
   }));
 
-  const stage = new Scenes.Stage<BotContext>([tutorialScene, promptScene, premiumScene, modeScene]);
+  const stage = new Scenes.Stage<BotContext>([tutorialScene, premiumScene, modeScene]);
 
   bot.use(stage.middleware());
 
@@ -49,14 +48,16 @@ export function processTelegramRequest(tgRequest: TelegramRequest) {
       await reply(
         ctx,
         `Добро пожаловать, <b>${userName(ctx.from)}</b>! Здесь можно пообщаться с <b>ChatGPT</b>. 🤖 Мы используем модель <b>gpt-3.5-turbo</b>.`,
-        `Рекомендуем начать с обучения /${commands.tutorial} и настройки промта /${commands.prompt}`
+        `Рекомендуем начать с обучения /${commands.tutorial} и выбора режима /${commands.mode}`
       );
     } else {
       await reply(
         ctx,
         `С возвращеним, <b>${userName(ctx.from)}</b>! Продолжаем общение с <b>ChatGPT</b>. 🤖 Мы используем модель <b>gpt-3.5-turbo</b>.`,
-        `Для настройки промта используйте команду /${commands.prompt}`
+        `Для настройки режима используйте команду /${commands.mode}`
       );
+
+      await showStatus(ctx, user);
     }
   });
 

@@ -1,6 +1,6 @@
 import { BaseScene } from "telegraf/scenes";
 import { BotContext, ModeStage, SessionData } from "../botContext";
-import { commands, messages, scenes } from "../../lib/constants";
+import { commands, messages, scenes, settings } from "../../lib/constants";
 import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { backToCustomPrompt, getOrAddUser, newCustomPrompt, setFreeMode, setPrompt } from "../../services/userService";
 import { getModeName, getModes, getPrompts } from "../../entities/prompt";
@@ -17,9 +17,9 @@ const cancelAction = "cancel";
 
 const cancelButton = ["Отмена", cancelAction];
 
-scene.enter(startHandler);
+scene.enter(modeSelectionHandler);
 
-async function startHandler(ctx: BotContext) {
+async function modeSelectionHandler(ctx: BotContext) {
   setStage(ctx.session, "modeSelection");
 
   if (!ctx.from) {
@@ -49,17 +49,24 @@ async function startHandler(ctx: BotContext) {
   );
 }
 
-addOtherCommandHandlers(scene, commands.prompt);
+addOtherCommandHandlers(scene, commands.mode);
 
 scene.action(cancelAction, async (ctx) => {
   await clearInlineKeyboard(ctx);
 
   if (isStage(ctx.session, "modeSelection")) {
-    await reply(ctx, messages.backToDialog);
     await ctx.scene.leave();
-  } else {
-    await startHandler(ctx);
+    await reply(ctx, messages.backToDialog);
+
+    if (ctx.from) {
+      const user = await getOrAddUser(ctx.from);
+      await showLastHistoryMessage(ctx, user);
+    }
+
+    return;
   }
+
+  await modeSelectionHandler(ctx);
 });
 
 getModes().forEach(mode => {
@@ -132,6 +139,7 @@ scene.action(selectFreeModeAction, async (ctx) => {
   // switch to free mode
   const user = await getOrAddUser(ctx.from);
   await setFreeMode(user);
+  await ctx.scene.leave();
 
   await reply(
     ctx,
@@ -139,7 +147,7 @@ scene.action(selectFreeModeAction, async (ctx) => {
     messages.backToDialog
   );
 
-  await ctx.scene.leave();
+  await showLastHistoryMessage(ctx, user);
 });
 
 getPrompts().forEach(prompt => {
@@ -171,7 +179,7 @@ scene.action(customPromptAction, async (ctx) => {
   await replyWithKeyboard(
     ctx,
     inlineKeyboard(cancelButton),
-    "Введите новый промт:"
+    `Введите новый промт (до ${settings.maxPromptLength} символов):`
   );
 });
 
@@ -223,10 +231,8 @@ scene.leave(async ctx => {
   delete ctx.session.modeData;
 });
 
-scene.use(async ctx => {
-  await kickHandler(ctx);
-  await dunnoHandler(ctx);
-});
+scene.use(kickHandler);
+scene.use(dunnoHandler);
 
 export const modeScene = scene;
 

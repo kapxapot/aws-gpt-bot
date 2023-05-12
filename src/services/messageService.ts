@@ -3,7 +3,7 @@ import { ts } from "../entities/at";
 import { getModeName } from "../entities/prompt";
 import { User } from "../entities/user";
 import { gptChatCompletion } from "../external/gptChatCompletion";
-import { isDebugMode, truncate } from "../lib/common";
+import { isDebugMode, toText, truncate } from "../lib/common";
 import { isSuccess } from "../lib/error";
 import { reply } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
@@ -95,6 +95,11 @@ export async function sendMessageToGpt(ctx: any, user: User, question: string, r
       isSuccess(answer) ? answer.usage : null
     );
   }
+}
+
+export async function showStatus(ctx: any, user: User) {
+  await reply(ctx, `Текущий режим: <b>${getModeName(user)}</b>`);
+  await showLastHistoryMessage(ctx, user);
 }
 
 export async function showLastHistoryMessage(ctx: any, user: User) {

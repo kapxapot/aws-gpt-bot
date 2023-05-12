@@ -1,9 +1,8 @@
 import { At } from "../entities/at";
-import { Product } from "../entities/product";
+import { Product, getProductDisplayName } from "../entities/product";
 import { User } from "../entities/user";
+import { settings } from "../lib/constants";
 import { updateUsageStats } from "./userService";
-
-const systemTimeZone = "Europe/Moscow";
 
 export async function messageLimitExceeded(user: User): Promise<boolean> {
   if (!user.usageStats) {
@@ -39,14 +38,14 @@ export async function incMessageUsage(user: User, requestedAt: At): Promise<User
 function getMessageLimit(user: User): number {
   const subscription = getActiveSubscription(user);
 
-  if (subscription && subscription.code === "subscription-premium-30-days") {
+  if (subscription) {
     return Number.POSITIVE_INFINITY;
   }
 
   return 10;
 }
 
-function getActiveSubscription(user: User): Product | null {
+export function getActiveSubscription(user: User): Product | null {
   if (!user.events) {
     return null;
   }
@@ -57,7 +56,24 @@ function getActiveSubscription(user: User): Product | null {
     return null;
   }
 
-  return purchaseEvent.details;
+  const product = purchaseEvent.details;
+
+  if (product.details.type !== "subscription") {
+    return null;
+  }
+
+  // check that the product is not expired
+  // ..
+
+  return product;
+}
+
+export function getCurrentPlanName(user: User) {
+  const subscription = getActiveSubscription(user);
+
+  return subscription
+    ? getProductDisplayName(subscription)
+    : settings.defaultPlanName;
 }
 
 function isToday(ts: number): boolean {
@@ -75,5 +91,5 @@ function startOfTomorrow(): number {
 
 function currentSystemDate(): Date {
   const now = new Date();
-  return new Date(now.toLocaleString("en-US", { timeZone: systemTimeZone }));
+  return new Date(now.toLocaleString("en-US", { timeZone: settings.systemTimeZone }));
 }
