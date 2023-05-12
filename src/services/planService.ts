@@ -50,7 +50,7 @@ export function getFormattedPlanName(user: User): string {
   const nameStr = `<b>${name}</b>`;
 
   return expiresAt
-    ? `${nameStr} (действует по ${format(expiresAt, "dd.MM.YYYY")})`
+    ? `${nameStr} (действует по ${format(expiresAt, "dd.MM.yyyy")})`
     : nameStr;
 }
 
