@@ -10,7 +10,7 @@ import { yooMoneyPayment } from "../../external/yooMoneyPayment";
 import { now } from "../../entities/at";
 import { Product, getProductDisplayName, monthlyPremiumSubscription, monthlyUnlimitedSubscription } from "../../entities/product";
 import { isError } from "../../lib/error";
-import { getCurrentPlanName } from "../../services/planService";
+import { getFormattedPlanName } from "../../services/planService";
 
 const scene = new BaseScene<BotContext>(scenes.premium);
 
@@ -33,7 +33,7 @@ scene.enter(async (ctx) => {
       ["Купить Безлимит", buyUnlimitedAction],
       ["Отмена", cancelAction]
     ),
-    `Текущий тариф: <b>${getCurrentPlanName(user)}</b>`,
+    `Текущий тариф: ${getFormattedPlanName(user)}`,
     "Для увеличения доступного количества ежедневных запросов к ChatGPT оформите подписку на один из платных тарифов:",
     `💚 Тариф «Премиум»:
 ◽ до 100 запросов в сутки

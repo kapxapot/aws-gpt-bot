@@ -1,6 +1,9 @@
-import { At } from "../entities/at";
-import { Product, getProductDisplayName } from "../entities/product";
+import { format } from "date-fns";
+import { At, ts } from "../entities/at";
+import { getPlanDailyMessageLimit } from "../entities/plan";
+import { Product, PurchasedProduct, Subscription, freeSubscription, getProductDisplayName, isPurchasedProduct } from "../entities/product";
 import { User } from "../entities/user";
+import { first } from "../lib/common";
 import { settings } from "../lib/constants";
 import { updateUsageStats } from "./userService";
 
@@ -36,48 +39,89 @@ export async function incMessageUsage(user: User, requestedAt: At): Promise<User
 }
 
 function getMessageLimit(user: User): number {
-  const subscription = getActiveSubscription(user);
+  const subscription = getCurrentSubscription(user);
+  const plan = subscription.details.plan;
 
-  if (subscription) {
-    return Number.POSITIVE_INFINITY;
-  }
-
-  return 10;
+  return getPlanDailyMessageLimit(plan);
 }
 
-export function getActiveSubscription(user: User): Product | null {
+export function getFormattedPlanName(user: User): string {
+  const { name, expiresAt } = getCurrentPlan(user);
+  const nameStr = `<b>${name}</b>`;
+
+  return expiresAt
+    ? `${nameStr} (действует по ${format(expiresAt, "dd.MM.YYYY")})`
+    : nameStr;
+}
+
+export interface CurrentPlan {
+  name: string;
+  expiresAt: Date | null;
+}
+
+function getCurrentPlan(user: User): CurrentPlan {
+  const subscription = getCurrentSubscription(user);
+  const name = getProductDisplayName(subscription);
+
+  let expiresAt = null;
+
+  if (isPurchasedProduct(subscription)) {
+    const { end } = getProductTimestampRange(subscription);
+    expiresAt = systemDate(new Date(end));
+  }
+
+  return { name, expiresAt };
+}
+
+function getCurrentSubscription(user: User): PurchasedProduct | Subscription {
+  return first(getActiveSubscriptions(user)) ?? freeSubscription();
+}
+
+function getActiveSubscriptions(user: User): PurchasedProduct[] {
+  return getPurchasedProducts(user).filter(pp => isActiveSubscription(pp));
+}
+
+function getPurchasedProducts(user: User): PurchasedProduct[] {
   if (!user.events) {
-    return null;
+    return [];
   }
 
-  const purchaseEvent = user.events.find(e => e.type === "purchase");
-
-  if (!purchaseEvent) {
-    return null;
-  }
-
-  const product = purchaseEvent.details;
-
-  if (product.details.type !== "subscription") {
-    return null;
-  }
-
-  // check that the product is not expired
-  // ..
-
-  return product;
+  return user.events
+    .filter(ev => ev.type === "purchase")
+    .map(ev => ({
+      ...ev.details,
+      purchasedAt: ev.at
+    }));
 }
 
-export function getCurrentPlanName(user: User) {
-  const subscription = getActiveSubscription(user);
+function isActiveSubscription(product: PurchasedProduct): boolean {
+  if (product.details.type !== "subscription") {
+    return false;
+  }
 
-  return subscription
-    ? getProductDisplayName(subscription)
-    : settings.defaultPlanName;
+  const { start, end } = getProductTimestampRange(product);
+
+  return isInRange(ts(), start, end);
+}
+
+interface TimestampRange {
+  start: number;
+  end: number;
+}
+
+function getProductTimestampRange(product: PurchasedProduct): TimestampRange {
+  const start = product.purchasedAt.timestamp;
+  const end = addDays(start, product.details.term.range)
+
+  return { start, end };
 }
 
 function isToday(ts: number): boolean {
-  return ts >= startOfToday() && ts < startOfTomorrow();
+  return isInRange(ts, startOfToday(), startOfTomorrow());
+}
+
+function isInRange(ts: number, start: number, end: number): boolean {
+  return ts >= start && ts < end;
 }
 
 function startOfToday(): number {
@@ -85,11 +129,18 @@ function startOfToday(): number {
 }
 
 function startOfTomorrow(): number {
-  const date = new Date(startOfToday());
-  return date.setDate(date.getDate() + 1);
+  return addDays(startOfToday(), 1);
+}
+
+function addDays(ts: number, days: number): number {
+  const date = new Date(ts);
+  return date.setDate(date.getDate() + days);
 }
 
 function currentSystemDate(): Date {
-  const now = new Date();
-  return new Date(now.toLocaleString("en-US", { timeZone: settings.systemTimeZone }));
+  return systemDate(new Date());
+}
+
+function systemDate(date: Date): Date {
+  return new Date(date.toLocaleString("en-US", { timeZone: settings.systemTimeZone }));
 }

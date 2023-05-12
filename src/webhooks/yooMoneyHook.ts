@@ -27,12 +27,12 @@ export async function youMoneyHook(requestData: any) {
   // add new event to the payment
   // update the payment status to "succeeded"
   const events = payment.events;
-  const payedAt = at(ts(data.captured_at));
+  const paidAt = at(ts(data.captured_at));
 
   events.push({
     type: "succeeded",
     details: data,
-    at: payedAt
+    at: paidAt
   });
 
   payment = await updatePayment(
@@ -57,14 +57,20 @@ export async function youMoneyHook(requestData: any) {
       {
         type: "purchase",
         details: product,
-        at: payedAt
+        at: paidAt
       }
     );
+
+    let productName = `<b>${getProductDisplayName(product, "Acc")}</b>`;
+
+    if (product.details.type === "subscription") {
+      productName = `тариф ${productName}`;
+    }
 
     await sendTelegramMessage(
       user,
       toText(
-        `Мы успешно получили ваш платеж. Вы приобрели <b>${getProductDisplayName(product, "Acc")}</b>.`,
+        `Мы успешно получили ваш платеж. Вы приобрели ${productName}.`,
         "Благодарим за покупку! ♥"
       )
     );

@@ -3,13 +3,13 @@ import { ts } from "../entities/at";
 import { getModeName } from "../entities/prompt";
 import { User } from "../entities/user";
 import { gptChatCompletion } from "../external/gptChatCompletion";
-import { isDebugMode, toText, truncate } from "../lib/common";
+import { isDebugMode, truncate } from "../lib/common";
 import { isSuccess } from "../lib/error";
 import { reply } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
 import { addMessageToUser, getCurrentContext, gotGptAnswer, waitForGptAnswer } from "./userService";
 import { commands } from "../lib/constants";
-import { incMessageUsage, messageLimitExceeded } from "./planService";
+import { getFormattedPlanName, incMessageUsage, messageLimitExceeded } from "./planService";
 import { getCurrentHistory } from "./contextService";
 import { getCaseByNumber } from "../lib/cases";
 
@@ -98,6 +98,7 @@ export async function sendMessageToGpt(ctx: any, user: User, question: string, r
 }
 
 export async function showStatus(ctx: any, user: User) {
+  await reply(ctx, `Текущий тариф: ${getFormattedPlanName(user)}`);
   await reply(ctx, `Текущий режим: <b>${getModeName(user)}</b>`);
   await showLastHistoryMessage(ctx, user);
 }

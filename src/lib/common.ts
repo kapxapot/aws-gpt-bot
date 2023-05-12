@@ -17,3 +17,11 @@ export function truncate(str: string, limit: number): string {
     ? `${str.substring(0, limit)}...`
     : str;
 }
+
+export function first<T>(array: T[]): T | null {
+  return !empty(array) ? array[0] : null;
+}
+
+export function empty<T>(array: T[]): boolean {
+  return array.length === 0;
+}

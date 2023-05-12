@@ -1,6 +1,7 @@
-import { At, now } from "./at";
+import { At } from "./at";
 import { Case } from "./case";
 import { Money } from "./money";
+import { Plan } from "./plan";
 
 export interface Product {
   code: "subscription-premium-30-days" | "subscription-unlimited-30-days";
@@ -9,12 +10,40 @@ export interface Product {
   price: Money;
   details: {
     type: "subscription";
-    plan: "premium" | "unlimited";
+    plan: Plan;
     term: {
       range: number;
       unit: "day";
     };
-    orderedAt: At;
+    priority: number;
+  };
+}
+
+export type Subscription = {
+  name: string;
+  displayNames: Partial<Record<Case, string>>;
+  details: {
+    plan: Plan;
+  };
+}
+
+export type PurchasedProduct = Product & {
+  purchasedAt: At;
+}
+
+export function isPurchasedProduct(product: PurchasedProduct | Subscription): product is PurchasedProduct {
+  return "purchasedAt" in product;
+}
+
+export function freeSubscription(): Subscription {
+  return {
+    name: "Free Subscription",
+    displayNames: {
+      "Nom": "Бесплатный"
+    },
+    details: {
+      plan: "free",
+    }
   };
 }
 
@@ -23,9 +52,8 @@ export function monthlyPremiumSubscription(): Product {
     code: "subscription-premium-30-days",
     name: "Premium Subscription - 30 Days",
     displayNames: {
-      "Nom": "Премиум-подписка на 30 дней",
-      "Gen": "Премиум-подписки на 30 дней",
-      "Acc": "Премиум-подписку на 30 дней"
+      "Nom": "Премиум на 30 дней",
+      "Gen": "Премиума на 30 дней"
     },
     price: {
       currency: "RUB",
@@ -38,7 +66,7 @@ export function monthlyPremiumSubscription(): Product {
         range: 30,
         unit: "day"
       },
-      orderedAt: now()
+      priority: 100
     }
   };
 }
@@ -48,9 +76,8 @@ export function monthlyUnlimitedSubscription(): Product {
     code: "subscription-unlimited-30-days",
     name: "Unlimited Subscription - 30 Days",
     displayNames: {
-      "Nom": "Безлимит-подписка на 30 дней",
-      "Gen": "Безлимит-подписки на 30 дней",
-      "Acc": "Безлимит-подписку на 30 дней"
+      "Nom": "Безлимит на 30 дней",
+      "Gen": "Безлимита на 30 дней"
     },
     price: {
       currency: "RUB",
@@ -63,12 +90,12 @@ export function monthlyUnlimitedSubscription(): Product {
         range: 30,
         unit: "day"
       },
-      orderedAt: now()
+      priority: 200
     }
   };
 }
 
-export function getProductDisplayName(product: Product, targetCase?: Case) {
+export function getProductDisplayName(product: Product | Subscription, targetCase?: Case) {
   return (targetCase ? product.displayNames[targetCase] : null)
     ?? product.displayNames["Nom"]
     ?? product.name;

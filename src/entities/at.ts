@@ -22,6 +22,9 @@ export function iso(ts: number): string {
   return new Date(ts).toISOString();
 }
 
+/**
+ * Returns a timestamp for a date string. In case of `null` string returns the current timestamp.
+ */
 export function ts(dateStr?: string): number {
   const date = dateStr ? new Date(dateStr) : new Date();
   return date.getTime();
