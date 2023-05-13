@@ -33,5 +33,5 @@ export const settings = {
   },
   maxPromptLength: 1000,
   maxHistoryMessageLength: 200,
-  systemTimeZone: "Europe/Moscow"
+  systemTimeOffset: -3, // hours
 } as const;

@@ -1,11 +1,11 @@
 import { format } from "date-fns";
 import { At, ts } from "../entities/at";
 import { getPlanDailyMessageLimit } from "../entities/plan";
-import { Product, PurchasedProduct, Subscription, freeSubscription, getProductDisplayName, isPurchasedProduct } from "../entities/product";
+import { PurchasedProduct, Subscription, freeSubscription, getProductDisplayName, isPurchasedProduct } from "../entities/product";
 import { User } from "../entities/user";
 import { first } from "../lib/common";
-import { settings } from "../lib/constants";
 import { updateUsageStats } from "./userService";
+import { addDays, isInRange, startOfToday } from "./dateService";
 
 export async function messageLimitExceeded(user: User): Promise<boolean> {
   if (!user.usageStats) {
@@ -67,7 +67,7 @@ function getCurrentPlan(user: User): CurrentPlan {
 
   if (isPurchasedProduct(subscription)) {
     const { end } = getProductTimestampRange(subscription);
-    expiresAt = systemDate(new Date(end));
+    expiresAt = new Date(end);
   }
 
   return { name, expiresAt };
@@ -117,33 +117,4 @@ function getProductTimestampRange(product: PurchasedProduct): TimestampRange {
   const end = addDays(start, product.details.term.range + 1);
 
   return { start, end };
-}
-
-function isToday(ts: number): boolean {
-  return isInRange(ts, startOfToday(), startOfTomorrow());
-}
-
-function isInRange(ts: number, start: number, end: number): boolean {
-  return ts >= start && ts < end;
-}
-
-function startOfToday(): number {
-  return currentSystemDate().setHours(0, 0, 0, 0);
-}
-
-function startOfTomorrow(): number {
-  return addDays(startOfToday(), 1);
-}
-
-function addDays(ts: number, days: number): number {
-  const date = new Date(ts);
-  return date.setDate(date.getDate() + days);
-}
-
-function currentSystemDate(): Date {
-  return systemDate(new Date());
-}
-
-function systemDate(date: Date): Date {
-  return new Date(date.toLocaleString("en-US", { timeZone: settings.systemTimeZone }));
 }
