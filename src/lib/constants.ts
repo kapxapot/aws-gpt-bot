@@ -33,6 +33,5 @@ export const settings = {
   },
   maxPromptLength: 1000,
   maxHistoryMessageLength: 200,
-  systemTimeZone: "Europe/Moscow",
-  defaultPlanName: "Бесплатный"
+  systemTimeZone: "Europe/Moscow"
 } as const;

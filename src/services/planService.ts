@@ -74,7 +74,10 @@ function getCurrentPlan(user: User): CurrentPlan {
 }
 
 function getCurrentSubscription(user: User): PurchasedProduct | Subscription {
-  return first(getActiveSubscriptions(user)) ?? freeSubscription();
+  const activeSubscriptions = getActiveSubscriptions(user)
+    .sort((a, b) => a.details.priority - b.details.priority);
+
+  return first(activeSubscriptions) ?? freeSubscription();
 }
 
 function getActiveSubscriptions(user: User): PurchasedProduct[] {
@@ -111,7 +114,7 @@ interface TimestampRange {
 
 function getProductTimestampRange(product: PurchasedProduct): TimestampRange {
   const start = product.purchasedAt.timestamp;
-  const end = addDays(start, product.details.term.range)
+  const end = addDays(start, product.details.term.range + 1);
 
   return { start, end };
 }
