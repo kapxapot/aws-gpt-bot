@@ -5,11 +5,10 @@ export function isInRange(dot: DateOrTs, start: number, end: number): boolean {
   return ts >= start && ts < end;
 }
 
-export function startOfToday(): number {
-  return systemStartOfDay();
-}
-
-export function systemStartOfDay(dot?: DateOrTs): number {
+/**
+ * Returns *system* start of the day for a given date. In case of `undefined` uses the current date.
+ */
+export function startOfToday(dot?: DateOrTs): number {
   return addHours(utcStartOfDay(dot), settings.systemTimeOffset);
 }
 

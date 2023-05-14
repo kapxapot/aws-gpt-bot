@@ -1,4 +1,4 @@
-import { addDays, addHours, utcStartOfDay } from "../../src/services/dateService";
+import { addDays, addHours, startOfToday, utcStartOfDay } from "../../src/services/dateService";
 
 describe('addDays', () => {
   test('should correctly add days', () => {
@@ -57,6 +57,19 @@ describe('utcStartOfDay', () => {
       new Date(date).toISOString()
     ).toBe(
       "2023-04-30T00:00:00.000Z"
+    );
+  });
+});
+
+describe('startOfDay', () => {
+  test('should correctly calculate', () => {
+    const ts = 1682888909796; // 2023-04-30T21:08:29.796Z
+    const date = startOfToday(ts);
+
+    expect(
+      new Date(date).toISOString()
+    ).toBe(
+      "2023-04-29T21:00:00.000Z"
     );
   });
 });
