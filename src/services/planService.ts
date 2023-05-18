@@ -1,11 +1,10 @@
-import { format } from "date-fns";
 import { At, ts } from "../entities/at";
 import { getPlanDailyMessageLimit } from "../entities/plan";
 import { PurchasedProduct, Subscription, freeSubscription, getProductDisplayName, isPurchasedProduct } from "../entities/product";
 import { User } from "../entities/user";
 import { first } from "../lib/common";
 import { updateUsageStats } from "./userService";
-import { addDays, isInRange, startOfToday } from "./dateService";
+import { addDays, formatDate, isInRange, startOfToday } from "./dateService";
 
 export async function messageLimitExceeded(user: User): Promise<boolean> {
   if (!user.usageStats) {
@@ -49,9 +48,11 @@ export function getFormattedPlanName(user: User): string {
   const { name, expiresAt } = getCurrentPlan(user);
   const nameStr = `<b>${name}</b>`;
 
-  return expiresAt
-    ? `${nameStr} (действует по ${format(expiresAt, "dd.MM.yyyy")})`
-    : nameStr;
+  if (!expiresAt) {
+    return nameStr;
+  }
+
+  return `${nameStr} (действует по ${formatDate(expiresAt, "dd.MM.yyyy")})`;
 }
 
 export interface CurrentPlan {

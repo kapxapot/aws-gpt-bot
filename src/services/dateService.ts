@@ -1,4 +1,10 @@
+import { format } from "date-fns";
 import { settings } from "../lib/constants";
+
+/**
+ * One day in milliseconds.
+ */
+const oneDay = 1000 * 60 * 60 * 24;
 
 export function isInRange(dot: DateOrTs, start: number, end: number): boolean {
   const ts = toTs(dot);
@@ -9,7 +15,16 @@ export function isInRange(dot: DateOrTs, start: number, end: number): boolean {
  * Returns *system* start of the day for a given date. In case of `undefined` uses the current date.
  */
 export function startOfToday(dot?: DateOrTs): number {
-  return addHours(utcStartOfDay(dot), settings.systemTimeOffset);
+  const date = dot ? toDate(dot) : new Date();
+  let start = addHours(utcStartOfDay(date), settings.systemTimeOffset);
+
+  const ts = toTs(date);
+
+  while (ts > start + oneDay) {
+    start = addDays(start, 1);
+  }
+
+  return start;
 }
 
 export function utcStartOfDay(dot?: DateOrTs): Date {
@@ -22,6 +37,12 @@ export function utcStartOfDay(dot?: DateOrTs): Date {
   const ds = `${y}-${m}-${d}`;
 
   return new Date(ds);
+}
+
+export function formatDate(dot: DateOrTs, formatStr: string): string {
+  const adjustedTs = addHours(dot, -settings.systemTimeOffset);
+
+  return format(adjustedTs, formatStr);
 }
 
 export function addDays(dot: DateOrTs, days: number): number {
