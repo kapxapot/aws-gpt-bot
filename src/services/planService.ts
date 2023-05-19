@@ -74,9 +74,9 @@ function getCurrentPlan(user: User): CurrentPlan {
   return { name, expiresAt };
 }
 
-function getCurrentSubscription(user: User): PurchasedProduct | Subscription {
+export function getCurrentSubscription(user: User): PurchasedProduct | Subscription {
   const activeSubscriptions = getActiveSubscriptions(user)
-    .sort((a, b) => a.details.priority - b.details.priority);
+    .sort((a, b) => b.details.priority - a.details.priority);
 
   return first(activeSubscriptions) ?? freeSubscription();
 }

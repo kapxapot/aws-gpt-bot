@@ -8,9 +8,9 @@ import { getOrAddUser } from "../../services/userService";
 import { storePayment } from "../../storage/paymentStorage";
 import { yooMoneyPayment } from "../../external/yooMoneyPayment";
 import { now } from "../../entities/at";
-import { Product, getProductDisplayName, monthlyPremiumSubscription, monthlyUnlimitedSubscription } from "../../entities/product";
+import { Product, getProductDisplayName, isPurchasedProduct, monthlyPremiumSubscription, monthlyUnlimitedSubscription } from "../../entities/product";
 import { isError } from "../../lib/error";
-import { getFormattedPlanName } from "../../services/planService";
+import { getCurrentSubscription, getFormattedPlanName } from "../../services/planService";
 
 const scene = new BaseScene<BotContext>(scenes.premium);
 
@@ -26,13 +26,7 @@ scene.enter(async (ctx) => {
 
   const user = await getOrAddUser(ctx.from);
 
-  await replyWithKeyboard(
-    ctx,
-    inlineKeyboard(
-      ["Купить Премиум", buyPremiumAction],
-      ["Купить Безлимит", buyUnlimitedAction],
-      ["Отмена", cancelAction]
-    ),
+  const messages = [
     `Текущий тариф: ${getFormattedPlanName(user)}`,
     "Для увеличения доступного количества ежедневных запросов к ChatGPT оформите подписку на один из платных тарифов:",
     `💚 Тариф «Премиум»:
@@ -40,7 +34,33 @@ scene.enter(async (ctx) => {
 ◽ 290 рублей на 30 дней`,
     `💛 Тариф «Безлимит»:
 ◽ неограниченное количество запросов
-◽ 390 рублей на 30 дней`
+◽ 390 рублей на 30 дней`,
+  ];
+
+  const buttons: string[][] = [];
+  const subscription = getCurrentSubscription(user);
+
+  if (isPurchasedProduct(subscription)) {
+    if (subscription.code === "subscription-premium-30-days") {
+      buttons.push(
+        ["Купить Безлимит", buyUnlimitedAction]
+      );
+
+      messages.push("⚠ Ваш текущий тариф <b>«Премиум»</b>. Вы можете приобрести <b>«Безлимит»</b>, который заменит текущий тариф <b>без компенсации средств</b>.");
+    } else if (subscription.code === "subscription-unlimited-30-days") {
+      messages.push("⚠ Ваш текущий тариф <b>«Безлимит»</b>. Вы не можете приобрести другие тарифы, пока у вас не закончится текущий.");
+    }
+  } else {
+    buttons.push(
+      ["Купить Премиум", buyPremiumAction],
+      ["Купить Безлимит", buyUnlimitedAction]
+    );
+  }
+
+  await replyWithKeyboard(
+    ctx,
+    inlineKeyboard(...buttons, ["Отмена", cancelAction]),
+    ...messages
   );
 });
 

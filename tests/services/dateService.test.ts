@@ -1,7 +1,7 @@
 import { addDays, addHours, formatDate, startOfToday, utcStartOfDay } from "../../src/services/dateService";
 
-describe('addDays', () => {
-  test('should correctly add days', () => {
+describe("addDays", () => {
+  test("should correctly add days", () => {
     const ts = 1682888909796; // 2023-04-30T21:08:29.796Z
     const date = addDays(ts, 30);
 
@@ -12,7 +12,7 @@ describe('addDays', () => {
     );
   });
 
-  test('should correctly subtract days', () => {
+  test("should correctly subtract days", () => {
     const ts = 1682888909796; // 2023-04-30T21:08:29.796Z
     const date = addDays(ts, -30);
 
@@ -24,8 +24,8 @@ describe('addDays', () => {
   });
 });
 
-describe('addHours', () => {
-  test('should correctly add hours', () => {
+describe("addHours", () => {
+  test("should correctly add hours", () => {
     const ts = 1682888909796; // 2023-04-30T21:08:29.796Z
     const date = addHours(ts, 3);
 
@@ -36,7 +36,7 @@ describe('addHours', () => {
     );
   });
 
-  test('should correctly subtract hours', () => {
+  test("should correctly subtract hours", () => {
     const ts = 1682888909796; // 2023-04-30T21:08:29.796Z
     const date = addHours(ts, -22);
 
@@ -48,8 +48,8 @@ describe('addHours', () => {
   });
 });
 
-describe('utcStartOfDay', () => {
-  test('should correctly calculate', () => {
+describe("utcStartOfDay", () => {
+  test("should correctly calculate", () => {
     const ts = 1682888909796; // 2023-04-30T21:08:29.796Z
     const date = utcStartOfDay(ts);
 
@@ -61,8 +61,8 @@ describe('utcStartOfDay', () => {
   });
 });
 
-describe('startOfDay', () => {
-  test('should correctly calculate a start of day for GMT+3', () => {
+describe("startOfDay", () => {
+  test("should correctly calculate a start of day for GMT+3", () => {
     const ts = 1682888909796; // 2023-04-30T21:08:29.796Z
     const date = startOfToday(ts);
 
@@ -74,8 +74,8 @@ describe('startOfDay', () => {
   });
 });
 
-describe('formatDate', () => {
-  test('should correctly format date for GMT+3', () => {
+describe("formatDate", () => {
+  test("should correctly format date for GMT+3", () => {
     const ts = 1682888909796; // 2023-04-30T21:08:29.796Z
     const date = startOfToday(ts);
 
