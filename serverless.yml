@@ -1,3 +1,5 @@
+org: kapxapot
+app: gpt-bot
 service: gpt-bot
 frameworkVersion: '3'
 
