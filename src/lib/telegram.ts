@@ -1,9 +1,8 @@
+import he from "he";
 import { InlineKeyboardButton, InlineKeyboardMarkup, Message, User } from "telegraf/types";
 import { toText } from "./common";
 import { Markup } from "telegraf";
-
-const maxMessageLength = 4096;
-const maxButtonTextLength = 14;
+import { settings } from "./constants";
 
 export function userName(user: User): string {
   return user.first_name ?? user.last_name ?? user.username ?? "anonymous";
@@ -29,7 +28,7 @@ export async function clearInlineKeyboard(ctx: any) {
   } catch {}
 }
 
-export function sliceButtons<T extends Button>(buttons: T[], limit: number = 2, maxLength: number = maxButtonTextLength): T[][] {
+export function sliceButtons<T extends Button>(buttons: T[], limit: number = 2, maxLength: number = settings.telegram.maxButtonTextLength): T[][] {
   const result = [];
   let accumulator: T[] = [];
 
@@ -63,7 +62,7 @@ export function sliceButtons<T extends Button>(buttons: T[], limit: number = 2, 
 }
 
 export async function reply(ctx: any, ...lines: string[]): Promise<Message.TextMessage[]> {
-  const slices = sliceText(toText(...lines), maxMessageLength);
+  const slices = sliceText(toText(...lines));
 
   const messages = [];
 
@@ -81,7 +80,7 @@ export async function replyWithKeyboard(
   keyboard: Markup.Markup<InlineKeyboardMarkup>,
   ...lines: string[]
 ) {
-  const slices = sliceText(toText(...lines), maxMessageLength);
+  const slices = sliceText(toText(...lines));
 
   for (let i = 0; i < slices.length; i++) {
     if (i !== slices.length - 1) {
@@ -92,14 +91,24 @@ export async function replyWithKeyboard(
   }
 }
 
-function sliceText(text: string, limit: number): string[] {
+export function encodeText(text: string): string {
+  return he.encode(text);
+}
+
+export function sliceText(text: string, limit: number = settings.telegram.maxMessageLength): string[] {
   const result: string[] = [];
 
   while (text.length) {
-    const chunk = text.substring(0, limit);
+    let chunk = text.substring(0, limit);
+    const lastSemicolon = chunk.lastIndexOf(";");
+
+    if (lastSemicolon >= 0) {
+      chunk = text.substring(0, lastSemicolon + 1);
+    }
+
     result.push(chunk);
 
-    text = text.substring(limit);
+    text = text.substring(chunk.length);
   }
 
   return result;

@@ -12,7 +12,7 @@ const apiConfig = new Configuration({
 });
 
 const config = {
-  apiTimeout: parseInt(process.env.GPT_TIMEOUT ?? "0") * 1000,
+  gptTimeout: parseInt(process.env.GPT_TIMEOUT ?? "0") * 1000,
   model: "gpt-3.5-turbo",
   maxPromptLength: settings.maxPromptLength,
   maxHistoryMessageLength: settings.maxHistoryMessageLength
@@ -62,7 +62,7 @@ export async function gptChatCompletion(user: User, userMessage: string): Promis
         messages: messages
       },
       {
-        timeout: config.apiTimeout,
+        timeout: config.gptTimeout,
         timeoutErrorMessage: "Мы не дождались ответа. 😥"
       }
     );

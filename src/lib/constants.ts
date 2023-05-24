@@ -34,4 +34,8 @@ export const settings = {
   maxPromptLength: 1000,
   maxHistoryMessageLength: 200,
   systemTimeOffset: -3, // hours
+  telegram: {
+    maxMessageLength: 4096,
+    maxButtonTextLength: 14
+  }
 } as const;

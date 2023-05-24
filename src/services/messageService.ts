@@ -1,11 +1,10 @@
-import he from "he";
 import { ts } from "../entities/at";
 import { getModeName } from "../entities/prompt";
 import { User } from "../entities/user";
 import { gptChatCompletion } from "../external/gptChatCompletion";
 import { isDebugMode, truncate } from "../lib/common";
 import { isSuccess } from "../lib/error";
-import { reply } from "../lib/telegram";
+import { encodeText, reply } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
 import { addMessageToUser, getCurrentContext, gotGptAnswer, waitForGptAnswer } from "./userService";
 import { commands } from "../lib/constants";
@@ -14,7 +13,8 @@ import { getCurrentHistory } from "./contextService";
 import { getCaseByNumber } from "../lib/cases";
 
 const config = {
-  messageInterval: parseInt(process.env.THROTTLE_TIMEOUT ?? "30") // seconds
+  messageInterval: parseInt(process.env.THROTTLE_TIMEOUT ?? "30"), // seconds
+  encodeGptMessage: true,
 };
 
 export async function sendMessageToGpt(ctx: any, user: User, question: string, requestedAt?: number) {
@@ -26,7 +26,7 @@ export async function sendMessageToGpt(ctx: any, user: User, question: string, r
   if (await messageLimitExceeded(user)) {
     await reply(
       ctx,
-      `Вы превысили лимит сообщений на сегодня. 😥`,
+      "Вы превысили лимит сообщений на сегодня. 😥",
       `Приходите завтра или перейдите на тариф с более высоким лимитом: /${commands.premium}`
     );
 
@@ -55,12 +55,14 @@ export async function sendMessageToGpt(ctx: any, user: User, question: string, r
 
   await ctx.deleteMessage(messages[0].message_id);
 
+  const now = ts();
+
   const message = await storeMessage(
     user,
     question,
     answer,
-    requestedAt ?? ts(),
-    ts()
+    requestedAt ?? now,
+    now
   );
 
   if (isSuccess(answer)) {
@@ -69,7 +71,7 @@ export async function sendMessageToGpt(ctx: any, user: User, question: string, r
     await reply(
       ctx,
       answer.reply
-        ? `🤖 ${he.encode(answer.reply)}`
+        ? formatGptMessage(answer.reply)
         : "Нет ответа от ChatGPT. 😣"
     );
 
@@ -115,9 +117,17 @@ export async function showLastHistoryMessage(ctx: any, user: User) {
   if (isSuccess(answer) && answer.reply) {
     await reply(
       ctx,
-      `🤖 ${he.encode(answer.reply)}`
+      formatGptMessage(answer.reply)
     );
   }
+}
+
+function formatGptMessage(message: string): string {
+  const resultingMessage = config.encodeGptMessage
+    ? encodeText(message)
+    : message;
+
+    return `🤖 ${resultingMessage}`;
 }
 
 export async function showDebugInfo(ctx: any, user: User, usage: any) {

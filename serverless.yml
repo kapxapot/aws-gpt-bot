@@ -39,7 +39,12 @@ provider:
             - Fn::GetAtt: [TelegramRequestsTable, Arn]
             - Fn::GetAtt: [SessionsTable, Arn]
             - Fn::GetAtt: [UsersTable, Arn]
+        - Effect: Allow
+          Action:
+            - cloudwatch:PutMetricData
+          Resource: "*"
   environment:
+    ENV: ${sls:stage}
     MESSAGES_TABLE: ${self:custom.tables.messages}
     PAYMENTS_TABLE: ${self:custom.tables.payments}
     SESSIONS_TABLE: ${self:custom.tables.sessions}
