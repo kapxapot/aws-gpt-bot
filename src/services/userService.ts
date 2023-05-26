@@ -62,7 +62,11 @@ export const setFreeMode = async (user: User): Promise<User> => {
 }
 
 export function getContext(user: User): Context {
-  return user.context ?? createContext();
+  if (!user.context) {
+    user.context = createContext();
+  }
+
+  return user.context;
 }
 
 async function updateContext(user: User, context: Context): Promise<User> {
