@@ -61,7 +61,7 @@ export const setFreeMode = async (user: User): Promise<User> => {
   return await updateContext(user, context);
 }
 
-function getContext(user: User): Context {
+export function getContext(user: User): Context {
   return user.context ?? createContext();
 }
 
@@ -69,11 +69,14 @@ async function updateContext(user: User, context: Context): Promise<User> {
   return await updateUser(user, { context });
 }
 
-export interface CurrentContext {
+interface CurrentContext {
   prompt: string | null;
   latestMessages: Message[] | null;
 }
 
+/**
+ * Refactor this.
+ */
 export function getCurrentContext(user: User, historySize: number): CurrentContext {
   const context = user.context;
 

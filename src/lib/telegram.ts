@@ -100,10 +100,14 @@ export function sliceText(text: string, limit: number = settings.telegram.maxMes
 
   while (text.length) {
     let chunk = text.substring(0, limit);
-    const lastSemicolon = chunk.lastIndexOf(";");
 
-    if (lastSemicolon >= 0) {
-      chunk = text.substring(0, lastSemicolon + 1);
+    // if not last chunk
+    if (text.length > limit) {
+      const lastSemicolon = chunk.lastIndexOf(";");
+
+      if (lastSemicolon >= 0) {
+        chunk = text.substring(0, lastSemicolon + 1);
+      }
     }
 
     result.push(chunk);

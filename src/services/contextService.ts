@@ -1,9 +1,9 @@
 import { Context, History } from "../entities/context";
 import { Message } from "../entities/message";
-import { customPromptCode, getDefaults, getPromptByCode, noPromptCode } from "../entities/prompt";
+import { customPromptCode, getPromptDefaults, getPromptByCode, noPromptCode } from "../entities/prompt";
 
 export function createContext(): Context {
-  const { modeCode, promptCode } = getDefaults();
+  const { modeCode, promptCode } = getPromptDefaults();
 
   return {
     modeCode,
@@ -36,7 +36,7 @@ export function getCurrentPrompt(context: Context): string | null {
     return null;
   }
 
-  if (code == customPromptCode) {
+  if (code === customPromptCode) {
     return context.customPrompt;
   }
 

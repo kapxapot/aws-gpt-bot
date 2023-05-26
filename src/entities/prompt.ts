@@ -1,4 +1,5 @@
 import { toText } from "../lib/common";
+import { getContext } from "../services/userService";
 import { User } from "./user";
 
 export const noPromptCode = "_none";
@@ -34,7 +35,7 @@ const modes: Mode[] = [
   }
 ];
 
-interface Defaults {
+interface PromptDefaults {
   modeCode: ModeCode;
   promptCode: string;
 }
@@ -93,7 +94,7 @@ const prompts: Prompt[] = [
   }
 ];
 
-export function getDefaults(): Defaults {
+export function getPromptDefaults(): PromptDefaults {
   return {
     modeCode: "free",
     promptCode: noPromptCode
@@ -125,7 +126,7 @@ export function getModeByCode(code: string): Mode | null {
 }
 
 export function getModeName(user: User): string | null {
-  const context = user.context;
+  const context = getContext(user);
 
   if (!context) {
     return "Неизвестный режим";
