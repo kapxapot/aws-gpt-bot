@@ -14,7 +14,6 @@ import { getCaseByNumber } from "../lib/cases";
 
 const config = {
   messageInterval: parseInt(process.env.THROTTLE_TIMEOUT ?? "30"), // seconds
-  encodeGptMessage: true,
 };
 
 export async function sendMessageToGpt(ctx: any, user: User, question: string, requestedAt?: number) {
@@ -123,11 +122,7 @@ export async function showLastHistoryMessage(ctx: any, user: User) {
 }
 
 function formatGptMessage(message: string): string {
-  const resultingMessage = config.encodeGptMessage
-    ? encodeText(message)
-    : message;
-
-    return `🤖 ${resultingMessage}`;
+    return `🤖 ${encodeText(message)}`;
 }
 
 export async function showDebugInfo(ctx: any, user: User, usage: any) {
@@ -145,7 +140,11 @@ export async function showDebugInfo(ctx: any, user: User, usage: any) {
     const messages = getCurrentHistory(context).messages;
 
     if (messages.length) {
-      chunks.push(`история: ${messages.map(m => `[${truncate(m.request, 20)}]`).join(", ")}`)
+      chunks.push(
+        encodeText(
+          `история: ${messages.map(m => `[${truncate(m.request, 20)}]`).join(", ")}`
+        )
+      );
     } else {
       chunks.push("история пуста");
     }
