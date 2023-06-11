@@ -120,3 +120,17 @@ export function sliceText(text: string, limit: number = settings.telegram.maxMes
 
   return result;
 }
+
+interface CommandWithArgs {
+  command: string;
+  args: string[];
+}
+
+export function parseCommandWithArgs(text: string): CommandWithArgs {
+  const parts = text.trim().split(/\s+/);
+
+  return {
+    command: parts[0].replace("/", ""),
+    args: parts.slice(1)
+  };
+}

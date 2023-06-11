@@ -1,5 +1,5 @@
 import { settings } from "../../lib/constants";
-import { reply } from "../../lib/telegram";
+import { parseCommandWithArgs, reply } from "../../lib/telegram";
 import { getOrAddUser } from "../../services/userService";
 import { getUserTemperature, updateUserSettings } from "../../services/userSettingsService";
 
@@ -10,16 +10,14 @@ export async function temperatureHandler(ctx: any) {
   const badInput = `Укажите желаемую температуру через пробел в виде дробного числа от ${minTemperature} до ${maxTemperature}.`;
 
   const user = await getOrAddUser(ctx.from);
+  const { args } = parseCommandWithArgs(ctx.update.message.text);
 
-  const text: string = ctx.update.message.text;
-  const parts = text.split(' ');
-
-  if (parts.length === 1) {
+  if (!args.length) {
     await reply(ctx, `Текущая температура: ${getUserTemperature(user)}`);
     return;
   }
 
-  const temp = parseFloat(parts[1].replace(",", "."));
+  const temp = parseFloat(args[0].replace(",", "."));
 
   if (!Number.isFinite(temp) || temp < minTemperature || temp > maxTemperature) {
     await reply(ctx, badInput);

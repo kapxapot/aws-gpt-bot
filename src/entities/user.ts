@@ -31,4 +31,5 @@ export interface User extends Timestamps {
   waitingForGptAnswer?: boolean;
   usageStats?: UsageStats;
   settings?: UserSettings;
+  source?: string;
 }

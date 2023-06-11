@@ -2,7 +2,7 @@ import { Scenes, Telegraf, session } from "telegraf";
 import { message } from "telegraf/filters";
 import { TelegramRequest } from "../entities/telegramRequest";
 import { isDebugMode } from "../lib/common";
-import { reply, userName } from "../lib/telegram";
+import { parseCommandWithArgs, reply, userName } from "../lib/telegram";
 import { getOrAddUser } from "../services/userService";
 import { sessionStore } from "./session";
 import { tutorialScene } from "./scenes/tutorialScene";
@@ -14,6 +14,7 @@ import { User } from "../entities/user";
 import { inspect } from "util";
 import { sendMessageToGpt, showStatus } from "../services/messageService";
 import { modeScene } from "./scenes/modeScene";
+import { updateUser } from "../storage/userStorage";
 
 const config = {
   botToken: process.env.BOT_TOKEN!,
@@ -45,6 +46,12 @@ export function processTelegramRequest(tgRequest: TelegramRequest) {
     const newUser = !user.context;
 
     if (newUser) {
+      const { args } = parseCommandWithArgs(ctx.message.text);
+
+      if (args.length) {
+        await updateUser(user, { source: args[0] });
+      }
+
       await reply(
         ctx,
         `Привет, <b>${userName(ctx.from)}</b>! 🤖 Я — <b>GPToid</b>, бот, созданный помогать вам в работе с <b>ChatGPT</b>!`,
