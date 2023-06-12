@@ -15,6 +15,7 @@ import { inspect } from "util";
 import { sendMessageToGpt, showStatus } from "../services/messageService";
 import { modeScene } from "./scenes/modeScene";
 import { updateUser } from "../storage/userStorage";
+import { putMetric } from "../services/metricService";
 
 const config = {
   botToken: process.env.BOT_TOKEN!,
@@ -78,6 +79,8 @@ export function processTelegramRequest(tgRequest: TelegramRequest) {
     const user = await getOrAddUser(ctx.from);
 
     await sendMessageToGpt(ctx, user, ctx.message.text, tgRequest.createdAt);
+
+    await putMetric("MessageSent", 1);
   });
 
   bot.use(kickHandler);
