@@ -63,6 +63,8 @@ export function processTelegramRequest(tgRequest: TelegramRequest) {
         `Если у вас есть вопросы или предложения, обращайтесь к команде поддержки /${commands.support}, вам будут рады ответить!`,
         `Условия пользовательского соглашения: /${commands.terms}`
       );
+
+      await putMetric("UserRegistered", 1);
     } else {
       await reply(
         ctx,
@@ -79,8 +81,6 @@ export function processTelegramRequest(tgRequest: TelegramRequest) {
     const user = await getOrAddUser(ctx.from);
 
     await sendMessageToGpt(ctx, user, ctx.message.text, tgRequest.createdAt);
-
-    await putMetric("MessageSent", 1);
   });
 
   bot.use(kickHandler);

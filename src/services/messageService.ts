@@ -11,6 +11,8 @@ import { commands } from "../lib/constants";
 import { getFormattedPlanName, incMessageUsage, messageLimitExceeded } from "./planService";
 import { getCurrentHistory } from "./contextService";
 import { getCaseByNumber } from "../lib/cases";
+import { Completion } from "../entities/message";
+import { putMetric } from "./metricService";
 
 const config = {
   messageInterval: parseInt(process.env.THROTTLE_TIMEOUT ?? "30"), // seconds
@@ -95,6 +97,18 @@ export async function sendMessageToGpt(ctx: any, user: User, question: string, r
       user,
       isSuccess(answer) ? answer.usage : null
     );
+  }
+
+  if (isSuccess(answer)) {
+    await addMessageMetrics(answer);
+  }
+}
+
+async function addMessageMetrics(completion: Completion) {
+  await putMetric("MessageSent", 1);
+
+  if (completion.usage) {
+    await putMetric("TokensUsed", completion.usage.totalTokens);
   }
 }
 

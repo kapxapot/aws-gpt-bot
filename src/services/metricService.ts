@@ -1,6 +1,6 @@
 import { CloudWatchClient, PutMetricDataCommand } from "@aws-sdk/client-cloudwatch";
 
-export type MetricName = "MessageSent";
+export type MetricName = "MessageSent" | "TokensUsed" | "UserRegistered";
 
 const config = {
   env: process.env.ENV,
