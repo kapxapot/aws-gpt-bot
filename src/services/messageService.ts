@@ -86,6 +86,8 @@ export async function sendMessageToGpt(ctx: any, user: User, question: string, r
       errorMessage = "Вы шлете сообщения слишком часто. Подождите несколько секунд... ⏳";
     } else if (errorMessage.includes("model is currently overloaded")) {
       errorMessage = "Ой, что-то мне поплохело... 😵 Слишком большая нагрузка. Дайте отдышаться... ⏳";
+    } else if (errorMessage.includes("The server had an error while processing your request")) {
+      errorMessage = "Неизвестная ошибка на стороне ChatGPT. Попробуйте повторить запрос.";
     }
 
     await reply(ctx, `❌ ${errorMessage}`);

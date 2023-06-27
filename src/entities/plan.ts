@@ -3,7 +3,7 @@ export type Plan = "free" | "premium" | "unlimited";
 export function getPlanDailyMessageLimit(plan: Plan): number {
   switch (plan) {
     case "free":
-      return 10;
+      return 20;
 
     case "premium":
       return 100;
