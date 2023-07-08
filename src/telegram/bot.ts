@@ -14,7 +14,7 @@ import { User } from "../entities/user";
 import { inspect } from "util";
 import { sendMessageToGpt, showStatus } from "../services/messageService";
 import { modeScene } from "./scenes/modeScene";
-import { updateUser } from "../storage/userStorage";
+import { getUsersCount, updateUser } from "../storage/userStorage";
 import { putMetric } from "../services/metricService";
 
 const config = {
@@ -65,6 +65,7 @@ export function processTelegramRequest(tgRequest: TelegramRequest) {
       );
 
       await putMetric("UserRegistered", 1);
+      await putMetric("UsersTotal", await getUsersCount());
     } else {
       await reply(
         ctx,

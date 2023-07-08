@@ -1,11 +1,11 @@
-import { getItem, putItem, scanItem, updateItem } from "../lib/database";
+import { getCount, getItem, putItem, scanItem, updateItem } from "../lib/database";
 import { User } from "../entities/user";
 import { User as TelegrafUser } from "telegraf/types";
 
 const usersTable = process.env.USERS_TABLE!;
 
-export const storeUser = async (tgUser: TelegrafUser): Promise<User> =>
-  await putItem<User>(
+export async function storeUser(tgUser: TelegrafUser): Promise<User> {
+  return await putItem<User>(
     usersTable,
     {
       telegramId: tgUser.id,
@@ -14,24 +14,32 @@ export const storeUser = async (tgUser: TelegrafUser): Promise<User> =>
       username: tgUser.username
     }
   );
+}
 
-export const getUser = async (id: string): Promise<User | null> =>
-  await getItem<User>(usersTable, id);
+export async function getUser(id: string): Promise<User | null> {
+  return await getItem<User>(usersTable, id);
+}
 
-export const getUserByTelegramId = async (telegramId: number): Promise<User | null> =>
-  await scanItem<User>(
+export async function getUserByTelegramId(telegramId: number): Promise<User | null> {
+  return await scanItem<User>(
     usersTable,
     "telegramId = :tid",
     {
       ":tid": telegramId
     }
   );
+}
 
-export const updateUser = async (user: User, changes: Record<string, any>): Promise<User> =>
-  await updateItem<User>(
+export async function updateUser(user: User, changes: Record<string, any>): Promise<User> {
+  return await updateItem<User>(
     usersTable,
     {
       id: user.id
     },
     changes
   );
+}
+
+export async function getUsersCount(): Promise<number> {
+  return await getCount(usersTable) ?? 0;
+}

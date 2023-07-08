@@ -19,12 +19,12 @@ export function getDynamoDbClient() {
   };
 
   const translateConfig = { marshallOptions, unmarshallOptions };
-
   const client = new DynamoDBClient({});
+
   return DynamoDBDocumentClient.from(client, translateConfig);
 }
 
-export const putItem = async <T>(table: string, item: any): Promise<T> => {
+export async function putItem<T>(table: string, item: any): Promise<T> {
   const params = {
     TableName: table,
     Item: {
@@ -40,7 +40,7 @@ export const putItem = async <T>(table: string, item: any): Promise<T> => {
   return params.Item as T;
 }
 
-export const getItem = async <T>(table: string, id: string): Promise<T | null> => {
+export async function getItem<T>(table: string, id: string): Promise<T | null> {
   const params = {
     TableName: table,
     Key: {
@@ -54,12 +54,12 @@ export const getItem = async <T>(table: string, id: string): Promise<T | null> =
   return fromItem<T>(result.Item);
 }
 
-export const queryItems = async <T>(
+export async function queryItems<T>(
   table: string,
   attributes: Record<string, any>,
   condition: string,
   filter?: string
-): Promise<T[]> => {
+): Promise<T[]> {
   const params: QueryCommandInput = {
     TableName: table,
     ExpressionAttributeValues: attributes,
@@ -83,27 +83,50 @@ export const queryItems = async <T>(
     .filter((item): item is T => item !== null);
 }
 
-export const queryItem = async <T>(
+export async function queryItem<T>(
   table: string,
   attributes: Record<string, any>,
   condition: string,
   filter?: string
-): Promise<T | null> => {
+): Promise<T | null> {
   const items = await queryItems<T>(table, attributes, condition, filter);
 
   return items.length ? items[0] : null;
 }
 
-export const scanItems = async <T>(
+export async function getCount(table: string): Promise<number | null> {
+  const params: ScanCommandInput = {
+    TableName: table,
+    Select: "COUNT",
+  };
+
+  const dbClient = getDynamoDbClient();
+  const result = await dbClient.send(new ScanCommand(params));
+
+  return result.ScannedCount || null;
+}
+
+export async function scanItem<T>(
   table: string,
   filter: string,
   attributes: Record<string, any>,
   projection?: string
-): Promise<T[]> => {
+): Promise<T | null> {
+  const items = await scanItems<T>(table, filter, attributes, projection);
+
+  return items.length ? items[0] : null;
+}
+
+export async function scanItems<T>(
+  table: string,
+  filter: string,
+  attributes: Record<string, any>,
+  projection?: string
+): Promise<T[]> {
   const params: ScanCommandInput = {
     TableName: table,
     ExpressionAttributeValues: attributes,
-    FilterExpression: filter
+    FilterExpression: filter,
   };
 
   if (projection) {
@@ -124,22 +147,11 @@ export const scanItems = async <T>(
     .filter((item): item is T => item !== null);
 }
 
-export const scanItem = async <T>(
-  table: string,
-  filter: string,
-  attributes: Record<string, any>,
-  projection?: string
-): Promise<T | null> => {
-  const items = await scanItems<T>(table, filter, attributes, projection);
-
-  return items.length ? items[0] : null;
-}
-
-export const updateItem = async <T>(
+export async function updateItem<T>(
   table: string,
   key: Record<string, any>,
   attributes: Record<string, any>
-): Promise<T> => {
+): Promise<T> {
   const updatedAttributes = {
     ...attributes,
     ...updatedTimestamps()
@@ -161,11 +173,11 @@ export const updateItem = async <T>(
   return result.Attributes as T;
 }
 
-export const removeFromItem = async <T>(
+export async function removeFromItem<T>(
   table: string,
   key: Record<string, any>,
   attributes: string[]
-): Promise<T> => {
+): Promise<T> {
   const params: UpdateCommandInput = {
     TableName: table,
     Key: key,
@@ -179,7 +191,7 @@ export const removeFromItem = async <T>(
   return result.Attributes as T;
 }
 
-export const deleteItem = async <T>(table: string, id: string): Promise<T> => {
+export async function deleteItem<T>(table: string, id: string): Promise<T> {
   const params = {
     TableName: table,
     Key: {

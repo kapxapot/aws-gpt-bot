@@ -68,7 +68,7 @@ functions:
           type: dynamodb
           arn:
             Fn::GetAtt: [TelegramRequestsTable, StreamArn]
-    timeout: ${self:custom.gpt.timeout}
+    timeout: 330
 
 resources:
   Resources:
