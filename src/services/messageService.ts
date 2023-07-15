@@ -178,11 +178,7 @@ export async function showDebugInfo(ctx: any, user: User, usage: any) {
 export async function broadcastMessage(message: string) {
   const users = await getAllUsers();
 
-  console.log(`Got users: ${users.length}`);
-
   for (const user of users) {
     await sendTelegramMessage(user, message);
-
-    console.log(`Sent message to user: ${message}, ${user.username ?? user.telegramId}`);
   };
 }
