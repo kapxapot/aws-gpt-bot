@@ -1,4 +1,4 @@
-import { DeleteCommand, DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, QueryCommandInput, ScanCommand, ScanCommandInput, UpdateCommand, UpdateCommandInput } from "@aws-sdk/lib-dynamodb";
+import { DeleteCommand, DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, QueryCommandInput, ScanCommand, ScanCommandInput, ScanCommandOutput, UpdateCommand, UpdateCommandInput } from "@aws-sdk/lib-dynamodb";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { v4 as uuidv4 } from "uuid";
 import { timestamps, updatedTimestamps } from "../entities/at";
@@ -119,28 +119,35 @@ export async function scanItem<T>(
 
 export async function scanItems<T>(
   table: string,
-  filter: string,
-  attributes: Record<string, any>,
+  filter?: string,
+  attributes?: Record<string, any>,
   projection?: string
 ): Promise<T[]> {
   const params: ScanCommandInput = {
     TableName: table,
-    ExpressionAttributeValues: attributes,
     FilterExpression: filter,
+    ExpressionAttributeValues: attributes,
+    ProjectionExpression: projection,
   };
 
-  if (projection) {
-    params.ProjectionExpression = projection;
-  }
-
   const dbClient = getDynamoDbClient();
-  const result = await dbClient.send(new ScanCommand(params));
 
-  const items = result.Items;
+  let items: Record<string, any>[] = [];
+  let lastKey;
 
-  if (!items) {
-    return [];
-  }
+  do {
+    const result: ScanCommandOutput = await dbClient.send(new ScanCommand({
+      ...params,
+      ExclusiveStartKey: lastKey,
+    }));
+
+    if (!result.Items) {
+      break;
+    }
+
+    lastKey = result.LastEvaluatedKey;
+    items = items.concat(result.Items);
+  } while (lastKey);
 
   return items
     .map(item => fromItem<T>(item))

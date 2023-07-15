@@ -1,4 +1,4 @@
-import { getCount, getItem, putItem, scanItem, updateItem } from "../lib/database";
+import { getCount, getItem, putItem, scanItem, scanItems, updateItem } from "../lib/database";
 import { User } from "../entities/user";
 import { User as TelegrafUser } from "telegraf/types";
 
@@ -14,6 +14,10 @@ export async function storeUser(tgUser: TelegrafUser): Promise<User> {
       username: tgUser.username
     }
   );
+}
+
+export async function getAllUsers(): Promise<User[]> {
+  return await scanItems<User>(usersTable);
 }
 
 export async function getUser(id: string): Promise<User | null> {

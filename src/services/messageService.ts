@@ -13,6 +13,8 @@ import { getCurrentHistory } from "./contextService";
 import { getCaseByNumber } from "../lib/cases";
 import { Completion } from "../entities/message";
 import { putMetric } from "./metricService";
+import { getAllUsers } from "../storage/userStorage";
+import { sendTelegramMessage } from "../telegram/bot";
 
 const config = {
   messageInterval: parseInt(process.env.THROTTLE_TIMEOUT ?? "30"), // seconds
@@ -170,8 +172,17 @@ export async function showDebugInfo(ctx: any, user: User, usage: any) {
     chunks.push(`сообщений сегодня: ${user.usageStats.messageCount}`);
   }
 
-  await reply(
-    ctx,
-    chunks.join(", ")
-  );
+  await reply(ctx, chunks.join(", "));
+}
+
+export async function broadcastMessage(message: string) {
+  const users = await getAllUsers();
+
+  console.log(`Got users: ${users.length}`);
+
+  for (const user of users) {
+    await sendTelegramMessage(user, message);
+
+    console.log(`Sent message to user: ${message}, ${user.username ?? user.telegramId}`);
+  };
 }
