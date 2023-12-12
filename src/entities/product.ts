@@ -42,7 +42,7 @@ export function freeSubscription(): Subscription {
       "Nom": "Бесплатный"
     },
     details: {
-      plan: "free",
+      plan: "free"
     }
   };
 }

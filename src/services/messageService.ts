@@ -99,7 +99,7 @@ export async function sendMessageToGpt(ctx: any, user: User, question: string, r
     showDebugInfo(
       ctx,
       user,
-      isSuccess(answer) ? answer.usage : null
+      isSuccess(answer) ? answer : null
     );
   }
 
@@ -143,12 +143,13 @@ function formatGptMessage(message: string): string {
     return `🤖 ${encodeText(message)}`;
 }
 
-export async function showDebugInfo(ctx: any, user: User, usage: any) {
+export async function showDebugInfo(ctx: any, user: User, answer: Completion | null) {
   const chunks = [];
 
   chunks.push(`👉 режим: <b>${getModeName(user)}</b>`);
 
-  if (usage) {
+  if (answer?.usage) {
+    const usage = answer.usage;
     chunks.push(`токены: ${usage.totalTokens} (${usage.promptTokens} + ${usage.completionTokens})`);
   }
 
@@ -166,6 +167,12 @@ export async function showDebugInfo(ctx: any, user: User, usage: any) {
     } else {
       chunks.push("история пуста");
     }
+  }
+
+  chunks.push(`модель запроса: ${process.env.GPT_MODEL}`);
+
+  if (answer?.model) {
+    chunks.push(`модель ответа: ${answer.model}`);
   }
 
   if (user.usageStats) {

@@ -10,6 +10,7 @@ export interface Usage {
 export interface Completion {
   reply: string | null;
   usage: Usage | null;
+  model?: string;
 }
 
 export interface Message extends Timestamps {

@@ -1,4 +1,3 @@
-import he from "he";
 import { InlineKeyboardButton, InlineKeyboardMarkup, Message, User } from "telegraf/types";
 import { toText } from "./common";
 import { Markup } from "telegraf";
