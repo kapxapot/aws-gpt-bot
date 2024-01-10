@@ -1,4 +1,4 @@
-import { broadcastMessage } from "../services/messageService";
+import { addBroadcast } from "../services/broadcastMessageService";
 
 interface BroadcastPayload {
   apiKey: string;
@@ -26,5 +26,5 @@ export async function broadcastHook(payload: BroadcastPayload) {
     throw new Error("Empty message (message).");
   }
 
-  await broadcastMessage(payload.message);
+  await addBroadcast(payload.message);
 }
