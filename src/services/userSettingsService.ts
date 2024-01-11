@@ -8,7 +8,12 @@ export async function updateUserSettings(user: User, changes: Partial<UserSettin
     ...changes
   };
 
-  return await updateUser(user, { settings });
+  return await updateUser(
+    user,
+    {
+      settings
+    }
+  );
 }
 
 export function getUserHistorySize(user: User): number {

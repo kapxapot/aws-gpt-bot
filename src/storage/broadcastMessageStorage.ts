@@ -2,13 +2,13 @@ import { putItem, updateItem } from "../lib/database";
 import { User } from "../entities/user";
 import { BroadcastMessage } from "../entities/broadcastMessage";
 
-const messagesTable = process.env.BROADCAST_MESSAGES_TABLE!;
+const broadcastMessagesTable = process.env.BROADCAST_MESSAGES_TABLE!;
 
 export const storeBroadcastMessage = async (
   user: User,
   message: string
 ) => await putItem<BroadcastMessage>(
-  messagesTable,
+  broadcastMessagesTable,
   {
     userId: user.id,
     message
@@ -17,10 +17,10 @@ export const storeBroadcastMessage = async (
 
 export async function updateBroadcastMessage(
   broadcastMessage: BroadcastMessage,
-  changes: Record<string, any>
+  changes: Partial<BroadcastMessage>
 ): Promise<BroadcastMessage> {
   return await updateItem<BroadcastMessage>(
-    messagesTable,
+    broadcastMessagesTable,
     {
       id: broadcastMessage.id
     },

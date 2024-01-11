@@ -12,7 +12,7 @@ export const storePayment = async (payment: Timestampless<Payment>) => await put
 export const getPayment = async (id: string): Promise<Payment | null> =>
   await getItem<Payment>(paymentsTable, id);
 
-export const updatePayment = async (payment: Payment, changes: Record<string, any>): Promise<Payment> =>
+export const updatePayment = async (payment: Payment, changes: Partial<Payment>): Promise<Payment> =>
   await updateItem<Payment>(
     paymentsTable,
     {

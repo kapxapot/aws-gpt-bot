@@ -1,13 +1,13 @@
 import { CloudWatchClient, PutMetricDataCommand } from "@aws-sdk/client-cloudwatch";
 
-export type MetricName = "MessageSent" | "TokensUsed" | "UserRegistered" | "UsersTotal";
+export type MetricName = "MessageSent" | "TokensUsed" | "UserRegistered" | "UsersTotal" | "BroadcastMessageSent" | "BroadcastMessageFailed";
 
 const config = {
   env: process.env.ENV,
   namespace: "GPToid"
 };
 
-export async function putMetric(name: MetricName, value: number): Promise<void> {
+export async function putMetric(name: MetricName, value: number = 1): Promise<void> {
   const client = new CloudWatchClient({});
 
   const command = new PutMetricDataCommand({

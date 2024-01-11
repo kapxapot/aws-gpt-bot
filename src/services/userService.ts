@@ -70,7 +70,12 @@ export function getContext(user: User): Context {
 }
 
 async function updateContext(user: User, context: Context): Promise<User> {
-  return await updateUser(user, { context });
+  return await updateUser(
+    user,
+    {
+      context
+    }
+  );
 }
 
 interface CurrentContext {
@@ -102,7 +107,12 @@ export async function addUserEvent(user: User, event: UserEvent): Promise<User> 
 
   events.push(event);
 
-  return await updateUser(user, { events });
+  return await updateUser(
+    user,
+    {
+      events
+    }
+  );
 }
 
 export async function waitForGptAnswer(user: User): Promise<User> {
@@ -124,5 +134,10 @@ export async function gotGptAnswer(user: User): Promise<User> {
 }
 
 export async function updateUsageStats(user: User, usageStats: UsageStats): Promise<User> {
-  return await updateUser(user, { usageStats });
+  return await updateUser(
+    user,
+    {
+      usageStats
+    }
+  );
 }

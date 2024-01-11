@@ -157,7 +157,7 @@ export async function scanItems<T>(
 export async function updateItem<T>(
   table: string,
   key: Record<string, any>,
-  attributes: Record<string, any>
+  attributes: Partial<T>
 ): Promise<T> {
   const updatedAttributes = {
     ...attributes,

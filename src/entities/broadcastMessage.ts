@@ -5,4 +5,10 @@ export interface BroadcastMessage extends Timestamps {
   message: string;
   userId: string;
   sentAt?: At;
+  sendResult?: {
+    status: "success";
+  } | {
+    status: "fail";
+    error: unknown;
+  }
 }

@@ -1,8 +1,9 @@
+import { toArray, toText } from "../lib/common";
 import { addBroadcast } from "../services/broadcastMessageService";
 
 interface BroadcastPayload {
   apiKey: string;
-  message: string;
+  message: string | string[];
 }
 
 export async function broadcastHook(payload: BroadcastPayload) {
@@ -20,11 +21,15 @@ export async function broadcastHook(payload: BroadcastPayload) {
     throw new Error("Invalid API key.");
   }
 
-  const msg = payload.message?.trim();
+  const messages = toArray(payload.message)
+    .map(m => m.trim())
+    .filter(m => !!m);
 
-  if (!msg) {
-    throw new Error("Empty message (message).");
+  if (!messages.length) {
+    throw new Error("Empty message (message). A not empty string or an array of strings is expected.");
   }
 
-  await addBroadcast(payload.message);
+  const text = toText(...messages);
+
+  await addBroadcast(text);
 }

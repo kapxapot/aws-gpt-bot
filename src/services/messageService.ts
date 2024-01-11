@@ -107,7 +107,7 @@ export async function sendMessageToGpt(ctx: any, user: User, question: string, r
 }
 
 async function addMessageMetrics(completion: Completion) {
-  await putMetric("MessageSent", 1);
+  await putMetric("MessageSent");
 
   if (completion.usage) {
     await putMetric("TokensUsed", completion.usage.totalTokens);

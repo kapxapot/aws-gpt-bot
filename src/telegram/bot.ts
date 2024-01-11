@@ -50,7 +50,12 @@ export function processTelegramRequest(tgRequest: TelegramRequest) {
       const { args } = parseCommandWithArgs(ctx.message.text);
 
       if (args.length) {
-        await updateUser(user, { source: args[0] });
+        await updateUser(
+          user,
+          {
+            source: args[0]
+          }
+        );
       }
 
       await reply(
@@ -64,7 +69,7 @@ export function processTelegramRequest(tgRequest: TelegramRequest) {
         `Условия пользовательского соглашения: /${commands.terms}`
       );
 
-      await putMetric("UserRegistered", 1);
+      await putMetric("UserRegistered");
       await putMetric("UsersTotal", await getUsersCount());
     } else {
       await reply(

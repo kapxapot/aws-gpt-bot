@@ -34,7 +34,7 @@ export async function getUserByTelegramId(telegramId: number): Promise<User | nu
   );
 }
 
-export async function updateUser(user: User, changes: Record<string, any>): Promise<User> {
+export async function updateUser(user: User, changes: Partial<User>): Promise<User> {
   return await updateItem<User>(
     usersTable,
     {
@@ -45,5 +45,9 @@ export async function updateUser(user: User, changes: Record<string, any>): Prom
 }
 
 export async function getUsersCount(): Promise<number> {
-  return await getCount(usersTable) ?? 0;
+  // temporary solution, should be like this (but it's bugged):
+  // getCount(usersTable) ?? 0;
+  const users = await getAllUsers();
+
+  return users.length;
 }
