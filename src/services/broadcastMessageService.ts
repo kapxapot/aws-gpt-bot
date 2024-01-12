@@ -8,10 +8,14 @@ import { putMetric } from "./metricService";
 /**
  * Adds broadcast messages for all users.
  */
-export async function addBroadcast(message: string) {
+export async function addBroadcast(message: string, userIds?: string[]) {
   const users = await getAllUsers();
 
   for (const user of users) {
+    if (userIds && !userIds.some(uid => uid === user.id)) {
+      continue;
+    }
+
     await storeBroadcastMessage(user, message);
   };
 }

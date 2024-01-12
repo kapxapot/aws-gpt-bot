@@ -4,6 +4,7 @@ import { addBroadcast } from "../services/broadcastMessageService";
 interface BroadcastPayload {
   apiKey: string;
   message: string | string[];
+  users?: string[];
 }
 
 export async function broadcastHook(payload: BroadcastPayload) {
@@ -31,5 +32,5 @@ export async function broadcastHook(payload: BroadcastPayload) {
 
   const text = toText(...messages);
 
-  await addBroadcast(text);
+  await addBroadcast(text, payload.users);
 }
