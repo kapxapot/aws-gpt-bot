@@ -5,9 +5,9 @@ import { commands, messages, scenes } from "../lib/constants";
 import { clearInlineKeyboard, reply } from "../lib/telegram";
 import { historySizeHandler } from "./handlers/historySizeHandler";
 import { temperatureHandler } from "./handlers/temperatureHandler";
-import { isDebugMode } from "../lib/common";
 import { getOrAddUser } from "../services/userService";
 import { showStatus } from "../services/messageService";
+import { isDebugMode } from "../services/userSettingsService";
 
 type Handler = (ctx: any) => Promise<void>;
 type HandlerTuple = [command: string, handler: Handler];

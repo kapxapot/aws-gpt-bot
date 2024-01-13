@@ -1,5 +1,3 @@
-import { User } from "../entities/user";
-
 export function toArray<T>(value: T | T[] | undefined | null): T[] {
   if (value === null || typeof value === "undefined") {
     return [];
@@ -10,14 +8,6 @@ export function toArray<T>(value: T | T[] | undefined | null): T[] {
 
 export function toText(...strings: string[]): string {
   return strings.join("\n\n");
-}
-
-export function isDebugMode(user?: User): boolean {
-  if (user?.settings?.isDebugMode !== undefined) {
-    return user?.settings?.isDebugMode;
-  }
-
-  return process.env.DEBUG === "true";
 }
 
 export function truncate(str: string, limit: number): string {

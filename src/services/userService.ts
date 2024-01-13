@@ -141,3 +141,7 @@ export async function updateUsageStats(user: User, usageStats: UsageStats): Prom
     }
   );
 }
+
+export function isTester(user: User) {
+  return user.isTester === true;
+}

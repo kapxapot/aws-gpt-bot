@@ -23,3 +23,11 @@ export function getUserHistorySize(user: User): number {
 export function getUserTemperature(user: User): number {
   return user.settings?.temperature ?? settings.temperature.default;
 }
+
+export function isDebugMode(user?: User): boolean {
+  if (user?.settings?.isDebugMode !== undefined) {
+    return user.settings.isDebugMode;
+  }
+
+  return process.env.DEBUG === "true";
+}

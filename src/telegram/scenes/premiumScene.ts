@@ -4,13 +4,15 @@ import { commands, messages, scenes } from "../../lib/constants";
 import { addOtherCommandHandlers, dunnoHandler, kickHandler } from "../handlers";
 import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { PaymentEvent } from "../../entities/payment";
-import { getOrAddUser } from "../../services/userService";
+import { getOrAddUser, isTester } from "../../services/userService";
 import { storePayment } from "../../storage/paymentStorage";
 import { yooMoneyPayment } from "../../external/yooMoneyPayment";
 import { now } from "../../entities/at";
 import { Product, getProductDisplayName, isPurchasedProduct, monthlyPremiumSubscription, monthlyUnlimitedSubscription } from "../../entities/product";
 import { isError } from "../../lib/error";
 import { getCurrentSubscription, getFormattedPlanName } from "../../services/planService";
+import { isProd } from "../../services/envService";
+import { purchasesEnabled } from "../../services/featureService";
 
 const scene = new BaseScene<BotContext>(scenes.premium);
 
@@ -51,10 +53,14 @@ scene.enter(async (ctx) => {
       messages.push("⚠ Ваш текущий тариф <b>«Безлимит»</b>. Вы не можете приобрести другие тарифы, пока у вас не закончится текущий.");
     }
   } else {
-    buttons.push(
-      ["Купить Премиум", buyPremiumAction],
-      ["Купить Безлимит", buyUnlimitedAction]
-    );
+    if (purchasesEnabled(user)) {
+      buttons.push(
+        ["Купить Премиум", buyPremiumAction],
+        ["Купить Безлимит", buyUnlimitedAction]
+      );
+    } else {
+      messages.push("⛔ Покупка тарифов недоступна.");
+    }
   }
 
   await replyWithKeyboard(

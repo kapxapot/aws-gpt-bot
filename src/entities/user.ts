@@ -32,4 +32,5 @@ export interface User extends Timestamps {
   usageStats?: UsageStats;
   settings?: UserSettings;
   source?: string;
+  isTester?: boolean;
 }

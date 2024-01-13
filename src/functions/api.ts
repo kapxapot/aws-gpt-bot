@@ -5,7 +5,7 @@ import { youMoneyHook } from "../webhooks/yooMoneyHook";
 import { Request, Response } from "express-serve-static-core/index";
 import { ParsedQs } from "qs";
 import { broadcastHook } from "../webhooks/broadcastHook";
-import { isDebugMode } from "../lib/common";
+import { isDebugMode } from "../services/userSettingsService";
 
 type ApiRequest = Request<{}, any, any, ParsedQs, Record<string, any>>;
 type ApiResponse = Response<any, Record<string, any>, number>;

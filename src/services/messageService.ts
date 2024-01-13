@@ -2,7 +2,7 @@ import { ts } from "../entities/at";
 import { getModeName } from "../entities/prompt";
 import { User } from "../entities/user";
 import { gptChatCompletion } from "../external/gptChatCompletion";
-import { isDebugMode, truncate } from "../lib/common";
+import { truncate } from "../lib/common";
 import { isSuccess } from "../lib/error";
 import { encodeText, reply } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
@@ -13,6 +13,7 @@ import { getCurrentHistory } from "./contextService";
 import { getCaseByNumber } from "../lib/cases";
 import { Completion } from "../entities/message";
 import { putMetric } from "./metricService";
+import { isDebugMode } from "./userSettingsService";
 
 const config = {
   messageInterval: parseInt(process.env.THROTTLE_TIMEOUT ?? "30"), // seconds

@@ -1,7 +1,6 @@
 import { Scenes, Telegraf, session } from "telegraf";
 import { message } from "telegraf/filters";
 import { TelegramRequest } from "../entities/telegramRequest";
-import { isDebugMode } from "../lib/common";
 import { parseCommandWithArgs, reply, userName } from "../lib/telegram";
 import { getOrAddUser } from "../services/userService";
 import { sessionStore } from "./session";
@@ -16,6 +15,7 @@ import { sendMessageToGpt, showStatus } from "../services/messageService";
 import { modeScene } from "./scenes/modeScene";
 import { getUsersCount, updateUser } from "../storage/userStorage";
 import { putMetric } from "../services/metricService";
+import { isDebugMode } from "../services/userSettingsService";
 
 const config = {
   botToken: process.env.BOT_TOKEN!,
