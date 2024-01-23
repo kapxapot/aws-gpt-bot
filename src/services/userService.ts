@@ -124,7 +124,7 @@ export async function waitForGptAnswer(user: User): Promise<User> {
   );
 }
 
-export async function gotGptAnswer(user: User): Promise<User> {
+export async function stopWaitingForGptAnswer(user: User): Promise<User> {
   return await updateUser(
     user,
     {

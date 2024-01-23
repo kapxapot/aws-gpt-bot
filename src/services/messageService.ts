@@ -6,7 +6,7 @@ import { truncate } from "../lib/common";
 import { isSuccess } from "../lib/error";
 import { encodeText, reply } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
-import { addMessageToUser, getCurrentContext, gotGptAnswer, waitForGptAnswer } from "./userService";
+import { addMessageToUser, getCurrentContext, stopWaitingForGptAnswer, waitForGptAnswer } from "./userService";
 import { commands } from "../lib/constants";
 import { getFormattedPlanName, incMessageUsage, messageLimitExceeded } from "./planService";
 import { getCurrentHistory } from "./contextService";
@@ -14,15 +14,24 @@ import { getCaseByNumber } from "../lib/cases";
 import { Completion } from "../entities/message";
 import { putMetric } from "./metricService";
 import { isDebugMode } from "./userSettingsService";
+import { gptTimeout } from "./gptService";
+import { happened } from "./dateService";
 
 const config = {
   messageInterval: parseInt(process.env.THROTTLE_TIMEOUT ?? "30"), // seconds
 };
 
 export async function sendMessageToGpt(ctx: any, user: User, question: string, requestedAt?: number) {
+  const lastMessageAt = user.usageStats?.lastMessageAt;
+
   if (user.waitingForGptAnswer) {
-    await reply(ctx, "Я обрабатываю ваше предыдущее сообщение, подождите... ⏳");
-    return;
+    if (lastMessageAt && happened(lastMessageAt.timestamp, gptTimeout * 1000)) {
+      // we have waited enough for the GPT answer
+      await stopWaitingForGptAnswer(user);
+    } else {
+      await reply(ctx, "Я обрабатываю ваше предыдущее сообщение, подождите... ⏳");
+      return;
+    }
   }
 
   if (await messageLimitExceeded(user)) {
@@ -35,8 +44,8 @@ export async function sendMessageToGpt(ctx: any, user: User, question: string, r
     return;
   }
 
-  if (config.messageInterval > 0 && user.usageStats?.lastMessageAt) {
-    const elapsed = (ts() - user.usageStats.lastMessageAt.timestamp) / 1000;
+  if (config.messageInterval > 0 && lastMessageAt) {
+    const elapsed = (ts() - lastMessageAt.timestamp) / 1000;
     const diff = Math.round(config.messageInterval - elapsed);
 
     if (diff > 0) {
@@ -53,7 +62,7 @@ export async function sendMessageToGpt(ctx: any, user: User, question: string, r
 
   await waitForGptAnswer(user);
   const answer = await gptChatCompletion(user, question);
-  await gotGptAnswer(user);
+  await stopWaitingForGptAnswer(user);
 
   await ctx.deleteMessage(messages[0].message_id);
 

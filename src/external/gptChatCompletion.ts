@@ -6,13 +6,14 @@ import { User } from "../entities/user";
 import { getCurrentContext } from "../services/userService";
 import { getUserHistorySize, getUserTemperature } from "../services/userSettingsService";
 import { settings } from "../lib/constants";
+import { gptTimeout } from "../services/gptService";
 
 const apiConfig = new Configuration({
   apiKey: process.env.OPENAI_API_KEY
 });
 
 const config = {
-  gptTimeout: parseInt(process.env.GPT_TIMEOUT ?? "0") * 1000,
+  gptTimeout: gptTimeout * 1000,
   model: process.env.GPT_MODEL ?? "gpt-3.5-turbo",
   maxPromptLength: settings.maxPromptLength,
   maxHistoryMessageLength: settings.maxHistoryMessageLength

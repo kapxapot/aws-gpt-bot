@@ -1,4 +1,5 @@
-import { addDays, addHours, formatDate, startOfToday, utcStartOfDay } from "../../src/services/dateService";
+import { ts } from "../../src/entities/at";
+import { addDays, addHours, formatDate, happened, startOfToday, utcStartOfDay } from "../../src/services/dateService";
 
 describe("addDays", () => {
   test("should correctly add days", () => {
@@ -84,5 +85,33 @@ describe("formatDate", () => {
     ).toBe(
       "01.05.2023"
     );
+  });
+});
+
+describe("happened", () => {
+  test("should be true if the event has happened", () => {
+    const now = ts();
+    const interval = 5000; // ms
+    const elapsed = interval + 1000;
+    const start = now - elapsed;
+
+    expect(happened(start, interval, now)).toBe(true);
+  });
+
+  test("should be true if the event has just happened (edge case)", () => {
+    const now = ts();
+    const interval = 5000; // ms
+    const start = now - interval;
+
+    expect(happened(start, interval, now)).toBe(true);
+  });
+
+  test("should be false if the event has not happened yet", () => {
+    const now = ts();
+    const interval = 5000; // ms
+    const elapsed = interval - 1;
+    const start = now - elapsed;
+
+    expect(happened(start, interval, now)).toBe(false);
   });
 });

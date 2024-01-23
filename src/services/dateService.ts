@@ -1,5 +1,6 @@
 import { format } from "date-fns";
 import { settings } from "../lib/constants";
+import { ts } from "../entities/at";
 
 /**
  * One day in milliseconds.
@@ -67,4 +68,14 @@ function toTs(date: DateOrTs): number {
   return typeof date === "number"
     ? date
     : date.getTime();
+}
+
+/**
+ * @param {number} start A timestamp in the past.
+ * @param {number} interval The interval to check (in milliseconds).
+ * @param {number|undefined} now Optional date that is used instead of current time.
+ */
+export function happened(start: number, interval: number, now?: number): boolean {
+  now = now ?? ts();
+  return now >= start + interval;
 }
