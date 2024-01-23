@@ -2,7 +2,7 @@ import { Composer } from "telegraf";
 import { WizardScene } from "telegraf/scenes";
 import { BotContext } from "../botContext";
 import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
-import { commands, messages, scenes } from "../../lib/constants";
+import { commands, messages, scenes, settings } from "../../lib/constants";
 import { addOtherCommandHandlers, dunnoHandler, kickHandler } from "../handlers";
 
 function makeStepHandler(text: string, first: boolean, last: boolean) {
@@ -101,7 +101,7 @@ ChatGPT не просто копирует данные из интернета,
 
 В боте предусмотрены 3 режима работы с ChatGPT:
 
-1. <b>Свободный диалог</b> — написание запросов и получение ответов. При этом ChatGPT запоминает историю последних 3-х сообщений. Режим подходит для формата «вопрос-ответ».
+1. <b>Свободный диалог</b> — написание запросов и получение ответов. При этом ChatGPT запоминает историю последних 3 сообщений. Режим подходит для формата «вопрос-ответ».
 
 Например:
 «Прочитай и перескажи в 3 предложениях суть следующего текста».
@@ -115,7 +115,7 @@ ChatGPT не просто копирует данные из интернета,
 «Веди себя как учитель английского языка. Я буду писать предложения, а ты исправляй ошибки и говори что можно добавить. Отвечай на русском».`,
 `<b>Тарифы</b>
 
-В начале использования бота вам доступен тариф <b>«Бесплатный»</b> с ограничением до 10 запросов в сутки.
+В начале использования бота вам доступен тариф <b>«Бесплатный»</b> с ограничением до ${settings.messageLimits.free} запросов в сутки.
 
 Если вам необходимо большее количество запросов — воспользуйтесь одним из премиальных тарифов (пункт меню «Оформить подписку» /${commands.premium})`,
 `<b>Техподдержка</b>

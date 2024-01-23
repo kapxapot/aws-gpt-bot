@@ -37,5 +37,9 @@ export const settings = {
   telegram: {
     maxMessageLength: 4096,
     maxButtonTextLength: 14
+  },
+  messageLimits: {
+    free: 20,
+    premium: 100
   }
 } as const;

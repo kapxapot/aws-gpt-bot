@@ -1,6 +1,6 @@
 import { BaseScene } from "telegraf/scenes";
 import { BotContext } from "../botContext";
-import { commands, messages, scenes } from "../../lib/constants";
+import { commands, messages, scenes, settings } from "../../lib/constants";
 import { addOtherCommandHandlers, dunnoHandler, kickHandler } from "../handlers";
 import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { PaymentEvent } from "../../entities/payment";
@@ -32,7 +32,7 @@ scene.enter(async (ctx) => {
     `Текущий тариф: ${getFormattedPlanName(user)}`,
     "Для увеличения доступного количества ежедневных запросов к ChatGPT оформите подписку на один из платных тарифов:",
     `💚 Тариф «Премиум»:
-◽ до 100 запросов в сутки
+◽ до ${settings.messageLimits.premium} запросов в сутки
 ◽ 290 рублей на 30 дней`,
     `💛 Тариф «Безлимит»:
 ◽ неограниченное количество запросов
