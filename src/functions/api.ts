@@ -11,10 +11,10 @@ type ApiRequest = Request<{}, any, any, ParsedQs, Record<string, any>>;
 type ApiResponse = Response<any, Record<string, any>, number>;
 type HandlerFunc = (reqBody: any) => Promise<void>;
 
-interface ErrorResult {
+type ErrorResult = {
   error: string,
   message?: string
-}
+};
 
 async function handle(req: ApiRequest, res: ApiResponse, func: HandlerFunc) {
   try {

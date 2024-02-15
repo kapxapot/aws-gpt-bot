@@ -3,7 +3,7 @@ import { Case } from "./case";
 import { Money } from "./money";
 import { Plan } from "./plan";
 
-export interface Product {
+export type Product = {
   code: "subscription-premium-30-days" | "subscription-unlimited-30-days";
   name: string;
   displayNames: Partial<Record<Case, string>>;
@@ -17,7 +17,7 @@ export interface Product {
     };
     priority: number;
   };
-}
+};
 
 export type Subscription = {
   name: string;
@@ -25,11 +25,11 @@ export type Subscription = {
   details: {
     plan: Plan;
   };
-}
+};
 
 export type PurchasedProduct = Product & {
   purchasedAt: At;
-}
+};
 
 export function isPurchasedProduct(product: PurchasedProduct | Subscription): product is PurchasedProduct {
   return "purchasedAt" in product;

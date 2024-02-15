@@ -6,8 +6,11 @@ export function decodeItem<T>(item: any) {
   return unmarshall(item as { [key: string]: AttributeValue; }) as T;
 }
 
-export function processStreamEvent<T>(event: DynamoDBStreamEvent, processor: (entity: T) => void) {
-  event.Records.forEach((record) => {
+export function processStreamEvent<T>(
+  event: DynamoDBStreamEvent,
+  processor: (entity: T) => Promise<void>
+) {
+  event.Records.forEach(async (record) => {
     if (record.eventName !== "INSERT") {
       return;
     }
@@ -20,6 +23,6 @@ export function processStreamEvent<T>(event: DynamoDBStreamEvent, processor: (en
 
     const entity = decodeItem<T>(rawItem);
 
-    processor(entity);
+    await processor(entity);
   });
 }

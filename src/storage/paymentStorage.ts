@@ -1,6 +1,6 @@
 import { getItem, putItem, updateItem } from "../lib/database";
 import { Payment } from "../entities/payment";
-import { Timestampless } from "../entities/at";
+import { Timestampless } from "../lib/types";
 
 const paymentsTable = process.env.PAYMENTS_TABLE!;
 

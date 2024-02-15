@@ -1,5 +1,7 @@
 import { now } from "../entities/at";
 import { BroadcastMessage } from "../entities/broadcastMessage";
+import { BroadcastRequest } from "../entities/broadcastRequest";
+import { toText } from "../lib/common";
 import { storeBroadcastMessage, updateBroadcastMessage } from "../storage/broadcastMessageStorage";
 import { getAllUsers, getUser } from "../storage/userStorage";
 import { sendTelegramMessage } from "../telegram/bot";
@@ -8,15 +10,16 @@ import { putMetric } from "./metricService";
 /**
  * Adds broadcast messages for all users.
  */
-export async function addBroadcast(message: string, userIds?: string[]) {
+export async function processBroadcastRequest(request: BroadcastRequest) {
+  const message = toText(...request.messages);
   const users = await getAllUsers();
 
   for (const user of users) {
-    if (userIds && !userIds.some(uid => uid === user.id)) {
+    if (request.users && !request.users.some(uid => uid === user.id)) {
       continue;
     }
 
-    await storeBroadcastMessage(user, message);
+    await storeBroadcastMessage(user, message, request.isTest);
   };
 }
 
@@ -36,14 +39,18 @@ export async function sendBroadcastMessage(broadcastMessage: BroadcastMessage) {
   }
 
   try {
-    await sendTelegramMessage(user, broadcastMessage.message);
+    const isTest = broadcastMessage.isTest;
+
+    if (isTest) {
+      await sendTelegramMessage(user, broadcastMessage.message);
+    }
 
     await updateBroadcastMessage(
       broadcastMessage,
       {
         sentAt: now(),
         sendResult: {
-          status: "success"
+          status: isTest ? "test" : "success"
         }
       }
     );

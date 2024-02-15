@@ -1,11 +1,12 @@
-import { toArray, toText } from "../lib/common";
-import { addBroadcast } from "../services/broadcastMessageService";
+import { toSanitizedArray } from "../lib/common";
+import { storeBroadcastRequest } from "../storage/broadcastRequestStorage";
 
-interface BroadcastPayload {
+type BroadcastPayload = {
   apiKey: string;
   message: string | string[];
   users?: string[];
-}
+  isTest?: boolean;
+};
 
 export async function broadcastHook(payload: BroadcastPayload) {
   const apiKey = process.env.API_KEY;
@@ -22,15 +23,15 @@ export async function broadcastHook(payload: BroadcastPayload) {
     throw new Error("Invalid API key.");
   }
 
-  const messages = toArray(payload.message)
-    .map(m => m.trim())
-    .filter(m => !!m);
+  const messages = toSanitizedArray(payload.message);
 
   if (!messages.length) {
     throw new Error("Empty message (message). A not empty string or an array of strings is expected.");
   }
 
-  const text = toText(...messages);
-
-  await addBroadcast(text, payload.users);
+  await storeBroadcastRequest({
+    messages,
+    users: payload.users,
+    isTest: payload.isTest
+  });
 }

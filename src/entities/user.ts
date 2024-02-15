@@ -1,27 +1,27 @@
+import { Entity } from "../lib/types";
 import { At, Timestamps } from "./at";
 import { Context } from "./context";
 import { Product } from "./product";
 
-export interface UserEvent {
+export type UserEvent = {
   type: "purchase";
   details: Product;
   at: At;
-}
+};
 
-export interface UsageStats {
+export type UsageStats = {
   messageCount: number;
   startOfDay: number;
   lastMessageAt?: At;
-}
+};
 
-export interface UserSettings {
+export type UserSettings = {
   historySize?: number;
   temperature?: number;
   isDebugMode?: boolean;
-}
+};
 
-export interface User extends Timestamps {
-  id: string;
+export type User = Entity & {
   telegramId: number;
   firstName?: string;
   lastName?: string;

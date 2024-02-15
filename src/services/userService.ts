@@ -7,6 +7,11 @@ import { Prompt, customPromptCode, noPromptCode } from "../entities/prompt";
 import { getUserHistorySize } from "./userSettingsService";
 import { addMessageToHistory, createContext, cutoffMessages, getCurrentHistory, getCurrentPrompt } from "./contextService";
 
+type CurrentContext = {
+  prompt: string | null;
+  latestMessages: Message[] | null;
+};
+
 export const getOrAddUser = async (userData: TelegrafUser): Promise<User> => {
   return await getUserByTelegramId(userData.id)
     ?? await storeUser(userData);
@@ -76,11 +81,6 @@ async function updateContext(user: User, context: Context): Promise<User> {
       context
     }
   );
-}
-
-interface CurrentContext {
-  prompt: string | null;
-  latestMessages: Message[] | null;
 }
 
 /**

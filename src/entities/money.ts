@@ -1,4 +1,6 @@
-export interface Money {
-  currency: "RUB";
+type Currency = "RUB";
+
+export type Money = {
+  currency: Currency;
   amount: number;
-}
+};

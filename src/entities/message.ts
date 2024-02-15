@@ -1,23 +1,23 @@
 import { Result } from "../lib/error";
-import { At, Timestamps } from "./at";
+import { Entity } from "../lib/types";
+import { At } from "./at";
 
-export interface Usage {
+export type Usage = {
   promptTokens: number;
   completionTokens: number;
   totalTokens: number;
-}
+};
 
-export interface Completion {
+export type Completion = {
   reply: string | null;
   usage: Usage | null;
   model?: string;
-}
+};
 
-export interface Message extends Timestamps {
-  id: string;
+export type Message = Entity & {
   userId: string;
   request: string;
   response: Result<Completion>;
   requestedAt: At;
   respondedAt: At;
-}
+};

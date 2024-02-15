@@ -1,14 +1,21 @@
-import { At, Timestamps } from "./at";
+import { Entity } from "../lib/types";
+import { At } from "./at";
 
-export interface BroadcastMessage extends Timestamps {
-  id: string;
+type Success = {
+  status: "success" | "test";
+};
+
+type Fail = {
+  status: "fail";
+  error: unknown;
+};
+
+type SendResult = Success | Fail;
+
+export type BroadcastMessage = Entity & {
   message: string;
   userId: string;
+  isTest?: string;
   sentAt?: At;
-  sendResult?: {
-    status: "success";
-  } | {
-    status: "fail";
-    error: unknown;
-  }
-}
+  sendResult?: SendResult;
+};

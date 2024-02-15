@@ -3,14 +3,14 @@ import { v4 as uuidv4 } from "uuid";
 import { Money } from "../entities/money";
 import { Result } from "../lib/error";
 
-export interface YooMoneyPaymentData {
+export type YooMoneyPaymentData = {
   total: Money;
   description: string;
-}
+};
 
-export interface PaymentResponse {
-  data: any;
-}
+export type PaymentResponse = {
+  data: unknown;
+};
 
 const config = {
   botUrl: process.env.BOT_URL,

@@ -1,17 +1,17 @@
-import { At, Timestamps } from "./at";
+import { Entity } from "../lib/types";
+import { At } from "./at";
 import { Money } from "./money";
 import { Product } from "./product";
 
 export type PaymentType = "YooMoney";
 
-export interface PaymentEvent {
+export type PaymentEvent = {
   type: "created" | "succeeded"
   details: any;
   at: At;
-}
+};
 
-export interface Payment extends Timestamps {
-  id: string;
+export type Payment = Entity & {
   userId: string;
   type: PaymentType;
   cart: Product[];
@@ -22,4 +22,4 @@ export interface Payment extends Timestamps {
   requestData: any;
   responseData: any;
   events: PaymentEvent[];
-}
+};

@@ -8,11 +8,11 @@ export const customPromptName = "Свой промт";
 
 export type ModeCode = "free" | "role" | "prompt";
 
-export interface Mode {
+export type Mode = {
   code: ModeCode;
   name: string;
   description: string;
-}
+};
 
 const modes: Mode[] = [
   {
@@ -35,18 +35,18 @@ const modes: Mode[] = [
   }
 ];
 
-interface PromptDefaults {
+type PromptDefaults = {
   modeCode: ModeCode;
   promptCode: string;
-}
+};
 
-export interface Prompt {
+export type Prompt = {
   language: "ru" | "en"
   code: string;
   name: string;
   content: string;
   intro: string;
-}
+};
 
 const prompts: Prompt[] = [
   {

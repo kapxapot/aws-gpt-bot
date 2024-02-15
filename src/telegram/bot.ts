@@ -31,7 +31,7 @@ function getBot() {
   );
 }
 
-export function processTelegramRequest(tgRequest: TelegramRequest) {
+export async function processTelegramRequest(tgRequest: TelegramRequest) {
   const bot = getBot();
 
   bot.use(session({
@@ -107,7 +107,7 @@ export function processTelegramRequest(tgRequest: TelegramRequest) {
      }
   });
 
-  bot.handleUpdate(tgRequest.request);
+  bot.handleUpdate(tgRequest.request as any);
 }
 
 export async function sendTelegramMessage(user: User, message: string) {

@@ -6,12 +6,14 @@ const broadcastMessagesTable = process.env.BROADCAST_MESSAGES_TABLE!;
 
 export const storeBroadcastMessage = async (
   user: User,
-  message: string
+  message: string,
+  isTest?: boolean
 ) => await putItem<BroadcastMessage>(
   broadcastMessagesTable,
   {
     userId: user.id,
-    message
+    message,
+    isTest
   }
 );
 

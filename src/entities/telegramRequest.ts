@@ -1,6 +1,5 @@
-import { Timestamps } from "./at";
+import { Entity } from "../lib/types";
 
-export interface TelegramRequest extends Timestamps {
-  id: string;
-  request: any;
-}
+export type TelegramRequest = Entity & {
+  request: unknown;
+};

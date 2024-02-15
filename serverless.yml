@@ -11,6 +11,7 @@ package:
 custom:
   tables:
     broadcastMessages: 'broadcast-messages-${sls:stage}'
+    broadcastRequests: 'broadcast-requests-${sls:stage}'
     messages: 'messages-${sls:stage}'
     payments: 'payments-${sls:stage}'
     sessions: 'sessions-${sls:stage}'
@@ -36,6 +37,7 @@ provider:
             - dynamodb:DeleteItem
           Resource:
             - Fn::GetAtt: [BroadcastMessagesTable, Arn]
+            - Fn::GetAtt: [BroadcastRequestsTable, Arn]
             - Fn::GetAtt: [MessagesTable, Arn]
             - Fn::GetAtt: [PaymentsTable, Arn]
             - Fn::GetAtt: [TelegramRequestsTable, Arn]
@@ -48,6 +50,7 @@ provider:
   environment:
     ENV: ${sls:stage}
     BROADCAST_MESSAGES_TABLE: ${self:custom.tables.broadcastMessages}
+    BROADCAST_REQUESTS_TABLE: ${self:custom.tables.broadcastRequests}
     MESSAGES_TABLE: ${self:custom.tables.messages}
     PAYMENTS_TABLE: ${self:custom.tables.payments}
     SESSIONS_TABLE: ${self:custom.tables.sessions}
@@ -72,8 +75,15 @@ functions:
           arn:
             Fn::GetAtt: [TelegramRequestsTable, StreamArn]
     timeout: 330
-  broadcast:
-    handler: src/functions/broadcast.handler
+  broadcastRequest:
+    handler: src/functions/broadcastRequest.handler
+    events:
+      - stream:
+          type: dynamodb
+          arn:
+            Fn::GetAtt: [BroadcastRequestsTable, StreamArn]
+  broadcastMessage:
+    handler: src/functions/broadcastMessage.handler
     events:
       - stream:
           type: dynamodb
@@ -93,6 +103,19 @@ resources:
             KeyType: HASH
         BillingMode: PAY_PER_REQUEST
         TableName: ${self:custom.tables.broadcastMessages}
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE
+    BroadcastRequestsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.tables.broadcastRequests}
         StreamSpecification:
           StreamViewType: NEW_IMAGE
     MessagesTable:

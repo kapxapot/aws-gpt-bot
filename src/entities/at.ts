@@ -1,22 +1,19 @@
-export interface At {
+export type At = {
   timestamp: number;
   date: string;
 }
 
-interface CreatedAt {
+type CreatedAt = {
   createdAt: number;
   createdAtIso: string;
 }
 
-interface UpdatedAt {
+type UpdatedAt = {
   updatedAt: number;
   updatedAtIso: string;
 }
 
-export interface Timestamps extends CreatedAt, UpdatedAt {
-}
-
-export type Timestampless<T extends Timestamps> = Omit<T, keyof Timestamps>;
+export type Timestamps = CreatedAt & UpdatedAt;
 
 export function iso(ts: number): string {
   return new Date(ts).toISOString();

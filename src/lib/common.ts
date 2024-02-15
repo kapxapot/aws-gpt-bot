@@ -10,6 +10,12 @@ export function toText(...strings: string[]): string {
   return strings.join("\n\n");
 }
 
+export function toSanitizedArray(strings: string | string[]): string[] {
+  return toArray(strings)
+    .map(m => m.trim())
+    .filter(m => !!m);
+}
+
 export function truncate(str: string, limit: number): string {
   return str.length > limit
     ? `${str.substring(0, limit)}...`
@@ -17,9 +23,9 @@ export function truncate(str: string, limit: number): string {
 }
 
 export function first<T>(array: T[]): T | null {
-  return !empty(array) ? array[0] : null;
+  return !isEmpty(array) ? array[0] : null;
 }
 
-export function empty<T>(array: T[]): boolean {
+function isEmpty<T>(array: T[]): boolean {
   return array.length === 0;
 }

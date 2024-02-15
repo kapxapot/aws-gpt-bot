@@ -5,5 +5,5 @@ import { processTelegramRequest } from "../telegram/bot";
 
 export const handler = (event: DynamoDBStreamEvent) => processStreamEvent(
   event,
-  (tgRequest: TelegramRequest) => processTelegramRequest(tgRequest)
+  async (tgRequest: TelegramRequest) => await processTelegramRequest(tgRequest)
 );

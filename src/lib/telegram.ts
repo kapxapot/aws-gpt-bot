@@ -3,11 +3,16 @@ import { toText } from "./common";
 import { Markup } from "telegraf";
 import { settings } from "./constants";
 
+type Button = InlineKeyboardButton.CallbackButton;
+
+type CommandWithArgs = {
+  command: string;
+  args: string[];
+};
+
 export function userName(user: User): string {
   return user.first_name ?? user.last_name ?? user.username ?? "anonymous";
 }
-
-type Button = InlineKeyboardButton.CallbackButton;
 
 export function inlineKeyboard(...buttonData: string[][]): Markup.Markup<InlineKeyboardMarkup> {
   const buttons: Button[] = buttonData.map(data => Markup.button.callback(data[0], data[1]));
@@ -118,11 +123,6 @@ export function sliceText(text: string, limit: number = settings.telegram.maxMes
   }
 
   return result;
-}
-
-interface CommandWithArgs {
-  command: string;
-  args: string[];
 }
 
 export function parseCommandWithArgs(text: string): CommandWithArgs {

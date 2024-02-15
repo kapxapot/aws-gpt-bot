@@ -6,6 +6,16 @@ import { first } from "../lib/common";
 import { updateUsageStats } from "./userService";
 import { addDays, formatDate, isInRange, startOfToday } from "./dateService";
 
+export type CurrentPlan = {
+  name: string;
+  expiresAt: Date | null;
+};
+
+type TimestampRange = {
+  start: number;
+  end: number;
+};
+
 export async function messageLimitExceeded(user: User): Promise<boolean> {
   if (!user.usageStats) {
     return false;
@@ -55,11 +65,6 @@ export function getFormattedPlanName(user: User): string {
   return `${nameStr} (действует по ${formatDate(expiresAt, "dd.MM.yyyy")})`;
 }
 
-export interface CurrentPlan {
-  name: string;
-  expiresAt: Date | null;
-}
-
 function getCurrentPlan(user: User): CurrentPlan {
   const subscription = getCurrentSubscription(user);
   const name = getProductDisplayName(subscription);
@@ -106,11 +111,6 @@ function isActiveSubscription(product: PurchasedProduct): boolean {
   const { start, end } = getProductTimestampRange(product);
 
   return isInRange(ts(), start, end);
-}
-
-interface TimestampRange {
-  start: number;
-  end: number;
 }
 
 function getProductTimestampRange(product: PurchasedProduct): TimestampRange {

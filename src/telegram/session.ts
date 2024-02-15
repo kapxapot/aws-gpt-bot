@@ -1,10 +1,10 @@
 import { deleteSession, getSession, putSession } from "../storage/sessionStorage";
 
-export type MaybePromise<T> = T | Promise<T>;
+type MaybePromise<T> = T | Promise<T>;
 
 type Any = {} | undefined | null;
 
-export interface SessionStore<T> {
+type SessionStore<T> = {
   get: (key: string) => MaybePromise<T | undefined>;
   set: (key: string, session: T) => MaybePromise<Any>;
   delete: (key: string) => MaybePromise<Any>;
