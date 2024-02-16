@@ -2,8 +2,9 @@ import { settings } from "../../lib/constants";
 import { parseCommandWithArgs, reply } from "../../lib/telegram";
 import { getOrAddUser } from "../../services/userService";
 import { getUserTemperature, updateUserSettings } from "../../services/userSettingsService";
+import { AnyContext } from "../botContext";
 
-export async function temperatureHandler(ctx: any) {
+export async function temperatureHandler(ctx: AnyContext) {
   const minTemperature = settings.temperature.min;
   const maxTemperature = settings.temperature.max;
 

@@ -3,6 +3,8 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { v4 as uuidv4 } from "uuid";
 import { timestamps, updatedTimestamps } from "../entities/at";
 
+type Attributes = Record<string, unknown>;
+
 export function getDynamoDbClient() {
   const marshallOptions = {
     // Whether to automatically convert empty strings, blobs, and sets to `null`.
@@ -24,6 +26,7 @@ export function getDynamoDbClient() {
   return DynamoDBDocumentClient.from(client, translateConfig);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export async function putItem<T>(table: string, item: any): Promise<T> {
   const params = {
     TableName: table,
@@ -56,7 +59,7 @@ export async function getItem<T>(table: string, id: string): Promise<T | null> {
 
 export async function queryItems<T>(
   table: string,
-  attributes: Record<string, any>,
+  attributes: Attributes,
   condition: string,
   filter?: string
 ): Promise<T[]> {
@@ -85,7 +88,7 @@ export async function queryItems<T>(
 
 export async function queryItem<T>(
   table: string,
-  attributes: Record<string, any>,
+  attributes: Attributes,
   condition: string,
   filter?: string
 ): Promise<T | null> {
@@ -109,7 +112,7 @@ export async function getCount(table: string): Promise<number | null> {
 export async function scanItem<T>(
   table: string,
   filter: string,
-  attributes: Record<string, any>,
+  attributes: Attributes,
   projection?: string
 ): Promise<T | null> {
   const items = await scanItems<T>(table, filter, attributes, projection);
@@ -120,7 +123,7 @@ export async function scanItem<T>(
 export async function scanItems<T>(
   table: string,
   filter?: string,
-  attributes?: Record<string, any>,
+  attributes?: Attributes,
   projection?: string
 ): Promise<T[]> {
   const params: ScanCommandInput = {
@@ -132,6 +135,7 @@ export async function scanItems<T>(
 
   const dbClient = getDynamoDbClient();
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   let items: Record<string, any>[] = [];
   let lastKey;
 
@@ -156,7 +160,7 @@ export async function scanItems<T>(
 
 export async function updateItem<T>(
   table: string,
-  key: Record<string, any>,
+  key: Record<string, unknown>,
   attributes: Partial<T>
 ): Promise<T> {
   const updatedAttributes = {
@@ -182,7 +186,7 @@ export async function updateItem<T>(
 
 export async function removeFromItem<T>(
   table: string,
-  key: Record<string, any>,
+  key: Record<string, unknown>,
   attributes: string[]
 ): Promise<T> {
   const params: UpdateCommandInput = {
@@ -212,14 +216,14 @@ export async function deleteItem<T>(table: string, id: string): Promise<T> {
   return result.Attributes as T;
 }
 
-function fromItem<T>(item: Record<string, any> | undefined): T | null {
+function fromItem<T>(item: Record<string, unknown> | undefined): T | null {
   return item ? item as T : null;
 }
 
-function recordToSetExpression(record: Record<string, any>): string {
+function recordToSetExpression(record: Record<string, unknown>): string {
   const chunks = [];
 
-  for (const [key, value] of Object.entries(record)) {
+  for (const [key] of Object.entries(record)) {
     chunks.push(`#${key} = :${key}`);
   }
 
@@ -230,18 +234,18 @@ function recordToSetExpression(record: Record<string, any>): string {
   return "set " + chunks.join(", ");
 }
 
-function recordToAttributeNames(record: Record<string, any>): Record<string, string> {
-  let result: Record<string, string> = {};
+function recordToAttributeNames(record: Record<string, unknown>): Record<string, string> {
+  const result: Record<string, string> = {};
 
-  for (const [key, value] of Object.entries(record)) {
+  for (const [key] of Object.entries(record)) {
     result[`#${key}`] = key;
   }
 
   return result;
 }
 
-function recordToAttributeValues(record: Record<string, any>): Record<string, any> {
-  let result: Record<string, any> = {};
+function recordToAttributeValues(record: Record<string, unknown>): Attributes {
+  const result: Attributes = {};
 
   for (const [key, value] of Object.entries(record)) {
     result[`:${key}`] = value;

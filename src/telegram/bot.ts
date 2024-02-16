@@ -16,6 +16,7 @@ import { modeScene } from "./scenes/modeScene";
 import { getUsersCount, updateUser } from "../storage/userStorage";
 import { putMetric } from "../services/metricService";
 import { isDebugMode } from "../services/userSettingsService";
+import { Update } from "telegraf/types";
 
 const config = {
   botToken: process.env.BOT_TOKEN!,
@@ -107,7 +108,7 @@ export async function processTelegramRequest(tgRequest: TelegramRequest) {
      }
   });
 
-  bot.handleUpdate(tgRequest.request as any);
+  bot.handleUpdate(tgRequest.request as Update);
 }
 
 export async function sendTelegramMessage(user: User, message: string) {

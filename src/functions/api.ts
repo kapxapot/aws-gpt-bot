@@ -7,9 +7,9 @@ import { ParsedQs } from "qs";
 import { broadcastHook } from "../webhooks/broadcastHook";
 import { isDebugMode } from "../services/userSettingsService";
 
-type ApiRequest = Request<{}, any, any, ParsedQs, Record<string, any>>;
-type ApiResponse = Response<any, Record<string, any>, number>;
-type HandlerFunc = (reqBody: any) => Promise<void>;
+type ApiRequest = Request<object, unknown, unknown, ParsedQs, Record<string, unknown>>;
+type ApiResponse = Response<unknown, Record<string, unknown>, number>;
+type HandlerFunc = (reqBody: unknown) => Promise<void>;
 
 type ErrorResult = {
   error: string,

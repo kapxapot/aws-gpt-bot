@@ -1,4 +1,4 @@
-import { getCount, getItem, putItem, scanItem, scanItems, updateItem } from "../lib/database";
+import { getItem, putItem, scanItem, scanItems, updateItem } from "../lib/database";
 import { User } from "../entities/user";
 import { User as TelegrafUser } from "telegraf/types";
 

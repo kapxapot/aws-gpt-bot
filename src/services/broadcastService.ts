@@ -20,7 +20,7 @@ export async function processBroadcastRequest(request: BroadcastRequest) {
     }
 
     await storeBroadcastMessage(user, message, request.isTest);
-  };
+  }
 }
 
 export async function sendBroadcastMessage(broadcastMessage: BroadcastMessage) {

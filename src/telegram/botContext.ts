@@ -1,5 +1,8 @@
 import { WizardContext, WizardSession } from "telegraf/scenes";
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type AnyContext = any;
+
 export type BotContext = WizardContext & {
   session: SessionData & WizardSession;
 };

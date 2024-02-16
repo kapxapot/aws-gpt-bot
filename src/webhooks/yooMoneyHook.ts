@@ -6,7 +6,7 @@ import { getPayment, updatePayment } from "../storage/paymentStorage";
 import { getUser } from "../storage/userStorage";
 import { sendTelegramMessage } from "../telegram/bot";
 
-export async function youMoneyHook(requestData: any) {
+export async function youMoneyHook(requestData: unknown) {
   const event = requestData.event;
 
   if (event !== "payment.succeeded") {

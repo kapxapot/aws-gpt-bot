@@ -2,7 +2,7 @@ import { AttributeValue } from "@aws-sdk/client-dynamodb";
 import { unmarshall } from "@aws-sdk/util-dynamodb";
 import { DynamoDBStreamEvent } from "aws-lambda";
 
-export function decodeItem<T>(item: any) {
+export function decodeItem<T>(item: unknown) {
   return unmarshall(item as { [key: string]: AttributeValue; }) as T;
 }
 

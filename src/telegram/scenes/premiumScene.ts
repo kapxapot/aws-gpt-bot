@@ -4,14 +4,13 @@ import { commands, messages, scenes, settings } from "../../lib/constants";
 import { addOtherCommandHandlers, dunnoHandler, kickHandler } from "../handlers";
 import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { PaymentEvent } from "../../entities/payment";
-import { getOrAddUser, isTester } from "../../services/userService";
+import { getOrAddUser } from "../../services/userService";
 import { storePayment } from "../../storage/paymentStorage";
 import { yooMoneyPayment } from "../../external/yooMoneyPayment";
 import { now } from "../../entities/at";
 import { Product, getProductDisplayName, isPurchasedProduct, monthlyPremiumSubscription, monthlyUnlimitedSubscription } from "../../entities/product";
 import { isError } from "../../lib/error";
 import { getCurrentSubscription, getFormattedPlanName } from "../../services/planService";
-import { isProd } from "../../services/envService";
 import { purchasesEnabled } from "../../services/featureService";
 
 const scene = new BaseScene<BotContext>(scenes.premium);

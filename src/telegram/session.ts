@@ -2,6 +2,7 @@ import { deleteSession, getSession, putSession } from "../storage/sessionStorage
 
 type MaybePromise<T> = T | Promise<T>;
 
+// eslint-disable-next-line @typescript-eslint/ban-types
 type Any = {} | undefined | null;
 
 type SessionStore<T> = {

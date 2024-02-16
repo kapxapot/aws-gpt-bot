@@ -1,6 +1,6 @@
 import { inspect } from "util";
 import { Composer } from "telegraf";
-import { BotContext } from "./botContext";
+import { AnyContext, BotContext } from "./botContext";
 import { commands, messages, scenes } from "../lib/constants";
 import { clearInlineKeyboard, reply } from "../lib/telegram";
 import { historySizeHandler } from "./handlers/historySizeHandler";
@@ -9,7 +9,7 @@ import { getOrAddUser } from "../services/userService";
 import { showStatus } from "../services/messageService";
 import { isDebugMode } from "../services/userSettingsService";
 
-type Handler = (ctx: any) => Promise<void>;
+type Handler = (ctx: AnyContext) => Promise<void>;
 type HandlerTuple = [command: string, handler: Handler];
 
 export function addOtherCommandHandlers(scene: Composer<BotContext>, exceptCommand: string) {
@@ -47,14 +47,14 @@ export function getCommandHandlers(): HandlerTuple[] {
 }
 
 function sceneHandler(scene: string): Handler {
-  return async (ctx: any) => await ctx.scene.enter(scene);
+  return async (ctx: AnyContext) => await ctx.scene.enter(scene);
 }
 
-async function termsHandler(ctx: any) {
+async function termsHandler(ctx: AnyContext) {
   await reply(ctx, process.env.TERMS_URL!);
 }
 
-async function supportHandler(ctx: any) {
+async function supportHandler(ctx: AnyContext) {
   await reply(
     ctx,
     "Напишите в техподдержку, чтобы получить ответ на ваш вопрос или обсудить идеи по развитию чат-бота под ваши задачи.",
@@ -62,7 +62,7 @@ async function supportHandler(ctx: any) {
   );
 }
 
-async function statusHandler(ctx: any) {
+async function statusHandler(ctx: AnyContext) {
   if (!ctx.from) {
     return;
   }
@@ -72,7 +72,7 @@ async function statusHandler(ctx: any) {
   await showStatus(ctx, user);
 }
 
-export async function kickHandler(ctx: any, next: any) {
+export async function kickHandler(ctx: AnyContext, next: () => Promise<void>) {
   const myChatMember = ctx.myChatMember;
 
   if (myChatMember) {
@@ -85,7 +85,7 @@ export async function kickHandler(ctx: any, next: any) {
   await next();
 }
 
-export async function dunnoHandler(ctx: any) {
+export async function dunnoHandler(ctx: AnyContext) {
   if (ctx.from) {
     const user = await getOrAddUser(ctx.from);
 

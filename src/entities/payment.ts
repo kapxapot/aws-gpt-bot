@@ -7,7 +7,7 @@ export type PaymentType = "YooMoney";
 
 export type PaymentEvent = {
   type: "created" | "succeeded"
-  details: any;
+  details: unknown;
   at: At;
 };
 
@@ -19,7 +19,7 @@ export type Payment = Entity & {
   description: string;
   status: string;
   url: string;
-  requestData: any;
-  responseData: any;
+  requestData: unknown;
+  responseData: unknown;
   events: PaymentEvent[];
 };

@@ -1,5 +1,5 @@
 import { Entity } from "../lib/types";
-import { At, Timestamps } from "./at";
+import { At } from "./at";
 import { Context } from "./context";
 import { Product } from "./product";
 

@@ -2,8 +2,9 @@ import { settings } from "../../lib/constants";
 import { parseCommandWithArgs, reply } from "../../lib/telegram";
 import { getOrAddUser } from "../../services/userService";
 import { getUserHistorySize, updateUserSettings } from "../../services/userSettingsService";
+import { AnyContext } from "../botContext";
 
-export async function historySizeHandler(ctx: any) {
+export async function historySizeHandler(ctx: AnyContext) {
   const minHistorySize = settings.historySize.min;
   const maxHistorySize = settings.historySize.max;
 

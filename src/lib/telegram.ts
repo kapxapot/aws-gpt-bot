@@ -2,6 +2,7 @@ import { InlineKeyboardButton, InlineKeyboardMarkup, Message, User } from "teleg
 import { toText } from "./common";
 import { Markup } from "telegraf";
 import { settings } from "./constants";
+import { AnyContext } from "../telegram/botContext";
 
 type Button = InlineKeyboardButton.CallbackButton;
 
@@ -22,14 +23,14 @@ export function inlineKeyboard(...buttonData: string[][]): Markup.Markup<InlineK
   );
 }
 
-export async function clearInlineKeyboard(ctx: any) {
+export async function clearInlineKeyboard(ctx: AnyContext) {
   try {
     await ctx.answerCbQuery();
-  } catch {}
+  } catch { /* empty */ }
 
   try {
     await ctx.editMessageReplyMarkup();
-  } catch {}
+  } catch { /* empty */ }
 }
 
 export function sliceButtons<T extends Button>(buttons: T[], limit: number = 2, maxLength: number = settings.telegram.maxButtonTextLength): T[][] {
@@ -65,7 +66,7 @@ export function sliceButtons<T extends Button>(buttons: T[], limit: number = 2, 
   return result;
 }
 
-export async function reply(ctx: any, ...lines: string[]): Promise<Message.TextMessage[]> {
+export async function reply(ctx: AnyContext, ...lines: string[]): Promise<Message.TextMessage[]> {
   const slices = sliceText(toText(...lines));
 
   const messages = [];
@@ -80,7 +81,7 @@ export async function reply(ctx: any, ...lines: string[]): Promise<Message.TextM
 }
 
 export async function replyWithKeyboard(
-  ctx: any,
+  ctx: AnyContext,
   keyboard: Markup.Markup<InlineKeyboardMarkup>,
   ...lines: string[]
 ) {

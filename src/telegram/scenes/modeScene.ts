@@ -100,7 +100,9 @@ getModes().forEach(mode => {
         case "prompt":
           setStage(ctx.session, "promptSelection");
 
+          // eslint-disable-next-line no-case-declarations
           const user = await getOrAddUser(ctx.from);
+          // eslint-disable-next-line no-case-declarations
           const customPrompt = user.context?.customPrompt;
 
           if (customPrompt) {

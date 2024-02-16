@@ -16,12 +16,13 @@ import { putMetric } from "./metricService";
 import { isDebugMode } from "./userSettingsService";
 import { gptTimeout } from "./gptService";
 import { happened } from "./dateService";
+import { AnyContext } from "../telegram/botContext";
 
 const config = {
   messageInterval: parseInt(process.env.THROTTLE_TIMEOUT ?? "30"), // seconds
 };
 
-export async function sendMessageToGpt(ctx: any, user: User, question: string, requestedAt?: number) {
+export async function sendMessageToGpt(ctx: AnyContext, user: User, question: string, requestedAt?: number) {
   const lastMessageAt = user.usageStats?.lastMessageAt;
 
   if (user.waitingForGptAnswer) {
@@ -124,13 +125,13 @@ async function addMessageMetrics(completion: Completion) {
   }
 }
 
-export async function showStatus(ctx: any, user: User) {
+export async function showStatus(ctx: AnyContext, user: User) {
   await reply(ctx, `Текущий тариф: ${getFormattedPlanName(user)}`);
   await reply(ctx, `Текущий режим: <b>${getModeName(user)}</b>`);
   await showLastHistoryMessage(ctx, user);
 }
 
-export async function showLastHistoryMessage(ctx: any, user: User) {
+export async function showLastHistoryMessage(ctx: AnyContext, user: User) {
   const { latestMessages } = getCurrentContext(user, 1);
 
   if (!latestMessages?.length) {
@@ -151,7 +152,7 @@ function formatGptMessage(message: string): string {
     return `🤖 ${encodeText(message)}`;
 }
 
-export async function showDebugInfo(ctx: any, user: User, answer: Completion | null) {
+export async function showDebugInfo(ctx: AnyContext, user: User, answer: Completion | null) {
   const chunks = [];
 
   chunks.push(`👉 режим: <b>${getModeName(user)}</b>`);
