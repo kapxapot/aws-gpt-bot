@@ -15,7 +15,7 @@ export function sessionStore<T>(): SessionStore<T> {
   return {
     async get(key: string) {
       const session = await getSession(key);
-      return session ? session.value : {};
+      return (session?.value ?? {}) as T;
     },
     async set(key: string, session: T) {
       return await putSession({

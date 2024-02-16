@@ -9,7 +9,13 @@ export type YooMoneyPaymentData = {
 };
 
 export type PaymentResponse = {
-  data: unknown;
+  data: {
+    id: string;
+    status: string;
+    confirmation: {
+      confirmation_url: string;
+    }
+  };
 };
 
 const config = {

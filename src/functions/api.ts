@@ -9,16 +9,16 @@ import { isDebugMode } from "../services/userSettingsService";
 
 type ApiRequest = Request<object, unknown, unknown, ParsedQs, Record<string, unknown>>;
 type ApiResponse = Response<unknown, Record<string, unknown>, number>;
-type HandlerFunc = (reqBody: unknown) => Promise<void>;
+type HandlerFunc<T> = (reqBody: T) => Promise<void>;
 
 type ErrorResult = {
   error: string,
   message?: string
 };
 
-async function handle(req: ApiRequest, res: ApiResponse, func: HandlerFunc) {
+async function handle<T>(req: ApiRequest, res: ApiResponse, func: HandlerFunc<T>) {
   try {
-    await func(req.body);
+    await func(req.body as T);
 
     res.status(200).end();
   } catch (error) {
