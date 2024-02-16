@@ -41,7 +41,7 @@ export async function sendBroadcastMessage(broadcastMessage: BroadcastMessage) {
   try {
     const isTest = broadcastMessage.isTest;
 
-    if (isTest) {
+    if (!isTest) {
       await sendTelegramMessage(user, broadcastMessage.message);
     }
 

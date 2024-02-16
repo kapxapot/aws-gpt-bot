@@ -15,7 +15,7 @@ type SendResult = Success | Fail;
 export type BroadcastMessage = Entity & {
   message: string;
   userId: string;
-  isTest?: string;
+  isTest?: boolean;
   sentAt?: At;
   sendResult?: SendResult;
 };
