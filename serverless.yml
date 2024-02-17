@@ -82,6 +82,7 @@ functions:
           type: dynamodb
           arn:
             Fn::GetAtt: [BroadcastRequestsTable, StreamArn]
+    timeout: 900
   broadcastMessage:
     handler: src/functions/broadcastMessage.handler
     events:
