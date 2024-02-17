@@ -2,6 +2,7 @@ import { DeleteCommand, DynamoDBDocumentClient, GetCommand, PutCommand, QueryCom
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { v4 as uuidv4 } from "uuid";
 import { timestamps, updatedTimestamps } from "../entities/at";
+import { Entity, Unsaved } from "./types";
 
 type Attributes = Record<string, unknown>;
 
@@ -12,12 +13,12 @@ export function getDynamoDbClient() {
     // Whether to remove undefined values while marshalling.
     removeUndefinedValues: true, // false, by default.
     // Whether to convert typeof object to map attribute.
-    convertClassInstanceToMap: true, // false, by default.
+    convertClassInstanceToMap: true // false, by default.
   };
 
   const unmarshallOptions = {
     // Whether to return numbers as a string instead of converting them to native JavaScript numbers.
-    wrapNumbers: false, // false, by default.
+    wrapNumbers: false // false, by default.
   };
 
   const translateConfig = { marshallOptions, unmarshallOptions };
@@ -26,8 +27,7 @@ export function getDynamoDbClient() {
   return DynamoDBDocumentClient.from(client, translateConfig);
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export async function putItem<T>(table: string, item: any): Promise<T> {
+export async function putItem<T extends Entity>(table: string, item: Unsaved<T>): Promise<T> {
   const params = {
     TableName: table,
     Item: {
@@ -61,7 +61,8 @@ export async function queryItems<T>(
   table: string,
   attributes: Attributes,
   condition: string,
-  filter?: string
+  filter?: string,
+  limit?: number
 ): Promise<T[]> {
   const params: QueryCommandInput = {
     TableName: table,
@@ -71,6 +72,10 @@ export async function queryItems<T>(
 
   if (filter) {
     params.FilterExpression = filter;
+  }
+
+  if (limit) {
+    params.Limit = limit;
   }
 
   const dbClient = getDynamoDbClient();
@@ -92,7 +97,7 @@ export async function queryItem<T>(
   condition: string,
   filter?: string
 ): Promise<T | null> {
-  const items = await queryItems<T>(table, attributes, condition, filter);
+  const items = await queryItems<T>(table, attributes, condition, filter, 1);
 
   return items.length ? items[0] : null;
 }
@@ -115,7 +120,7 @@ export async function scanItem<T>(
   attributes: Attributes,
   projection?: string
 ): Promise<T | null> {
-  const items = await scanItems<T>(table, filter, attributes, projection);
+  const items = await scanItems<T>(table, filter, attributes, projection, 1);
 
   return items.length ? items[0] : null;
 }
@@ -124,14 +129,19 @@ export async function scanItems<T>(
   table: string,
   filter?: string,
   attributes?: Attributes,
-  projection?: string
+  projection?: string,
+  limit?: number
 ): Promise<T[]> {
   const params: ScanCommandInput = {
     TableName: table,
     FilterExpression: filter,
     ExpressionAttributeValues: attributes,
-    ProjectionExpression: projection,
+    ProjectionExpression: projection
   };
+
+  if (limit) {
+    params.Limit = limit;
+  }
 
   const dbClient = getDynamoDbClient();
 
@@ -142,7 +152,7 @@ export async function scanItems<T>(
   do {
     const result: ScanCommandOutput = await dbClient.send(new ScanCommand({
       ...params,
-      ExclusiveStartKey: lastKey,
+      ExclusiveStartKey: lastKey
     }));
 
     if (!result.Items) {

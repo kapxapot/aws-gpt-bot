@@ -2,7 +2,7 @@ import { now } from "../entities/at";
 import { BroadcastMessage } from "../entities/broadcastMessage";
 import { BroadcastRequest } from "../entities/broadcastRequest";
 import { toText } from "../lib/common";
-import { storeBroadcastMessage, updateBroadcastMessage } from "../storage/broadcastMessageStorage";
+import { findBroadcastMessage, storeBroadcastMessage, updateBroadcastMessage } from "../storage/broadcastMessageStorage";
 import { getAllUsers, getUser } from "../storage/userStorage";
 import { sendTelegramMessage } from "../telegram/bot";
 import { putMetric } from "./metricService";
@@ -19,7 +19,11 @@ export async function processBroadcastRequest(request: BroadcastRequest) {
       continue;
     }
 
-    await storeBroadcastMessage(user, message, request.isTest);
+    const existingMessage = await findBroadcastMessage(request, user);
+
+    if (!existingMessage) {
+      await storeBroadcastMessage(request, user, message, request.isTest);
+    }
   }
 }
 
