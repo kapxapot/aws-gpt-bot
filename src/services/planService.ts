@@ -5,8 +5,8 @@ import { User } from "../entities/user";
 import { first } from "../lib/common";
 import { updateUsageStats } from "./userService";
 import { addDays, formatDate, isInRange, startOfToday } from "./dateService";
-import { settings } from "../lib/constants";
 import { GptModel } from "../lib/gpt";
+import { getMessageLimitDisplayInfo } from "./messageLimitService";
 
 type SubscriptionDisplayInfo = {
   name: string;
@@ -56,8 +56,9 @@ function getUserMessageLimit(user: User): number {
 
 export function getMessageLimitString(user: User): string {
   const limit = getUserMessageLimit(user);
+  const displayInfo = getMessageLimitDisplayInfo(limit);
 
-  return limit === settings.messageLimits.unlimited ? "♾" : String(limit);
+  return displayInfo.short;
 }
 
 export function getUserGptModel(user: User): GptModel {

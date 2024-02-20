@@ -13,6 +13,7 @@ import { isError } from "../../lib/error";
 import { formatUserSubscription, getCurrentSubscription, getUserPlanSettings } from "../../services/planService";
 import { purchasesEnabled } from "../../services/featureService";
 import { getPlanSettings } from "../../entities/plan";
+import { getMessageLimitDisplayInfo } from "../../services/messageLimitService";
 
 const scene = new BaseScene<BotContext>(scenes.premium);
 
@@ -35,15 +36,15 @@ scene.enter(async (ctx) => {
   const messages = [
     `Текущий тариф: ${formatUserSubscription(user)}:
 ◽ модель <b>${userPlanSettings.gptModel}</b>
-◽ до ${userPlanSettings.dailyMessageLimit} запросов в сутки`,
+◽ ${getMessageLimitDisplayInfo(userPlanSettings.dailyMessageLimit).long} запросов в сутки`,
     "Для увеличения доступного количества ежедневных запросов к ChatGPT оформите подписку на один из платных тарифов:",
     `💚 Тариф «Премиум»:
 ◽ модель <b>${premiumSettings.gptModel}</b>
-◽ до ${premiumSettings.dailyMessageLimit} запросов в сутки
+◽ ${getMessageLimitDisplayInfo(premiumSettings.dailyMessageLimit).long} запросов в сутки
 ◽ 290 рублей на 30 дней`,
     `💛 Тариф «Безлимит»:
 ◽ модель <b>${unlimitedSettings.gptModel}</b>
-◽ неограниченное количество запросов
+◽ ${getMessageLimitDisplayInfo(unlimitedSettings.dailyMessageLimit).long} запросов
 ◽ 390 рублей на 30 дней`,
   ];
 
