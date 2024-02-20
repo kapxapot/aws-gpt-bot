@@ -36,15 +36,18 @@ scene.enter(async (ctx) => {
   const messages = [
     `Текущий тариф: ${formatUserSubscription(user)}:
 ◽ модель <b>${userPlanSettings.gptModel}</b>
-◽ ${getMessageLimitDisplayInfo(userPlanSettings.dailyMessageLimit).long} запросов в сутки`,
-    "Для увеличения доступного количества ежедневных запросов к ChatGPT оформите подписку на один из платных тарифов:",
+◽ ${getMessageLimitDisplayInfo(userPlanSettings.dailyMessageLimit).long}`,
+
+    "Если вам нужно больше ежедневных запросов к ChatGPT или вы хотите работать с <b>GPT-4</b>, оформите подписку на один из платных тарифов:",
+
     `💚 Тариф «Премиум»:
 ◽ модель <b>${premiumSettings.gptModel}</b>
-◽ ${getMessageLimitDisplayInfo(premiumSettings.dailyMessageLimit).long} запросов в сутки
+◽ ${getMessageLimitDisplayInfo(premiumSettings.dailyMessageLimit).long}
 ◽ 290 рублей на 30 дней`,
+
     `💛 Тариф «Безлимит»:
 ◽ модель <b>${unlimitedSettings.gptModel}</b>
-◽ ${getMessageLimitDisplayInfo(unlimitedSettings.dailyMessageLimit).long} запросов
+◽ ${getMessageLimitDisplayInfo(unlimitedSettings.dailyMessageLimit).long}
 ◽ 390 рублей на 30 дней`,
   ];
 

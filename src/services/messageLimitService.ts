@@ -6,11 +6,11 @@ type MessageLimitDisplayInfo = {
 export function getMessageLimitDisplayInfo(limit: number): MessageLimitDisplayInfo {
   return limit === Number.POSITIVE_INFINITY
     ? {
-      long: "неограниченное количество",
+      long: "неограниченное количество запросов",
       short: "♾"
     }
     : {
-      long: `до ${limit}`,
+      long: `до ${limit} запросов в сутки`,
       short: String(limit)
     };
 }
