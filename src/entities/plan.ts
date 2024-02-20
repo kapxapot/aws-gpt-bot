@@ -15,11 +15,11 @@ const planSettings: Record<Plan, PlanSettings> = {
   },
   "premium": {
     dailyMessageLimit: settings.messageLimits.premium,
-    gptModel: "gpt-4"
+    gptModel: "gpt-4-1106-preview"
   },
   "unlimited": {
     dailyMessageLimit: settings.messageLimits.unlimited,
-    gptModel: "gpt-4"
+    gptModel: "gpt-4-1106-preview"
   }
 };
 
