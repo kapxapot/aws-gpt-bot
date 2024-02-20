@@ -1,6 +1,6 @@
 import { BaseScene } from "telegraf/scenes";
 import { BotContext } from "../botContext";
-import { commands, messages, scenes, settings } from "../../lib/constants";
+import { commands, messages, scenes } from "../../lib/constants";
 import { addOtherCommandHandlers, dunnoHandler, kickHandler } from "../handlers";
 import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { PaymentEvent } from "../../entities/payment";
@@ -10,8 +10,9 @@ import { yooMoneyPayment } from "../../external/yooMoneyPayment";
 import { now } from "../../entities/at";
 import { Product, getProductDisplayName, isPurchasedProduct, monthlyPremiumSubscription, monthlyUnlimitedSubscription } from "../../entities/product";
 import { isError } from "../../lib/error";
-import { getCurrentSubscription, getFormattedPlanName } from "../../services/planService";
+import { formatUserSubscription, getCurrentSubscription, getUserPlanSettings } from "../../services/planService";
 import { purchasesEnabled } from "../../services/featureService";
+import { getPlanSettings } from "../../entities/plan";
 
 const scene = new BaseScene<BotContext>(scenes.premium);
 
@@ -27,38 +28,48 @@ scene.enter(async (ctx) => {
 
   const user = await getOrAddUser(ctx.from);
 
+  const userPlanSettings = getUserPlanSettings(user);
+  const premiumSettings = getPlanSettings("premium");
+  const unlimitedSettings = getPlanSettings("unlimited");
+
   const messages = [
-    `Текущий тариф: ${getFormattedPlanName(user)}`,
+    `Текущий тариф: ${formatUserSubscription(user)}:
+◽ модель: ${userPlanSettings.gptModel}
+◽ до ${userPlanSettings.dailyMessageLimit} запросов в сутки
+    `,
     "Для увеличения доступного количества ежедневных запросов к ChatGPT оформите подписку на один из платных тарифов:",
     `💚 Тариф «Премиум»:
-◽ до ${settings.messageLimits.premium} запросов в сутки
+◽ модель: ${premiumSettings.gptModel} запросов в сутки
+◽ до ${premiumSettings.dailyMessageLimit} запросов в сутки
 ◽ 290 рублей на 30 дней`,
     `💛 Тариф «Безлимит»:
+◽ модель: ${unlimitedSettings.gptModel}
 ◽ неограниченное количество запросов
 ◽ 390 рублей на 30 дней`,
   ];
 
   const buttons: string[][] = [];
-  const subscription = getCurrentSubscription(user);
 
-  if (isPurchasedProduct(subscription)) {
-    if (subscription.code === "subscription-premium-30-days") {
-      buttons.push(
-        ["Купить Безлимит", buyUnlimitedAction]
-      );
-
-      messages.push("⚠ Ваш текущий тариф <b>«Премиум»</b>. Вы можете приобрести <b>«Безлимит»</b>, который заменит текущий тариф <b>без компенсации средств</b>.");
-    } else if (subscription.code === "subscription-unlimited-30-days") {
-      messages.push("⚠ Ваш текущий тариф <b>«Безлимит»</b>. Вы не можете приобрести другие тарифы, пока у вас не закончится текущий.");
-    }
+  if (!purchasesEnabled(user)) {
+    messages.push("⛔ Покупка тарифов недоступна.");
   } else {
-    if (purchasesEnabled(user)) {
+    const subscription = getCurrentSubscription(user);
+
+    if (isPurchasedProduct(subscription)) {
+      if (subscription.code === "subscription-premium-30-days") {
+        buttons.push(
+          ["Купить Безлимит", buyUnlimitedAction]
+        );
+
+        messages.push("⚠ Ваш текущий тариф <b>«Премиум»</b>. Вы можете приобрести <b>«Безлимит»</b>, который заменит текущий тариф <b>без компенсации средств</b>.");
+      } else if (subscription.code === "subscription-unlimited-30-days") {
+        messages.push("⚠ Ваш текущий тариф <b>«Безлимит»</b>. Вы не можете приобрести другие тарифы, пока у вас не закончится текущий.");
+      }
+    } else {
       buttons.push(
         ["Купить Премиум", buyPremiumAction],
         ["Купить Безлимит", buyUnlimitedAction]
       );
-    } else {
-      messages.push("⛔ Покупка тарифов недоступна.");
     }
   }
 

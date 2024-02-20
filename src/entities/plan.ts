@@ -1,16 +1,38 @@
 import { settings } from "../lib/constants";
+import { GptModel } from "../lib/gpt";
 
 export type Plan = "free" | "premium" | "unlimited";
 
-export function getPlanDailyMessageLimit(plan: Plan): number {
-  switch (plan) {
-    case "free":
-      return settings.messageLimits.free;
+export type PlanSettings = {
+  dailyMessageLimit: number;
+  gptModel: GptModel;
+};
 
-    case "premium":
-      return settings.messageLimits.premium;
-
-    case "unlimited":
-      return Number.POSITIVE_INFINITY;
+const planSettings: Record<Plan, PlanSettings> = {
+  "free": {
+    dailyMessageLimit: settings.messageLimits.free,
+    gptModel: "gpt-3.5-turbo"
+  },
+  "premium": {
+    dailyMessageLimit: settings.messageLimits.premium,
+    gptModel: "gpt-4"
+  },
+  "unlimited": {
+    dailyMessageLimit: settings.messageLimits.unlimited,
+    gptModel: "gpt-4"
   }
+};
+
+export function getPlanSettings(plan: Plan): PlanSettings {
+  return planSettings[plan];
+}
+
+export function getPlanDailyMessageLimit(plan: Plan): number {
+  const settings = getPlanSettings(plan);
+  return settings.dailyMessageLimit;
+}
+
+export function getPlanGptModel(plan: Plan): GptModel {
+  const settings = getPlanSettings(plan);
+  return settings.gptModel;
 }

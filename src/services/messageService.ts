@@ -8,7 +8,7 @@ import { encodeText, reply } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
 import { addMessageToUser, getCurrentContext, stopWaitingForGptAnswer, waitForGptAnswer } from "./userService";
 import { commands } from "../lib/constants";
-import { getFormattedPlanName, incMessageUsage, messageLimitExceeded } from "./planService";
+import { formatUserSubscription, getMessageLimitString, getUserGptModel, incMessageUsage, messageLimitExceeded } from "./planService";
 import { getCurrentHistory } from "./contextService";
 import { getCaseByNumber } from "../lib/cases";
 import { Completion } from "../entities/message";
@@ -104,13 +104,11 @@ export async function sendMessageToGpt(ctx: AnyContext, user: User, question: st
     await reply(ctx, `❌ ${errorMessage}`);
   }
 
-  if (isDebugMode(user)) {
-    showDebugInfo(
-      ctx,
-      user,
-      isSuccess(answer) ? answer : null
-    );
-  }
+  showInfo(
+    ctx,
+    user,
+    isSuccess(answer) ? answer : null
+  );
 
   if (isSuccess(answer)) {
     await addMessageMetrics(answer);
@@ -126,7 +124,7 @@ async function addMessageMetrics(completion: Completion) {
 }
 
 export async function showStatus(ctx: AnyContext, user: User) {
-  await reply(ctx, `Текущий тариф: ${getFormattedPlanName(user)}`);
+  await reply(ctx, `Текущий тариф: ${formatUserSubscription(user)}`);
   await reply(ctx, `Текущий режим: <b>${getModeName(user)}</b>`);
   await showLastHistoryMessage(ctx, user);
 }
@@ -152,40 +150,42 @@ function formatGptMessage(message: string): string {
     return `🤖 ${encodeText(message)}`;
 }
 
-export async function showDebugInfo(ctx: AnyContext, user: User, answer: Completion | null) {
+export async function showInfo(ctx: AnyContext, user: User, answer: Completion | null) {
   const chunks = [];
 
-  chunks.push(`👉 режим: <b>${getModeName(user)}</b>`);
+  chunks.push(`📌 режим: <b>${getModeName(user)}</b>`);
 
-  if (answer?.usage) {
-    const usage = answer.usage;
-    chunks.push(`токены: ${usage.totalTokens} (${usage.promptTokens} + ${usage.completionTokens})`);
-  }
+  if (isDebugMode(user)) {
+    if (answer?.usage) {
+      const usage = answer.usage;
+      chunks.push(`токены: ${usage.totalTokens} (${usage.promptTokens} + ${usage.completionTokens})`);
+    }
 
-  const context = user.context;
+    const context = user.context;
 
-  if (context) {
-    const messages = getCurrentHistory(context).messages;
+    if (context) {
+      const messages = getCurrentHistory(context).messages;
 
-    if (messages.length) {
-      chunks.push(
-        encodeText(
-          `история: ${messages.map(m => `[${truncate(m.request, 20)}]`).join(", ")}`
-        )
-      );
-    } else {
-      chunks.push("история пуста");
+      if (messages.length) {
+        chunks.push(
+          encodeText(
+            `история: ${messages.map(m => `[${truncate(m.request, 20)}]`).join(", ")}`
+          )
+        );
+      } else {
+        chunks.push("история пуста");
+      }
+    }
+
+    chunks.push(`модель запроса: ${getUserGptModel(user)}`);
+
+    if (answer?.model) {
+      chunks.push(`модель ответа: ${answer.model}`);
     }
   }
 
-  chunks.push(`модель запроса: ${process.env.GPT_MODEL}`);
-
-  if (answer?.model) {
-    chunks.push(`модель ответа: ${answer.model}`);
-  }
-
   if (user.usageStats) {
-    chunks.push(`сообщений сегодня: ${user.usageStats.messageCount}`);
+    chunks.push(`сообщений сегодня: ${user.usageStats.messageCount}/${getMessageLimitString(user)}`);
   }
 
   await reply(ctx, chunks.join(", "));

@@ -1,12 +1,14 @@
 import { At, ts } from "../entities/at";
-import { getPlanDailyMessageLimit } from "../entities/plan";
+import { Plan, PlanSettings, getPlanDailyMessageLimit, getPlanGptModel, getPlanSettings } from "../entities/plan";
 import { PurchasedProduct, Subscription, freeSubscription, getProductDisplayName, isPurchasedProduct } from "../entities/product";
 import { User } from "../entities/user";
 import { first } from "../lib/common";
 import { updateUsageStats } from "./userService";
 import { addDays, formatDate, isInRange, startOfToday } from "./dateService";
+import { settings } from "../lib/constants";
+import { GptModel } from "../lib/gpt";
 
-export type CurrentPlan = {
+type SubscriptionDisplayInfo = {
   name: string;
   expiresAt: Date | null;
 };
@@ -25,7 +27,7 @@ export async function messageLimitExceeded(user: User): Promise<boolean> {
   const startOfDay = startOfToday();
 
   if (stats.startOfDay === startOfDay) {
-    return stats.messageCount >= getMessageLimit(user);
+    return stats.messageCount >= getUserMessageLimit(user);
   }
 
   return false;
@@ -47,15 +49,24 @@ export async function incMessageUsage(user: User, requestedAt: At): Promise<User
   return await updateUsageStats(user, user.usageStats);
 }
 
-function getMessageLimit(user: User): number {
-  const subscription = getCurrentSubscription(user);
-  const plan = subscription.details.plan;
-
+function getUserMessageLimit(user: User): number {
+  const plan = getUserPlan(user);
   return getPlanDailyMessageLimit(plan);
 }
 
-export function getFormattedPlanName(user: User): string {
-  const { name, expiresAt } = getCurrentPlan(user);
+export function getMessageLimitString(user: User): string {
+  const limit = getUserMessageLimit(user);
+
+  return limit === settings.messageLimits.unlimited ? "♾" : String(limit);
+}
+
+export function getUserGptModel(user: User): GptModel {
+  const plan = getUserPlan(user);
+  return getPlanGptModel(plan);
+}
+
+export function formatUserSubscription(user: User): string {
+  const { name, expiresAt } = getUserSubscriptionDisplayInfo(user);
   const nameStr = `<b>${name}</b>`;
 
   if (!expiresAt) {
@@ -65,7 +76,17 @@ export function getFormattedPlanName(user: User): string {
   return `${nameStr} (действует по ${formatDate(expiresAt, "dd.MM.yyyy")})`;
 }
 
-function getCurrentPlan(user: User): CurrentPlan {
+function getUserPlan(user: User): Plan {
+  const subscription = getCurrentSubscription(user);
+  return subscription.details.plan;
+}
+
+export function getUserPlanSettings(user: User): PlanSettings {
+  const plan = getUserPlan(user);
+  return getPlanSettings(plan);
+}
+
+function getUserSubscriptionDisplayInfo(user: User): SubscriptionDisplayInfo {
   const subscription = getCurrentSubscription(user);
   const name = getProductDisplayName(subscription);
 

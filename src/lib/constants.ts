@@ -40,6 +40,7 @@ export const settings = {
   },
   messageLimits: {
     free: 20,
-    premium: 100
-  }
+    premium: 100,
+    unlimited: Number.POSITIVE_INFINITY
+  },
 } as const;
