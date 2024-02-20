@@ -153,7 +153,7 @@ function formatGptMessage(message: string): string {
 export async function showInfo(ctx: AnyContext, user: User, answer: Completion | null) {
   const chunks = [];
 
-  chunks.push(`📌 режим: <b>${getModeName(user)}</b>`);
+  chunks.push(`📌 Режим: <b>${getModeName(user)}</b>`);
 
   if (isDebugMode(user)) {
     if (answer?.usage) {
