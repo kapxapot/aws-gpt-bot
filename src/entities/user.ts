@@ -29,6 +29,7 @@ export type User = Entity & {
   context?: Context;
   events?: UserEvent[];
   waitingForGptAnswer?: boolean;
+  waitingForGptImageGeneration?: boolean;
   usageStats?: UsageStats;
   settings?: UserSettings;
   source?: string;

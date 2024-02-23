@@ -12,6 +12,7 @@ custom:
   tables:
     broadcastMessages: 'broadcast-messages-${sls:stage}'
     broadcastRequests: 'broadcast-requests-${sls:stage}'
+    imageRequests: 'image-requests-${sls:stage}'
     messages: 'messages-${sls:stage}'
     payments: 'payments-${sls:stage}'
     sessions: 'sessions-${sls:stage}'
@@ -38,6 +39,7 @@ provider:
           Resource:
             - Fn::GetAtt: [BroadcastMessagesTable, Arn]
             - Fn::GetAtt: [BroadcastRequestsTable, Arn]
+            - Fn::GetAtt: [ImageRequestsTable, Arn]
             - Fn::GetAtt: [MessagesTable, Arn]
             - Fn::GetAtt: [PaymentsTable, Arn]
             - Fn::GetAtt: [TelegramRequestsTable, Arn]
@@ -51,6 +53,7 @@ provider:
     ENV: ${sls:stage}
     BROADCAST_MESSAGES_TABLE: ${self:custom.tables.broadcastMessages}
     BROADCAST_REQUESTS_TABLE: ${self:custom.tables.broadcastRequests}
+    IMAGE_REQUESTS_TABLE: ${self:custom.tables.imageRequests}
     MESSAGES_TABLE: ${self:custom.tables.messages}
     PAYMENTS_TABLE: ${self:custom.tables.payments}
     SESSIONS_TABLE: ${self:custom.tables.sessions}
@@ -119,6 +122,17 @@ resources:
         TableName: ${self:custom.tables.broadcastRequests}
         StreamSpecification:
           StreamViewType: NEW_IMAGE
+    ImageRequestsTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        TableName: ${self:custom.tables.imageRequests}
     MessagesTable:
       Type: AWS::DynamoDB::Table
       Properties:

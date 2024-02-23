@@ -133,6 +133,24 @@ export async function stopWaitingForGptAnswer(user: User): Promise<User> {
   );
 }
 
+export async function waitForGptImageGeneration(user: User): Promise<User> {
+  return await updateUser(
+    user,
+    {
+      waitingForGptImageGeneration: true
+    }
+  );
+}
+
+export async function stopWaitingForGptImageGeneration(user: User): Promise<User> {
+  return await updateUser(
+    user,
+    {
+      waitingForGptImageGeneration: false
+    }
+  );
+}
+
 export async function updateUsageStats(user: User, usageStats: UsageStats): Promise<User> {
   return await updateUser(
     user,

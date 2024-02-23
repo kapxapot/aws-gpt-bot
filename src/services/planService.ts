@@ -5,7 +5,7 @@ import { User } from "../entities/user";
 import { first } from "../lib/common";
 import { updateUsageStats } from "./userService";
 import { addDays, formatDate, isInRange, startOfToday } from "./dateService";
-import { GptModel } from "../lib/gpt";
+import { GptModel } from "../lib/openai";
 import { getMessageLimitDisplayInfo } from "./messageLimitService";
 
 type SubscriptionDisplayInfo = {

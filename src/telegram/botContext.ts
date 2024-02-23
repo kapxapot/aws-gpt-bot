@@ -9,6 +9,7 @@ export type BotContext = WizardContext & {
 
 export type SessionData = {
   modeData?: StageData<ModeStage>;
+  imageData?: StageData<ImageStage>;
 };
 
 export type StageData<T extends string> = {
@@ -16,3 +17,5 @@ export type StageData<T extends string> = {
 };
 
 export type ModeStage = "modeSelection" | "roleSelection" | "customPromptInput" | "promptSelection";
+
+export type ImageStage = "imagePromptInput";

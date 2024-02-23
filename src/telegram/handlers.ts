@@ -38,6 +38,7 @@ export function getCommandHandlers(): HandlerTuple[] {
     [commands.tutorial, sceneHandler(scenes.tutorial)],
     [commands.mode, sceneHandler(scenes.mode)],
     [commands.premium, sceneHandler(scenes.premium)],
+    [commands.image, sceneHandler(scenes.image)],
     [commands.terms, termsHandler],
     [commands.support, supportHandler],
     [commands.historySize, historySizeHandler],

@@ -1,9 +1,10 @@
 export const commands = {
   tutorial: "tutorial",
   mode: "mode",
+  premium: "premium",
+  image: "image",
   support: "support",
   terms: "terms",
-  premium: "premium",
   historySize: "history",
   temperature: "temp",
   status: "status"
@@ -17,7 +18,8 @@ export const messages = {
 export const scenes = {
   tutorial: "TUTORIAL_SCENE",
   mode: "MODE_SCENE",
-  premium: "PREMIUM_SCENE"
+  premium: "PREMIUM_SCENE",
+  image: "IMAGE_SCENE"
 } as const;
 
 export const settings = {
@@ -32,15 +34,11 @@ export const settings = {
     default: 0.6
   },
   maxPromptLength: 1000,
+  maxImagePromptLength: 4000,
   maxHistoryMessageLength: 200,
   systemTimeOffset: -3, // hours
   telegram: {
     maxMessageLength: 4096,
     maxButtonTextLength: 14
-  },
-  messageLimits: {
-    free: 20,
-    premium: 100,
-    unlimited: Number.POSITIVE_INFINITY
-  },
+  }
 } as const;

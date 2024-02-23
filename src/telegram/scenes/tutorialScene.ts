@@ -2,8 +2,9 @@ import { Composer } from "telegraf";
 import { WizardScene } from "telegraf/scenes";
 import { BotContext } from "../botContext";
 import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
-import { commands, messages, scenes, settings } from "../../lib/constants";
+import { commands, messages, scenes } from "../../lib/constants";
 import { addOtherCommandHandlers, dunnoHandler, kickHandler } from "../handlers";
+import { getPlanSettings } from "../../entities/plan";
 
 function makeStepHandler(text: string, first: boolean, last: boolean) {
   const stepHandler = new Composer<BotContext>();
@@ -115,7 +116,7 @@ ChatGPT не просто копирует данные из интернета,
 «Веди себя как учитель английского языка. Я буду писать предложения, а ты исправляй ошибки и говори что можно добавить. Отвечай на русском».`,
 `<b>Тарифы</b>
 
-В начале использования бота вам доступен тариф <b>«Бесплатный»</b> с ограничением до ${settings.messageLimits.free} запросов в сутки.
+В начале использования бота вам доступен тариф <b>«Бесплатный»</b> с ограничением до ${getPlanSettings("free").text.dailyMessageLimit} запросов в сутки.
 
 Если вам необходимо большее количество запросов — воспользуйтесь одним из премиальных тарифов (пункт меню «Оформить подписку» /${commands.premium})`,
 `<b>Техподдержка</b>

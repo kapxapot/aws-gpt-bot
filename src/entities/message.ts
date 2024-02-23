@@ -2,7 +2,7 @@ import { Result } from "../lib/error";
 import { Entity } from "../lib/types";
 import { At } from "./at";
 
-export type Usage = {
+type Usage = {
   promptTokens: number;
   completionTokens: number;
   totalTokens: number;

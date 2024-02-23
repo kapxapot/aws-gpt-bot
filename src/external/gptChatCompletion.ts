@@ -1,5 +1,5 @@
 import axios from "axios";
-import { ChatCompletionRequestMessage, Configuration, OpenAIApi } from "openai";
+import OpenAI from "openai";
 import { Completion } from "../entities/message";
 import { Result, isSuccess } from "../lib/error";
 import { User } from "../entities/user";
@@ -8,10 +8,7 @@ import { getUserHistorySize, getUserTemperature } from "../services/userSettings
 import { settings } from "../lib/constants";
 import { gptTimeout } from "../services/gptService";
 import { getUserGptModel } from "../services/planService";
-
-const apiConfig = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY
-});
+import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 
 const config = {
   gptTimeout: gptTimeout * 1000,
@@ -19,10 +16,12 @@ const config = {
   maxHistoryMessageLength: settings.maxHistoryMessageLength
 };
 
-const openai = new OpenAIApi(apiConfig);
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY
+});
 
 export async function gptChatCompletion(user: User, userMessage: string): Promise<Result<Completion>> {
-  const messages: ChatCompletionRequestMessage[] = [];
+  const messages: ChatCompletionMessageParam[] = [];
 
   const historySize = getUserHistorySize(user);
   const { prompt, latestMessages } = getCurrentContext(user, historySize);
@@ -56,28 +55,25 @@ export async function gptChatCompletion(user: User, userMessage: string): Promis
   });
 
   try {
-    const response = await openai.createChatCompletion(
+    const response = await openai.chat.completions.create(
       {
         model: getUserGptModel(user),
         temperature: getUserTemperature(user),
         messages: messages
       },
       {
-        timeout: config.gptTimeout,
-        timeoutErrorMessage: "Мы не дождались ответа. 😥"
+        timeout: config.gptTimeout
       }
     );
 
-    const completion = response.data;
-
     return {
-      reply: completion.choices[0].message?.content ?? null,
-      model: completion.model,
-      usage: completion.usage
+      reply: response.choices[0].message?.content ?? null,
+      model: response.model,
+      usage: response.usage
         ? {
-          promptTokens: completion.usage.prompt_tokens,
-          completionTokens: completion.usage.completion_tokens,
-          totalTokens: completion.usage.total_tokens
+          promptTokens: response.usage.prompt_tokens,
+          completionTokens: response.usage.completion_tokens,
+          totalTokens: response.usage.total_tokens
         }
         : null
     };
