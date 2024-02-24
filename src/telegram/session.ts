@@ -1,30 +1,16 @@
-import { deleteSession, getSession, putSession } from "../storage/sessionStorage";
+import { WizardSession } from "telegraf/scenes";
 
-type MaybePromise<T> = T | Promise<T>;
+export type CompoundSession = SessionData & WizardSession;
 
-// eslint-disable-next-line @typescript-eslint/ban-types
-type Any = {} | undefined | null;
+export type SessionData = {
+  modeData?: StageData<ModeStage>;
+  imageData?: StageData<ImageStage>;
+};
 
-type SessionStore<T> = {
-  get: (key: string) => MaybePromise<T | undefined>;
-  set: (key: string, session: T) => MaybePromise<Any>;
-  delete: (key: string) => MaybePromise<Any>;
-}
+type StageData<T extends string> = {
+  stage?: T
+};
 
-export function sessionStore<T>(): SessionStore<T> {
-  return {
-    async get(key: string) {
-      const session = await getSession(key);
-      return (session?.value ?? {}) as T;
-    },
-    async set(key: string, session: T) {
-      return await putSession({
-        id: key,
-        value: session
-      });
-    },
-    async delete(key: string) {
-      return await deleteSession(key);
-    },
-  };
-}
+export type ModeStage = "modeSelection" | "roleSelection" | "customPromptInput" | "promptSelection";
+
+export type ImageStage = "imagePromptInput";

@@ -2,7 +2,7 @@ import { inspect } from "util";
 import { Composer } from "telegraf";
 import { AnyContext, BotContext } from "./botContext";
 import { commands, messages, scenes } from "../lib/constants";
-import { clearInlineKeyboard, reply } from "../lib/telegram";
+import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
 import { historySizeHandler } from "./handlers/historySizeHandler";
 import { temperatureHandler } from "./handlers/temperatureHandler";
 import { getOrAddUser } from "../services/userService";
@@ -22,10 +22,18 @@ export function addOtherCommandHandlers(scene: Composer<BotContext>, exceptComma
   });
 
   scene.command(exceptCommand, async (ctx) => {
-    await reply(
+    await replyWithKeyboard(
       ctx,
-      `Вы уже находитесь в диалоге этой команды. ${messages.useTheKeyboard}`
+      inlineKeyboard(["Покинуть диалог", "leave-dialog"]),
+      `Вы уже находитесь в диалоге этой команды. ${messages.useTheKeyboard}`,
+      "Вы также можете покинуть диалог команды 👇"
     );
+  });
+
+  scene.action("leave-dialog", async (ctx) => {
+    await clearInlineKeyboard(ctx);
+    await ctx.scene.leave();
+    await reply(ctx, messages.backToDialog);
   });
 }
 

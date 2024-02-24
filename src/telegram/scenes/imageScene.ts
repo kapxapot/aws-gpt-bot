@@ -1,5 +1,5 @@
 import { BaseScene } from "telegraf/scenes";
-import { BotContext, ImageStage, SessionData } from "../botContext";
+import { BotContext } from "../botContext";
 import { commands, messages, scenes, settings } from "../../lib/constants";
 import { getOrAddUser } from "../../services/userService";
 import { addOtherCommandHandlers, dunnoHandler, kickHandler } from "../handlers";
@@ -7,6 +7,7 @@ import { canRequestImageGeneration } from "../../services/permissionService";
 import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { message } from "telegraf/filters";
 import { generateImageWithGpt } from "../../services/imageService";
+import { ImageStage, SessionData } from "../session";
 
 const scene = new BaseScene<BotContext>(scenes.image);
 

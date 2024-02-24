@@ -40,7 +40,7 @@ scene.enter(async (ctx) => {
     return displayInfo.long;
   }
 
-  const messages = [
+  const planMessages = [
     `Текущий тариф: ${formatUserSubscription(user)}:
 ◽ модель <b>${userPlanSettings.text.model}</b>
 ◽ ${getLimitText(userPlanSettings)}`,
@@ -61,9 +61,9 @@ scene.enter(async (ctx) => {
   const buttons: string[][] = [];
 
   if (!canMakePurchases(user)) {
-    messages.push("⛔ Покупка тарифов недоступна.");
+    planMessages.push("⛔ Покупка тарифов недоступна.");
 
-    await reply(ctx, ...messages);
+    await reply(ctx, ...planMessages, messages.backToDialog);
     await ctx.scene.leave();
     return;
   }
@@ -76,9 +76,9 @@ scene.enter(async (ctx) => {
         ["Купить Безлимит", buyUnlimitedAction]
       );
 
-      messages.push("⚠ Ваш текущий тариф <b>«Премиум»</b>. Вы можете приобрести <b>«Безлимит»</b>, который заменит текущий тариф <b>без компенсации средств</b>.");
+      planMessages.push("⚠ Ваш текущий тариф <b>«Премиум»</b>. Вы можете приобрести <b>«Безлимит»</b>, который заменит текущий тариф <b>без компенсации средств</b>.");
     } else if (subscription.code === "subscription-unlimited-30-days") {
-      messages.push("⚠ Ваш текущий тариф <b>«Безлимит»</b>. Вы не можете приобрести другие тарифы, пока у вас не закончится текущий.");
+      planMessages.push("⚠ Ваш текущий тариф <b>«Безлимит»</b>. Вы не можете приобрести другие тарифы, пока у вас не закончится текущий.");
     }
   } else {
     buttons.push(
@@ -90,7 +90,7 @@ scene.enter(async (ctx) => {
   await replyWithKeyboard(
     ctx,
     inlineKeyboard(...buttons, ["Отмена", cancelAction]),
-    ...messages
+    ...planMessages
   );
 });
 

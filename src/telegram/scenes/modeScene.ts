@@ -1,5 +1,5 @@
 import { BaseScene } from "telegraf/scenes";
-import { BotContext, ModeStage, SessionData } from "../botContext";
+import { BotContext } from "../botContext";
 import { commands, messages, scenes, settings } from "../../lib/constants";
 import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { backToCustomPrompt, getOrAddUser, newCustomPrompt, setFreeMode, setPrompt } from "../../services/userService";
@@ -7,6 +7,7 @@ import { getModeName, getModes, getPrompts } from "../../entities/prompt";
 import { addOtherCommandHandlers, dunnoHandler, kickHandler } from "../handlers";
 import { message } from "telegraf/filters";
 import { sendMessageToGpt, showLastHistoryMessage } from "../../services/messageService";
+import { ModeStage, SessionData } from "../session";
 
 const scene = new BaseScene<BotContext>(scenes.mode);
 

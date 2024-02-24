@@ -3,7 +3,6 @@ import { message } from "telegraf/filters";
 import { TelegramRequest } from "../entities/telegramRequest";
 import { parseCommandWithArgs, reply, userName } from "../lib/telegram";
 import { getOrAddUser } from "../services/userService";
-import { sessionStore } from "./session";
 import { tutorialScene } from "./scenes/tutorialScene";
 import { BotContext } from "./botContext";
 import { commands } from "../lib/constants";
@@ -17,6 +16,8 @@ import { getUsersCount, updateUser } from "../storage/userStorage";
 import { putMetric } from "../services/metricService";
 import { isDebugMode } from "../services/userSettingsService";
 import { Update } from "telegraf/types";
+import { sessionStore } from "./sessionStore";
+import { imageScene } from "./scenes/imageScene";
 
 const config = {
   botToken: process.env.BOT_TOKEN!,
@@ -39,7 +40,7 @@ export async function processTelegramRequest(tgRequest: TelegramRequest) {
     store: sessionStore()
   }));
 
-  const stage = new Scenes.Stage<BotContext>([tutorialScene, premiumScene, modeScene]);
+  const stage = new Scenes.Stage<BotContext>([tutorialScene, premiumScene, modeScene, imageScene]);
 
   bot.use(stage.middleware());
 

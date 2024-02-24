@@ -1,4 +1,3 @@
-import axios from "axios";
 import OpenAI from "openai";
 import { Completion } from "../entities/message";
 import { Result, isSuccess } from "../lib/error";
@@ -80,8 +79,8 @@ export async function gptChatCompletion(user: User, userMessage: string): Promis
   } catch (error) {
     console.error(error);
 
-    if (axios.isAxiosError(error)) {
-      const message = error.response?.data.error.message ?? error.message;
+    if (error.error && error.error.message) {
+      const message = error.error.message;
 
       return new Error(`Ошибка OpenAI API: ${message}`);
     }

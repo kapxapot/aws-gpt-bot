@@ -11,7 +11,7 @@ export const commands = {
 } as const;
 
 export const messages = {
-  backToDialog: "Возвращаемся к диалогу...",
+  backToDialog: "Возвращаемся к основной беседе...",
   useTheKeyboard: "Используйте кнопки диалога. 👆"
 } as const;
 
@@ -34,7 +34,7 @@ export const settings = {
     default: 0.6
   },
   maxPromptLength: 1000,
-  maxImagePromptLength: 4000,
+  maxImagePromptLength: 1000,
   maxHistoryMessageLength: 200,
   systemTimeOffset: -3, // hours
   telegram: {

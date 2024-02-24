@@ -1,4 +1,3 @@
-import axios from "axios";
 import OpenAI from "openai";
 import { gptTimeout } from "../services/gptService";
 import { settings } from "../lib/constants";
@@ -16,14 +15,19 @@ const openai = new OpenAI({
 });
 
 export async function gptImageGeneration(imageRequest: ImageRequest): Promise<Result<Image>> {
+  const prompt = imageRequest.strict
+    ? `I NEED to test how the tool works with extremely simple prompts. DO NOT add any detail, just use it AS-IS: ${imageRequest.prompt}`
+    : imageRequest.prompt;
+
   try {
     const response = await openai.images.generate(
       {
         model: imageRequest.model,
-        prompt: imageRequest.prompt.substring(0, config.maxImagePromptLength),
+        prompt: prompt.substring(0, config.maxImagePromptLength),
         n: 1,
         size: imageRequest.size,
-        quality: imageRequest.quality
+        quality: imageRequest.quality,
+        response_format: imageRequest.responseFormat
       },
       {
         timeout: config.gptTimeout
@@ -34,8 +38,8 @@ export async function gptImageGeneration(imageRequest: ImageRequest): Promise<Re
   } catch (error) {
     console.error(error);
 
-    if (axios.isAxiosError(error)) {
-      const message = error.response?.data.error.message ?? error.message;
+    if (error.error && error.error.message) {
+      const message = error.error.message;
 
       return new Error(`Ошибка OpenAI API: ${message}`);
     }
