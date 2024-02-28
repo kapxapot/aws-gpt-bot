@@ -2,8 +2,9 @@ import { now } from "../entities/at";
 import { User } from "../entities/user";
 import { gptImageGeneration } from "../external/gptImageGeneration";
 import { toText } from "../lib/common";
+import { cancelButton } from "../lib/dialog";
 import { isSuccess } from "../lib/error";
-import { reply } from "../lib/telegram";
+import { inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
 import { storeImageRequest, updateImageRequest } from "../storage/imageRequestStorage";
 import { AnyContext } from "../telegram/botContext";
 import { putMetric } from "./metricService";
@@ -11,7 +12,7 @@ import { getUserPlanSettings } from "./planService";
 import { stopWaitingForGptImageGeneration, waitForGptImageGeneration } from "./userService";
 import { PassThrough } from "stream";
 
-export async function generateImageWithGpt(ctx: AnyContext, user: User, prompt: string) {
+export async function generateImageWithGpt(ctx: AnyContext, user: User, prompt: string): Promise<boolean> {
   const requestedAt = now();
 
   const messages = await reply(ctx, "👨‍🎨 Рисую вашу картинку, подождите... ⏳");
@@ -68,6 +69,10 @@ export async function generateImageWithGpt(ctx: AnyContext, user: User, prompt: 
 
       await ctx.replyWithPhoto({ source: stream });
     }
+
+    await putMetric("ImageGenerated");
+
+    return true;
   } else {
     let errorMessage = image.message;
 
@@ -79,10 +84,12 @@ export async function generateImageWithGpt(ctx: AnyContext, user: User, prompt: 
       errorMessage = "Ваш запрос был отвергнут системой безопасности OpenAI. Если вы считаете, что это ошибка, можете попробовать повторить запрос. Иначе попробуйте его перефразировать.";
     }
 
-    await reply(ctx, `❌ ${errorMessage}`);
+    await replyWithKeyboard(
+      ctx,
+      inlineKeyboard(cancelButton),
+      `❌ ${errorMessage}`
+    );
   }
 
-  if (isSuccess(image)) {
-    await putMetric("ImageGenerated");
-  }
+  return false;
 }

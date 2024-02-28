@@ -4,7 +4,7 @@ import { commands, scenes, settings } from "../../lib/constants";
 import { getOrAddUser } from "../../services/userService";
 import { addOtherCommandHandlers, backToMainDialogHandler, dunnoHandler, kickHandler } from "../handlers";
 import { canRequestImageGeneration } from "../../services/permissionService";
-import { clearAndLeave, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
+import { clearAndLeave, clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { message } from "telegraf/filters";
 import { generateImageWithGpt } from "../../services/imageService";
 import { ImageStage, SessionData } from "../session";
@@ -42,13 +42,16 @@ scene.action(cancelAction, backToMainDialogHandler);
 
 scene.on(message("text"), async (ctx) => {
   if (isStage(ctx.session, "imagePromptInput")) {
-    await clearAndLeave(ctx);
+    await clearInlineKeyboard(ctx);
 
-    // generate image
     const imagePrompt = ctx.message.text;
     const user = await getOrAddUser(ctx.from);
 
-    await generateImageWithGpt(ctx, user, imagePrompt);
+    const result = await generateImageWithGpt(ctx, user, imagePrompt);
+
+    if (result) {
+      await backToMainDialogHandler(ctx);
+    }
 
     return;
   }

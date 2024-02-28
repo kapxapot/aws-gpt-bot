@@ -9,6 +9,8 @@ import { getLastHistoryMessage, getOrAddUser } from "../services/userService";
 import { showLastHistoryMessage, showStatus } from "../services/messageService";
 import { isDebugMode } from "../services/userSettingsService";
 import { remindButton } from "../lib/dialog";
+import { getModeName } from "../entities/prompt";
+import { User } from "../entities/user";
 
 type Handler = (ctx: AnyContext) => Promise<void>;
 type HandlerTuple = [command: string, handler: Handler];
@@ -109,22 +111,24 @@ export async function dunnoHandler(ctx: AnyContext) {
 export async function backToMainDialogHandler(ctx: AnyContext) {
   await clearAndLeave(ctx);
 
-  const hasMessage = await userHasMessage(ctx);
+  if (!ctx.from) {
+    return;
+  }
+
+  const user = await getOrAddUser(ctx.from);
+
+  const hasMessage = await userHasMessage(user);
   const buttons = hasMessage ? [remindButton] : []
 
   await replyWithKeyboard(
     ctx,
     inlineKeyboard(...buttons),
-    commonMessages.backToMainDialog
+    commonMessages.backToMainDialog,
+    `Режим: <b>${getModeName(user)}</b>`
   );
 }
 
-async function userHasMessage(ctx: AnyContext): Promise<boolean> {
-  if (!ctx.from) {
-    return false;
-  }
-
-  const user = await getOrAddUser(ctx.from);
+async function userHasMessage(user: User): Promise<boolean> {
   const message = getLastHistoryMessage(user);
 
   return !!message;
