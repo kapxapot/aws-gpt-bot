@@ -1,8 +1,8 @@
 import { BaseScene } from "telegraf/scenes";
 import { BotContext } from "../botContext";
-import { commands, messages, scenes } from "../../lib/constants";
-import { addOtherCommandHandlers, dunnoHandler, kickHandler } from "../handlers";
-import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
+import { commands, scenes } from "../../lib/constants";
+import { addOtherCommandHandlers, backToMainDialogHandler, dunnoHandler, kickHandler } from "../handlers";
+import { clearAndLeave, inlineKeyboard, replyBackToMainDialog, replyWithKeyboard } from "../../lib/telegram";
 import { PaymentEvent } from "../../entities/payment";
 import { getOrAddUser } from "../../services/userService";
 import { storePayment } from "../../storage/paymentStorage";
@@ -14,21 +14,15 @@ import { formatUserSubscription, getCurrentSubscription, getUserPlanSettings } f
 import { PlanSettings, getPlanSettings } from "../../entities/plan";
 import { getMessageLimitDisplayInfo } from "../../services/messageLimitService";
 import { canMakePurchases } from "../../services/permissionService";
+import { cancelAction, cancelButton } from "../../lib/dialog";
+import { User } from "../../entities/user";
 
 const scene = new BaseScene<BotContext>(scenes.premium);
 
 const buyPremiumAction = "buy-premium";
 const buyUnlimitedAction = "buy-unlimited";
-const cancelAction = "cancel";
 
-scene.enter(async (ctx) => {
-  if (!ctx.from) {
-    await ctx.scene.leave();
-    return;
-  }
-
-  const user = await getOrAddUser(ctx.from);
-
+function getPlanMessages(user: User): string[] {
   const userPlanSettings = getUserPlanSettings(user);
   const premiumSettings = getPlanSettings("premium");
   const unlimitedSettings = getPlanSettings("unlimited");
@@ -40,7 +34,7 @@ scene.enter(async (ctx) => {
     return displayInfo.long;
   }
 
-  const planMessages = [
+  return [
     `Текущий тариф: ${formatUserSubscription(user)}:
 ◽ модель <b>${userPlanSettings.text.model}</b>
 ◽ ${getLimitText(userPlanSettings)}`,
@@ -57,14 +51,25 @@ scene.enter(async (ctx) => {
 ◽ ${getLimitText(unlimitedSettings)}
 ◽ 390 рублей на 30 дней`,
   ];
+}
 
+scene.enter(async (ctx) => {
+  if (!ctx.from) {
+    await ctx.scene.leave();
+    return;
+  }
+
+  const user = await getOrAddUser(ctx.from);
+  const messages = getPlanMessages(user);
   const buttons: string[][] = [];
 
   if (!canMakePurchases(user)) {
-    planMessages.push("⛔ Покупка тарифов недоступна.");
+    await replyBackToMainDialog(
+      ctx,
+      ...messages,
+      "⛔ Покупка тарифов недоступна."
+    );
 
-    await reply(ctx, ...planMessages, messages.backToDialog);
-    await ctx.scene.leave();
     return;
   }
 
@@ -76,9 +81,9 @@ scene.enter(async (ctx) => {
         ["Купить Безлимит", buyUnlimitedAction]
       );
 
-      planMessages.push("⚠ Ваш текущий тариф <b>«Премиум»</b>. Вы можете приобрести <b>«Безлимит»</b>, который заменит текущий тариф <b>без компенсации средств</b>.");
+      messages.push("⚠ Ваш текущий тариф <b>«Премиум»</b>. Вы можете приобрести <b>«Безлимит»</b>, который заменит текущий тариф <b>без компенсации средств</b>.");
     } else if (subscription.code === "subscription-unlimited-30-days") {
-      planMessages.push("⚠ Ваш текущий тариф <b>«Безлимит»</b>. Вы не можете приобрести другие тарифы, пока у вас не закончится текущий.");
+      messages.push("⚠ Ваш текущий тариф <b>«Безлимит»</b>. Вы не можете приобрести другие тарифы, пока у вас не закончится текущий.");
     }
   } else {
     buttons.push(
@@ -89,8 +94,8 @@ scene.enter(async (ctx) => {
 
   await replyWithKeyboard(
     ctx,
-    inlineKeyboard(...buttons, ["Отмена", cancelAction]),
-    ...planMessages
+    inlineKeyboard(...buttons, cancelButton),
+    ...messages
   );
 });
 
@@ -107,10 +112,8 @@ scene.action(buyUnlimitedAction, async (ctx) => {
 });
 
 async function buyProduct(ctx: BotContext, product: Product) {
-  await clearInlineKeyboard(ctx);
-
   if (!ctx.from) {
-    await ctx.scene.leave();
+    await clearAndLeave(ctx);
     return;
   }
 
@@ -122,13 +125,10 @@ async function buyProduct(ctx: BotContext, product: Product) {
   const response = await yooMoneyPayment(requestData);
 
   if (isError(response)) {
-    await reply(
+    await replyBackToMainDialog(
       ctx,
-      "Произошла ошибка, оплата временно недоступна. Приносим извинения.",
-      messages.backToDialog
+      "Произошла ошибка, оплата временно недоступна. Приносим извинения."
     );
-
-    await ctx.scene.leave();
 
     return;
   }
@@ -160,22 +160,15 @@ async function buyProduct(ctx: BotContext, product: Product) {
     events: [event]
   });
 
-  await reply(
+  await replyBackToMainDialog(
     ctx,
     `Для оплаты <b>${getProductDisplayName(product, "Gen")}</b> пройдите по ссылке: ${paymentUrl}`,
-    `⚠ Время действия ссылки ограничено. Если вы не произведете оплату вовремя, получите новую ссылку с помощью команды /${commands.premium}`,
-    "Мы сообщим вам, когда получим оплату.",
-    messages.backToDialog
+    `⚠ Время действия ссылки ограничено. Если вы не успеете оплатить счет, вы можете получить новую ссылку с помощью команды /${commands.premium}`,
+    "Мы сообщим вам, когда получим оплату."
   );
-
-  await ctx.scene.leave();
 }
 
-scene.action(cancelAction, async (ctx) => {
-  await clearInlineKeyboard(ctx);
-  await ctx.scene.leave();
-  await reply(ctx, messages.backToDialog);
-});
+scene.action(cancelAction, backToMainDialogHandler);
 
 scene.use(kickHandler);
 scene.use(dunnoHandler);

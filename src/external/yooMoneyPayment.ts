@@ -1,7 +1,8 @@
 import axios from "axios";
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuid } from "uuid";
 import { Money } from "../entities/money";
 import { Result } from "../lib/error";
+import { putMetric } from "../services/metricService";
 
 export type YooMoneyPaymentData = {
   total: Money;
@@ -26,20 +27,39 @@ const config = {
 };
 
 export async function yooMoneyPayment(paymentData: YooMoneyPaymentData): Promise<Result<PaymentResponse>> {
+  const totalAmount = paymentData.total.amount.toFixed(2);
+  const totalCurrency = paymentData.total.currency;
+
   const paymentRequest = {
     "amount": {
-      "value": paymentData.total.amount.toFixed(2),
-      "currency": paymentData.total.currency
+      "value": totalAmount,
+      "currency": totalCurrency
     },
     "capture": true,
     "confirmation": {
       "type": "redirect",
       "return_url": config.botUrl
     },
-    "description": paymentData.description
+    "description": paymentData.description,
+    "receipt": {
+      "customer": {
+        "email": "user@example.com"
+      },
+      "items": [
+        {
+          "description": paymentData.description,
+          "quantity": "1",
+          "amount": {
+            "value": totalAmount,
+            "currency": totalCurrency
+          },
+          "vat_code": "1"
+        }
+      ]
+    }
   };
 
-  const idempotenceKey = uuidv4();
+  const idempotenceKey = uuid();
 
   try {
     const response = await axios.post(
@@ -62,11 +82,21 @@ export async function yooMoneyPayment(paymentData: YooMoneyPaymentData): Promise
     };
   } catch (error) {
     console.error(error);
+    await putMetric("Error");
+    await putMetric("YooMoneyError");
 
     if (axios.isAxiosError(error)) {
-      const message = error.response?.data.error.message ?? error.message;
+      let errorMessage = "Ошибка YooMoney API";
 
-      return new Error(`Ошибка YooMoney API: ${message}`);
+      try {
+        const message = error.response?.data?.error?.message
+          ?? error.response?.data?.description
+          ?? error.message;
+
+        errorMessage += `: ${message}`;
+      } catch { /* empty */ }
+
+      return new Error(errorMessage);
     }
 
     return new Error("Ошибка обращения к YooMoney API.");

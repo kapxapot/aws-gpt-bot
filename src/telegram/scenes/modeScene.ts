@@ -1,22 +1,20 @@
 import { BaseScene } from "telegraf/scenes";
 import { BotContext } from "../botContext";
-import { commands, messages, scenes, settings } from "../../lib/constants";
-import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
+import { commands, commonMessages, scenes, settings } from "../../lib/constants";
+import { clearAndLeave, clearInlineKeyboard, inlineKeyboard, reply, replyBackToMainDialog, replyWithKeyboard } from "../../lib/telegram";
 import { backToCustomPrompt, getOrAddUser, newCustomPrompt, setFreeMode, setPrompt } from "../../services/userService";
 import { getModeName, getModes, getPrompts } from "../../entities/prompt";
-import { addOtherCommandHandlers, dunnoHandler, kickHandler } from "../handlers";
+import { addOtherCommandHandlers, backToMainDialogHandler, dunnoHandler, kickHandler } from "../handlers";
 import { message } from "telegraf/filters";
-import { sendMessageToGpt, showLastHistoryMessage } from "../../services/messageService";
+import { sendMessageToGpt } from "../../services/messageService";
 import { ModeStage, SessionData } from "../session";
+import { cancelAction, cancelButton } from "../../lib/dialog";
 
 const scene = new BaseScene<BotContext>(scenes.mode);
 
 const selectFreeModeAction = "select-free-mode";
 const customPromptAction = "custom-prompt";
 const backToCustomPromptAction = "back-to-custom-prompt";
-const cancelAction = "cancel";
-
-const cancelButton = ["Отмена", cancelAction];
 
 scene.enter(modeSelectionHandler);
 
@@ -53,20 +51,12 @@ async function modeSelectionHandler(ctx: BotContext) {
 addOtherCommandHandlers(scene, commands.mode);
 
 scene.action(cancelAction, async (ctx) => {
-  await clearInlineKeyboard(ctx);
-
   if (isStage(ctx.session, "modeSelection")) {
-    await ctx.scene.leave();
-    await reply(ctx, messages.backToDialog);
-
-    if (ctx.from) {
-      const user = await getOrAddUser(ctx.from);
-      await showLastHistoryMessage(ctx, user);
-    }
-
+    await backToMainDialogHandler(ctx);
     return;
   }
 
+  await clearInlineKeyboard(ctx);
   await modeSelectionHandler(ctx);
 });
 
@@ -137,39 +127,28 @@ scene.action(selectFreeModeAction, async (ctx) => {
     return;
   }
 
-  await clearInlineKeyboard(ctx);
-
   // switch to free mode
   const user = await getOrAddUser(ctx.from);
   await setFreeMode(user);
-  await ctx.scene.leave();
 
-  await reply(
+  await replyBackToMainDialog(
     ctx,
-    `Вы перешли в режим <b>«${getModeName(user)}»</b>.`,
-    messages.backToDialog
+    `Вы перешли в режим <b>«${getModeName(user)}»</b>.`
   );
-
-  await showLastHistoryMessage(ctx, user);
 });
 
 getPrompts().forEach(prompt => {
   scene.action(prompt.code, async (ctx) => {
     if (isStage(ctx.session, "roleSelection") && ctx.from) {
-      await clearInlineKeyboard(ctx);
-
       // set prompt
       const user = await getOrAddUser(ctx.from);
       await setPrompt(user, prompt);
 
-      await reply(
+      await replyBackToMainDialog(
         ctx,
         `Вы выбрали роль <b>«${prompt.name}»</b>.`,
         prompt.intro
       );
-
-      await ctx.scene.leave();
-      await showLastHistoryMessage(ctx, user);
     }
   });
 });
@@ -191,24 +170,19 @@ scene.action(backToCustomPromptAction, async (ctx) => {
     return;
   }
 
-  await clearInlineKeyboard(ctx);
-
   // switch to old custom prompt
   const user = await getOrAddUser(ctx.from);
   await backToCustomPrompt(user);
 
-  await reply(
+  await replyBackToMainDialog(
     ctx,
-    `Вы вернулись к своему промту. ${messages.backToDialog}`
+    "Вы вернулись к своему промту."
   );
-
-  await ctx.scene.leave();
-  await showLastHistoryMessage(ctx, user);
 });
 
 scene.on(message("text"), async (ctx) => {
   if (isStage(ctx.session, "customPromptInput")) {
-    await clearInlineKeyboard(ctx);
+    await clearAndLeave(ctx);
 
     // switch to new custom prompt
     const customPrompt = ctx.message.text;
@@ -218,10 +192,10 @@ scene.on(message("text"), async (ctx) => {
 
     await reply(
       ctx,
-      `Вы задали новый промт. ${messages.backToDialog}`
+      "Вы задали новый промт.",
+      commonMessages.backToMainDialog
     );
 
-    await ctx.scene.leave();
     await sendMessageToGpt(ctx, user, customPrompt);
 
     return;

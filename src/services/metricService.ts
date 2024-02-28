@@ -7,7 +7,13 @@ export type MetricName =
   | "UsersTotal"
   | "BroadcastMessageSent"
   | "BroadcastMessageFailed"
-  | "ImageGenerated";
+  | "ImageGenerated"
+  | "Error"
+  | "PaymentUserNotFoundError"
+  | "PaymentNotFoundError"
+  | "ApiProcessingError"
+  | "YooMoneyError"
+  | "OpenAiError";
 
 const config = {
   env: process.env.ENV,

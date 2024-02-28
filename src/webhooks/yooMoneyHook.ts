@@ -1,6 +1,7 @@
 import { at, ts } from "../entities/at";
 import { getProductDisplayName } from "../entities/product";
 import { toText } from "../lib/common";
+import { putMetric } from "../services/metricService";
 import { addUserEvent } from "../services/userService";
 import { getPayment, updatePayment } from "../storage/paymentStorage";
 import { getUser } from "../storage/userStorage";
@@ -30,6 +31,9 @@ export async function youMoneyHook(requestData: YouMoneyRequestData) {
 
   if (!payment) {
     console.error(`YooMoney payment ${paymentId} not found.`);
+    await putMetric("Error");
+    await putMetric("PaymentNotFoundError");
+
     return;
   }
 
@@ -57,6 +61,9 @@ export async function youMoneyHook(requestData: YouMoneyRequestData) {
 
   if (!user) {
     console.error(`Payment user ${payment.userId} not found.`);
+    await putMetric("Error");
+    await putMetric("PaymentUserNotFoundError");
+
     return;
   }
 

@@ -10,8 +10,8 @@ export const commands = {
   status: "status"
 } as const;
 
-export const messages = {
-  backToDialog: "Возвращаемся к основной беседе...",
+export const commonMessages = {
+  backToMainDialog: "Возвращаемся к основному диалогу...",
   useTheKeyboard: "Используйте кнопки диалога. 👆"
 } as const;
 

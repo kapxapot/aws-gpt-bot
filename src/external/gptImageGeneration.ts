@@ -4,6 +4,8 @@ import { settings } from "../lib/constants";
 import { Result } from "../lib/error";
 import { ImageRequest } from "../entities/imageRequest";
 import { Image } from "openai/resources/images.mjs";
+import { isOpenAiError } from "../lib/openai";
+import { putMetric } from "../services/metricService";
 
 const config = {
   gptTimeout: gptTimeout * 1000,
@@ -37,8 +39,10 @@ export async function gptImageGeneration(imageRequest: ImageRequest): Promise<Re
     return response.data[0];
   } catch (error) {
     console.error(error);
+    await putMetric("Error");
+    await putMetric("OpenAiError");
 
-    if (error.error && error.error.message) {
+    if (isOpenAiError(error)) {
       const message = error.error.message;
 
       return new Error(`Ошибка OpenAI API: ${message}`);

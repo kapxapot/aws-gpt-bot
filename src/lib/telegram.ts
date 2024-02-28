@@ -3,6 +3,7 @@ import { toText } from "./common";
 import { Markup } from "telegraf";
 import { settings } from "./constants";
 import { AnyContext } from "../telegram/botContext";
+import { backToMainDialogHandler } from "../telegram/handlers";
 
 type Button = InlineKeyboardButton.CallbackButton;
 
@@ -31,6 +32,14 @@ export async function clearInlineKeyboard(ctx: AnyContext) {
   try {
     await ctx.editMessageReplyMarkup();
   } catch { /* empty */ }
+}
+
+/**
+ * Clear the inline keyboard and leave the current scene.
+ */
+export async function clearAndLeave(ctx: AnyContext) {
+  await clearInlineKeyboard(ctx);
+  await ctx.scene.leave();
 }
 
 export function sliceButtons<T extends Button>(buttons: T[], limit: number = 2, maxLength: number = settings.telegram.maxButtonTextLength): T[][] {
@@ -64,6 +73,11 @@ export function sliceButtons<T extends Button>(buttons: T[], limit: number = 2, 
   flush();
 
   return result;
+}
+
+export async function replyBackToMainDialog(ctx: AnyContext, ...lines: string[]) {
+  await reply(ctx, ...lines);
+  await backToMainDialogHandler(ctx);
 }
 
 export async function reply(ctx: AnyContext, ...lines: string[]): Promise<Message.TextMessage[]> {

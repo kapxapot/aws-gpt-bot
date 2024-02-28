@@ -6,7 +6,7 @@ import { truncate } from "../lib/common";
 import { isSuccess } from "../lib/error";
 import { encodeText, reply } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
-import { addMessageToUser, getCurrentContext, stopWaitingForGptAnswer, waitForGptAnswer } from "./userService";
+import { addMessageToUser, getLastHistoryMessage, stopWaitingForGptAnswer, waitForGptAnswer } from "./userService";
 import { commands } from "../lib/constants";
 import { formatUserSubscription, getMessageLimitString, getUserGptModel, incMessageUsage, messageLimitExceeded } from "./planService";
 import { getCurrentHistory } from "./contextService";
@@ -129,20 +129,15 @@ export async function showStatus(ctx: AnyContext, user: User) {
   await showLastHistoryMessage(ctx, user);
 }
 
-export async function showLastHistoryMessage(ctx: AnyContext, user: User) {
-  const { latestMessages } = getCurrentContext(user, 1);
+export async function showLastHistoryMessage(ctx: AnyContext, user: User, fallbackMessage?: string) {
+  const historyMessage = getLastHistoryMessage(user);
 
-  if (!latestMessages?.length) {
-    return;
-  }
+  const message = historyMessage
+    ? formatGptMessage(historyMessage)
+    : fallbackMessage;
 
-  const answer = latestMessages[0].response;
-
-  if (isSuccess(answer) && answer.reply) {
-    await reply(
-      ctx,
-      formatGptMessage(answer.reply)
-    );
+  if (message) {
+    await reply(ctx, message);
   }
 }
 

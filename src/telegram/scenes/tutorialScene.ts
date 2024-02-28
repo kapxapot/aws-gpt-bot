@@ -2,8 +2,8 @@ import { Composer } from "telegraf";
 import { WizardScene } from "telegraf/scenes";
 import { BotContext } from "../botContext";
 import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
-import { commands, messages, scenes } from "../../lib/constants";
-import { addOtherCommandHandlers, dunnoHandler, kickHandler } from "../handlers";
+import { commands, scenes } from "../../lib/constants";
+import { addOtherCommandHandlers, backToMainDialogHandler, dunnoHandler, kickHandler } from "../handlers";
 import { getPlanSettings } from "../../entities/plan";
 
 function makeStepHandler(text: string, first: boolean, last: boolean) {
@@ -29,11 +29,7 @@ function makeStepHandler(text: string, first: boolean, last: boolean) {
     }
   });
 
-  stepHandler.action(exitAction, async (ctx) => {
-    await clearInlineKeyboard(ctx);
-    await reply(ctx, messages.backToDialog)
-    await ctx.scene.leave();
-  });
+  stepHandler.action(exitAction, backToMainDialogHandler);
 
   if (first) {
     stepHandler.use(async (ctx) => {

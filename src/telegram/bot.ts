@@ -6,7 +6,7 @@ import { getOrAddUser } from "../services/userService";
 import { tutorialScene } from "./scenes/tutorialScene";
 import { BotContext } from "./botContext";
 import { commands } from "../lib/constants";
-import { getCommandHandlers, kickHandler } from "./handlers";
+import { getCommandHandlers, kickHandler, remindHandler } from "./handlers";
 import { premiumScene } from "./scenes/premiumScene";
 import { User } from "../entities/user";
 import { inspect } from "util";
@@ -18,6 +18,7 @@ import { isDebugMode } from "../services/userSettingsService";
 import { Update } from "telegraf/types";
 import { sessionStore } from "./sessionStore";
 import { imageScene } from "./scenes/imageScene";
+import { remindAction } from "../lib/dialog";
 
 const config = {
   botToken: process.env.BOT_TOKEN!,
@@ -84,6 +85,8 @@ export async function processTelegramRequest(tgRequest: TelegramRequest) {
   });
 
   getCommandHandlers().forEach(tuple => bot.command(...tuple));
+
+  bot.action(remindAction, remindHandler);
 
   bot.on(message("text"), async ctx => {
     const user = await getOrAddUser(ctx.from);

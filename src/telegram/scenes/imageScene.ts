@@ -1,18 +1,16 @@
 import { BaseScene } from "telegraf/scenes";
 import { BotContext } from "../botContext";
-import { commands, messages, scenes, settings } from "../../lib/constants";
+import { commands, scenes, settings } from "../../lib/constants";
 import { getOrAddUser } from "../../services/userService";
-import { addOtherCommandHandlers, dunnoHandler, kickHandler } from "../handlers";
+import { addOtherCommandHandlers, backToMainDialogHandler, dunnoHandler, kickHandler } from "../handlers";
 import { canRequestImageGeneration } from "../../services/permissionService";
-import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
+import { clearAndLeave, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { message } from "telegraf/filters";
 import { generateImageWithGpt } from "../../services/imageService";
 import { ImageStage, SessionData } from "../session";
+import { cancelAction, cancelButton } from "../../lib/dialog";
 
 const scene = new BaseScene<BotContext>(scenes.image);
-
-const cancelAction = "cancel";
-const cancelButton = ["Отмена", cancelAction];
 
 scene.enter(async (ctx) => {
   if (!ctx.from) {
@@ -40,21 +38,16 @@ scene.enter(async (ctx) => {
 
 addOtherCommandHandlers(scene, commands.image);
 
-scene.action(cancelAction, async (ctx) => {
-  await clearInlineKeyboard(ctx);
-  await ctx.scene.leave();
-  await reply(ctx, messages.backToDialog);
-});
+scene.action(cancelAction, backToMainDialogHandler);
 
 scene.on(message("text"), async (ctx) => {
   if (isStage(ctx.session, "imagePromptInput")) {
-    await clearInlineKeyboard(ctx);
+    await clearAndLeave(ctx);
 
     // generate image
     const imagePrompt = ctx.message.text;
     const user = await getOrAddUser(ctx.from);
 
-    await ctx.scene.leave();
     await generateImageWithGpt(ctx, user, imagePrompt);
 
     return;

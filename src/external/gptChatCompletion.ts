@@ -8,6 +8,8 @@ import { settings } from "../lib/constants";
 import { gptTimeout } from "../services/gptService";
 import { getUserGptModel } from "../services/planService";
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
+import { isOpenAiError } from "../lib/openai";
+import { putMetric } from "../services/metricService";
 
 const config = {
   gptTimeout: gptTimeout * 1000,
@@ -78,8 +80,10 @@ export async function gptChatCompletion(user: User, userMessage: string): Promis
     };
   } catch (error) {
     console.error(error);
+    await putMetric("Error");
+    await putMetric("OpenAiError");
 
-    if (error.error && error.error.message) {
+    if (isOpenAiError(error)) {
       const message = error.error.message;
 
       return new Error(`Ошибка OpenAI API: ${message}`);

@@ -1,6 +1,7 @@
 import { now } from "../entities/at";
 import { User } from "../entities/user";
 import { gptImageGeneration } from "../external/gptImageGeneration";
+import { toText } from "../lib/common";
 import { isSuccess } from "../lib/error";
 import { reply } from "../lib/telegram";
 import { storeImageRequest, updateImageRequest } from "../storage/imageRequestStorage";
@@ -50,6 +51,16 @@ export async function generateImageWithGpt(ctx: AnyContext, user: User, prompt: 
 
     if (image.url) {
       await ctx.replyWithPhoto(image.url);
+
+      await ctx.replyWithHTML(
+        toText(
+          `Вы также можете <a href="${image.url}">скачать картинку</a> в максимальном качестве.`,
+          "⚠ Внимание! Эта ссылка будет работать только 60 минут!"
+        ),
+        { 
+          disable_web_page_preview: true 
+        }
+      );
     } else if (image.b64_json) {
       const stream = new PassThrough();
       stream.write(image.b64_json);

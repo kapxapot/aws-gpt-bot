@@ -1,13 +1,14 @@
 import { inspect } from "util";
 import { Composer } from "telegraf";
 import { AnyContext, BotContext } from "./botContext";
-import { commands, messages, scenes } from "../lib/constants";
-import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
+import { commands, commonMessages, scenes } from "../lib/constants";
+import { clearAndLeave, clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
 import { historySizeHandler } from "./handlers/historySizeHandler";
 import { temperatureHandler } from "./handlers/temperatureHandler";
-import { getOrAddUser } from "../services/userService";
-import { showStatus } from "../services/messageService";
+import { getLastHistoryMessage, getOrAddUser } from "../services/userService";
+import { showLastHistoryMessage, showStatus } from "../services/messageService";
 import { isDebugMode } from "../services/userSettingsService";
+import { remindButton } from "../lib/dialog";
 
 type Handler = (ctx: AnyContext) => Promise<void>;
 type HandlerTuple = [command: string, handler: Handler];
@@ -15,8 +16,7 @@ type HandlerTuple = [command: string, handler: Handler];
 export function addOtherCommandHandlers(scene: Composer<BotContext>, exceptCommand: string) {
   getOtherCommandHandlers(exceptCommand).forEach(tuple => {
     scene.command(tuple[0], async (ctx) => {
-      await clearInlineKeyboard(ctx);
-      await ctx.scene.leave();
+      await clearAndLeave(ctx);
       await tuple[1](ctx);
     });
   });
@@ -25,16 +25,11 @@ export function addOtherCommandHandlers(scene: Composer<BotContext>, exceptComma
     await replyWithKeyboard(
       ctx,
       inlineKeyboard(["Покинуть диалог", "leave-dialog"]),
-      `Вы уже находитесь в диалоге этой команды. ${messages.useTheKeyboard}`,
-      "Вы также можете покинуть диалог команды 👇"
+      `Вы уже находитесь в диалоге этой команды. ${commonMessages.useTheKeyboard}`
     );
   });
 
-  scene.action("leave-dialog", async (ctx) => {
-    await clearInlineKeyboard(ctx);
-    await ctx.scene.leave();
-    await reply(ctx, messages.backToDialog);
-  });
+  scene.action("leave-dialog", backToMainDialogHandler);
 }
 
 function getOtherCommandHandlers(command: string): HandlerTuple[] {
@@ -103,5 +98,46 @@ export async function dunnoHandler(ctx: AnyContext) {
     }
   }
 
-  await reply(ctx, `Я не понял ваш запрос. ${messages.useTheKeyboard}`);
+  await reply(ctx, `Я не понял ваш запрос. ${commonMessages.useTheKeyboard}`);
+}
+
+/**
+ * 1. Clears the inline keyboard.
+ * 2. Leaves the scene.
+ * 3. Shows "backToMainDialog" message with a button to replay last message (if there is one).
+ */
+export async function backToMainDialogHandler(ctx: AnyContext) {
+  await clearAndLeave(ctx);
+
+  const hasMessage = await userHasMessage(ctx);
+  const buttons = hasMessage ? [remindButton] : []
+
+  await replyWithKeyboard(
+    ctx,
+    inlineKeyboard(...buttons),
+    commonMessages.backToMainDialog
+  );
+}
+
+async function userHasMessage(ctx: AnyContext): Promise<boolean> {
+  if (!ctx.from) {
+    return false;
+  }
+
+  const user = await getOrAddUser(ctx.from);
+  const message = getLastHistoryMessage(user);
+
+  return !!message;
+}
+
+export async function remindHandler(ctx: AnyContext) {
+  await clearInlineKeyboard(ctx);
+
+  if (!ctx.from) {
+    return;
+  }
+
+  const user = await getOrAddUser(ctx.from);
+
+  await showLastHistoryMessage(ctx, user, "Похоже, разговор только начался. В истории пусто.");
 }

@@ -6,6 +6,7 @@ import { Context } from "../entities/context";
 import { Prompt, customPromptCode, noPromptCode } from "../entities/prompt";
 import { getUserHistorySize } from "./userSettingsService";
 import { addMessageToHistory, createContext, cutoffMessages, getCurrentHistory, getCurrentPrompt } from "./contextService";
+import { isSuccess } from "../lib/error";
 
 type CurrentContext = {
   prompt: string | null;
@@ -100,6 +101,20 @@ export function getCurrentContext(user: User, historySize: number): CurrentConte
     prompt: getCurrentPrompt(context),
     latestMessages
   };
+}
+
+export function getLastHistoryMessage(user: User): string | null {
+  const { latestMessages } = getCurrentContext(user, 1);
+
+  if (!latestMessages?.length) {
+    return null;
+  }
+
+  const answer = latestMessages[0].response;
+
+  return isSuccess(answer)
+    ? answer.reply
+    : null;
 }
 
 export async function addUserEvent(user: User, event: UserEvent): Promise<User> {

@@ -6,6 +6,7 @@ import { Request, Response } from "express-serve-static-core/index";
 import { ParsedQs } from "qs";
 import { broadcastHook } from "../webhooks/broadcastHook";
 import { isDebugMode } from "../services/userSettingsService";
+import { putMetric } from "../services/metricService";
 
 type ApiRequest = Request<object, unknown, unknown, ParsedQs, Record<string, unknown>>;
 type ApiResponse = Response<unknown, Record<string, unknown>, number>;
@@ -23,6 +24,8 @@ async function handle<T>(req: ApiRequest, res: ApiResponse, func: HandlerFunc<T>
     res.status(200).end();
   } catch (error) {
     console.error(error);
+    await putMetric("Error");
+    await putMetric("ApiProcessingError");
 
     const errorResult: ErrorResult = {
       error: "Failed to process the request."
