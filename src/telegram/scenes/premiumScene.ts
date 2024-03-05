@@ -2,21 +2,20 @@ import { BaseScene } from "telegraf/scenes";
 import { AnyContext, BotContext } from "../botContext";
 import { commands, scenes } from "../../lib/constants";
 import { addOtherCommandHandlers, backToMainDialogHandler, dunnoHandler, kickHandler } from "../handlers";
-import { clearInlineKeyboard, contactKeyboard, emptyKeyboard, inlineKeyboard, replyBackToMainDialog, replyWithKeyboard } from "../../lib/telegram";
+import { clearInlineKeyboard, contactKeyboard, emptyKeyboard, inlineKeyboard, reply, replyBackToMainDialog, replyWithKeyboard } from "../../lib/telegram";
 import { PaymentEvent } from "../../entities/payment";
 import { storePayment } from "../../storage/paymentStorage";
 import { yooMoneyPayment } from "../../external/yooMoneyPayment";
 import { now } from "../../entities/at";
-import { Product, getProductDisplayName, isPurchasedProduct, monthlyPremiumSubscription, monthlyUnlimitedSubscription } from "../../entities/product";
+import { ProductCode, getProductByCode, getProductDisplayName } from "../../entities/product";
 import { isError } from "../../lib/error";
-import { formatUserSubscription, getCurrentSubscription, getSubscriptionPlan } from "../../services/subscriptionService";
-import { canMakePurchases } from "../../services/permissionService";
+import { formatUserSubscription } from "../../services/subscriptionService";
+import { canMakePurchases, canPurchaseProduct } from "../../services/permissionService";
 import { cancelAction, cancelButton } from "../../lib/dialog";
 import { getUserOrLeave } from "../../services/messageService";
-import { getUserPlanSettings } from "../../services/userService";
+import { getUserPlan, getUserPlanSettings } from "../../services/userService";
 import { getPlanSettings, getPlanSettingsLimitText } from "../../services/planSettingsService";
 import { SessionData } from "../session";
-import { Plan } from "../../entities/plan";
 import { phoneToItu, toText } from "../../lib/common";
 import { message } from "telegraf/filters";
 import { updateUser } from "../../storage/userStorage";
@@ -87,38 +86,37 @@ scene.enter(async ctx => {
     return;
   }
 
-  const subscription = getCurrentSubscription(user);
+  const plan = getUserPlan(user);
 
-  if (isPurchasedProduct(subscription)) {
-    const plan = getSubscriptionPlan(subscription);
+  switch (plan) {
+    case "free":
+      if (premiumActive) {
+        buttons.push(["Купить Премиум", buyPremiumAction]);
+      }
 
-    switch (plan) {
-      case "premium":
-        if (unlimitedActive) {
-          buttons.push(
-            ["Купить Безлимит", buyUnlimitedAction]
-          );
-  
-          messages.push("⚠ Ваш текущий тариф <b>«Премиум»</b>. Вы можете приобрести <b>«Безлимит»</b>, который заменит текущий тариф <b>без компенсации средств</b>.");
-        } else {
-          messages.push("⚠ Ваш текущий тариф <b>«Премиум»</b>. Вы не можете приобрести другие тарифы, пока у вас не закончится текущий.");
-        }
+      if (unlimitedActive) {
+        buttons.push(["Купить Безлимит", buyUnlimitedAction]);
+      }
 
-        break;
+      break;
 
-      case "unlimited":
-        messages.push("⚠ Ваш текущий тариф <b>«Безлимит»</b>. Вы не можете приобрести другие тарифы, пока у вас не закончится текущий.");
+    case "premium":
+      if (unlimitedActive) {
+        buttons.push(
+          ["Купить Безлимит", buyUnlimitedAction]
+        );
 
-        break;
-    }
-  } else {
-    if (premiumActive) {
-      buttons.push(["Купить Премиум", buyPremiumAction]);
-    }
+        messages.push("⚠ Ваш текущий тариф <b>«Премиум»</b>. Вы можете приобрести <b>«Безлимит»</b>, который заменит текущий тариф <b>без компенсации средств</b>.");
+      } else {
+        messages.push("⚠ Ваш текущий тариф <b>«Премиум»</b>. Вы не можете приобрести другие тарифы, пока у вас не закончится текущий.");
+      }
 
-    if (unlimitedActive) {
-      buttons.push(["Купить Безлимит", buyUnlimitedAction]);
-    }
+      break;
+
+    case "unlimited":
+      messages.push("⚠ Ваш текущий тариф <b>«Безлимит»</b>. Вы не можете приобрести другие тарифы, пока у вас не закончится текущий.");
+
+      break;
   }
 
   await replyWithKeyboard(
@@ -130,7 +128,17 @@ scene.enter(async ctx => {
 
 addOtherCommandHandlers(scene, commands.premium);
 
-scene.action(buyPremiumAction, async ctx => {
+scene.action(
+  buyPremiumAction,
+  async ctx => await buyAction(ctx, "subscription-premium-30-days")
+);
+
+scene.action(
+  buyUnlimitedAction,
+  async ctx => await buyAction(ctx, "subscription-unlimited-30-days")
+);
+
+async function buyAction(ctx: AnyContext, productCode: ProductCode) {
   await clearInlineKeyboard(ctx);
 
   const user = await getUserOrLeave(ctx);
@@ -140,33 +148,14 @@ scene.action(buyPremiumAction, async ctx => {
   }
 
   if (user.phoneNumber) {
-    await buyPremium(ctx);
-    return;
-  }
-
-  // ask for phone number and then buy premium
-  setTargetPlan(ctx.session, "premium");
-  await askForPhone(ctx);
-});
-
-scene.action(buyUnlimitedAction, async ctx => {
-  await clearInlineKeyboard(ctx);
-
-  const user = await getUserOrLeave(ctx);
-
-  if (!user) {
-    return;
-  }
-
-  if (user.phoneNumber) {
-    await buyUnlimited(ctx);
+    await buyProduct(ctx, productCode);
     return;
   }
 
   // ask for phone number and then buy unlimited
-  setTargetPlan(ctx.session, "unlimited");
+  setTargetProductCode(ctx.session, productCode);
   await askForPhone(ctx);
-});
+}
 
 async function askForPhone(ctx: AnyContext) {
   await ctx.reply(
@@ -213,40 +202,26 @@ scene.on(message("contact"), async ctx => {
     emptyKeyboard()
   );
 
-  const targetPlan = getTargetPlan(ctx.session);
+  const targetProductCode = getTargetProductCode(ctx.session);
 
-  if (!targetPlan) {
+  if (!targetProductCode || !canPurchaseProduct(user, targetProductCode)) {
+    await reply(ctx, "Выбранный вами продукт более не доступен.");
     backToMainDialogHandler(ctx);
+
     return;
   }
 
-  switch (targetPlan) {
-    case "premium":
-      await buyPremium(ctx);
-      break;
-
-    case "unlimited":
-      await buyUnlimited(ctx);
-      break;
-  }
+  await buyProduct(ctx, targetProductCode);
 });
 
-async function buyPremium(ctx: AnyContext) {
-  const product = monthlyPremiumSubscription();
-  await buyProduct(ctx, product);
-}
-
-async function buyUnlimited(ctx: AnyContext) {
-  const product = monthlyUnlimitedSubscription();
-  await buyProduct(ctx, product);
-}
-
-async function buyProduct(ctx: BotContext, product: Product) {
+async function buyProduct(ctx: BotContext, productCode: ProductCode) {
   const user = await getUserOrLeave(ctx);
 
   if (!user) {
     return;
   }
+
+  const product = getProductByCode(productCode);
 
   const requestData = {
     user,
@@ -306,13 +281,13 @@ scene.use(dunnoHandler);
 
 export const premiumScene = scene;
 
-function setTargetPlan(session: SessionData, targetPlan: Plan) {
+function setTargetProductCode(session: SessionData, targetProductCode: ProductCode) {
   session.premiumData = {
     ...session.premiumData ?? {},
-    targetPlan
+    targetProductCode
   };
 }
 
-function getTargetPlan(session: SessionData): Plan | null {
-  return session.premiumData?.targetPlan ?? null;
+function getTargetProductCode(session: SessionData): ProductCode | null {
+  return session.premiumData?.targetProductCode ?? null;
 }

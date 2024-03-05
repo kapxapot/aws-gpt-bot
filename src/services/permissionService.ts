@@ -1,6 +1,8 @@
+import { ProductCode, getProductByCode } from "../entities/product";
 import { User } from "../entities/user";
 import { isProd } from "./envService";
-import { getUserPlanSettings, isTester } from "./userService";
+import { isPlanActive } from "./planService";
+import { getUserPlan, getUserPlanSettings, isTester } from "./userService";
 
 export const canMakePurchases = (user: User) => isProd() || isTester(user);
 
@@ -13,3 +15,23 @@ export const canRequestImageGeneration = (user: User) => {
 }
 
 const getUserPlanPermissions = (user: User) => getUserPlanSettings(user).permissions;
+
+export function canPurchaseProduct(user: User, productCode: ProductCode) {
+  if (!canMakePurchases(user)) {
+    return false;
+  }
+
+  const product = getProductByCode(productCode);
+  const plan = product.details.plan;
+  const userPlan = getUserPlan(user);
+
+  if (userPlan === "premium" && plan === "premium") {
+    return false;
+  }
+
+  if (userPlan === "unlimited") {
+    return false;
+  }
+
+  return isPlanActive(plan);
+}

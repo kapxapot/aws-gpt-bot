@@ -1,5 +1,5 @@
 import { WizardSession } from "telegraf/scenes";
-import { Plan } from "../entities/plan";
+import { ProductCode } from "../entities/product";
 
 export type CompoundSession = SessionData & WizardSession;
 
@@ -11,7 +11,7 @@ export type SessionData = {
     stage?: ImageStage;
   }
   premiumData?: {
-    targetPlan?: Plan;
+    targetProductCode?: ProductCode;
   }
 };
 

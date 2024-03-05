@@ -11,8 +11,12 @@ export type Subscription = {
   };
 };
 
+export type ProductCode =
+  "subscription-premium-30-days" |
+  "subscription-unlimited-30-days";
+
 export type Product = Subscription & {
-  code: "subscription-premium-30-days" | "subscription-unlimited-30-days";
+  code: ProductCode;
   price: Money;
   details: {
     type: "subscription";
@@ -96,4 +100,14 @@ export function getProductDisplayName(product: Subscription, targetCase?: Case) 
   return (targetCase ? product.displayNames[targetCase] : null)
     ?? product.displayNames["Nom"]
     ?? product.name;
+}
+
+export function getProductByCode(code: ProductCode): Product {
+  switch (code) {
+    case "subscription-premium-30-days":
+      return monthlyPremiumSubscription();
+
+    case "subscription-unlimited-30-days":
+      return monthlyUnlimitedSubscription();
+  }
 }

@@ -217,7 +217,7 @@ export function isTester(user: User) {
   return user.isTester === true;
 }
 
-function getUserPlan(user: User): Plan {
+export function getUserPlan(user: User): Plan {
   const subscription = getCurrentSubscription(user);
   return subscription.details.plan;
 }
