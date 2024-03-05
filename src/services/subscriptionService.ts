@@ -1,12 +1,8 @@
-import { At, ts } from "../entities/at";
-import { Plan, PlanSettings, getPlanDailyMessageLimit, getPlanGptModel, getPlanSettings } from "../entities/plan";
+import { ts } from "../entities/at";
 import { PurchasedProduct, Subscription, freeSubscription, getProductDisplayName, isPurchasedProduct } from "../entities/product";
 import { User } from "../entities/user";
 import { first } from "../lib/common";
-import { updateUsageStats } from "./userService";
-import { addDays, formatDate, isInRange, startOfToday } from "./dateService";
-import { GptModel } from "../lib/openai";
-import { getMessageLimitDisplayInfo } from "./messageLimitService";
+import { addDays, formatDate, isInRange } from "./dateService";
 
 type SubscriptionDisplayInfo = {
   name: string;
@@ -18,54 +14,6 @@ type TimestampRange = {
   end: number;
 };
 
-export async function messageLimitExceeded(user: User): Promise<boolean> {
-  if (!user.usageStats) {
-    return false;
-  }
-
-  const stats = user.usageStats;
-  const startOfDay = startOfToday();
-
-  if (stats.startOfDay === startOfDay) {
-    return stats.messageCount >= getUserMessageLimit(user);
-  }
-
-  return false;
-}
-
-export async function incMessageUsage(user: User, requestedAt: At): Promise<User> {
-  const startOfDay = startOfToday();
-
-  const messageCount = (user.usageStats?.startOfDay === startOfDay)
-    ? user.usageStats.messageCount + 1
-    : 1;
-
-  user.usageStats = {
-    messageCount,
-    startOfDay,
-    lastMessageAt: requestedAt
-  };
-
-  return await updateUsageStats(user, user.usageStats);
-}
-
-function getUserMessageLimit(user: User): number {
-  const plan = getUserPlan(user);
-  return getPlanDailyMessageLimit(plan);
-}
-
-export function getMessageLimitString(user: User): string {
-  const limit = getUserMessageLimit(user);
-  const displayInfo = getMessageLimitDisplayInfo(limit);
-
-  return displayInfo.short;
-}
-
-export function getUserGptModel(user: User): GptModel {
-  const plan = getUserPlan(user);
-  return getPlanGptModel(plan);
-}
-
 export function formatUserSubscription(user: User): string {
   const { name, expiresAt } = getUserSubscriptionDisplayInfo(user);
   const nameStr = `<b>${name}</b>`;
@@ -75,16 +23,6 @@ export function formatUserSubscription(user: User): string {
   }
 
   return `${nameStr} (действует по ${formatDate(expiresAt, "dd.MM.yyyy")})`;
-}
-
-function getUserPlan(user: User): Plan {
-  const subscription = getCurrentSubscription(user);
-  return subscription.details.plan;
-}
-
-export function getUserPlanSettings(user: User): PlanSettings {
-  const plan = getUserPlan(user);
-  return getPlanSettings(plan);
 }
 
 function getUserSubscriptionDisplayInfo(user: User): SubscriptionDisplayInfo {
@@ -101,7 +39,7 @@ function getUserSubscriptionDisplayInfo(user: User): SubscriptionDisplayInfo {
   return { name, expiresAt };
 }
 
-export function getCurrentSubscription(user: User): PurchasedProduct | Subscription {
+export function getCurrentSubscription(user: User): Subscription {
   const activeSubscriptions = getActiveSubscriptions(user)
     .sort((a, b) => b.details.priority - a.details.priority);
 
@@ -109,7 +47,8 @@ export function getCurrentSubscription(user: User): PurchasedProduct | Subscript
 }
 
 function getActiveSubscriptions(user: User): PurchasedProduct[] {
-  return getPurchasedProducts(user).filter(pp => isActiveSubscription(pp));
+  return getPurchasedProducts(user)
+    .filter(pp => isActiveSubscription(pp));
 }
 
 function getPurchasedProducts(user: User): PurchasedProduct[] {
@@ -141,3 +80,5 @@ function getProductTimestampRange(product: PurchasedProduct): TimestampRange {
 
   return { start, end };
 }
+
+export const getSubscriptionPlan = (subscription: Subscription) => subscription.details.plan;

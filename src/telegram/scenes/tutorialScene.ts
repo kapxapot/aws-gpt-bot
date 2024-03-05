@@ -4,7 +4,7 @@ import { BotContext } from "../botContext";
 import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { commands, scenes } from "../../lib/constants";
 import { addOtherCommandHandlers, backToMainDialogHandler, dunnoHandler, kickHandler } from "../handlers";
-import { getPlanSettings } from "../../entities/plan";
+import { getPlanSettings } from "../../services/planSettingsService";
 
 function makeStepHandler(text: string, first: boolean, last: boolean) {
   const stepHandler = new Composer<BotContext>();

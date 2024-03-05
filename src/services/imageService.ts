@@ -8,8 +8,7 @@ import { inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
 import { storeImageRequest, updateImageRequest } from "../storage/imageRequestStorage";
 import { AnyContext } from "../telegram/botContext";
 import { putMetric } from "./metricService";
-import { getUserPlanSettings } from "./planService";
-import { stopWaitingForGptImageGeneration, waitForGptImageGeneration } from "./userService";
+import { getUserPlanSettings, stopWaitingForGptImageGeneration, waitForGptImageGeneration } from "./userService";
 import { PassThrough } from "stream";
 
 export async function generateImageWithGpt(ctx: AnyContext, user: User, prompt: string): Promise<boolean> {

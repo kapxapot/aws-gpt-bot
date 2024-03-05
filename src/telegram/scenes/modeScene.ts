@@ -6,7 +6,7 @@ import { backToCustomPrompt, getOrAddUser, newCustomPrompt, setFreeMode, setProm
 import { getModeName, getModes, getPrompts } from "../../entities/prompt";
 import { addOtherCommandHandlers, backToMainDialogHandler, dunnoHandler, kickHandler } from "../handlers";
 import { message } from "telegraf/filters";
-import { sendMessageToGpt } from "../../services/messageService";
+import { getUserOrLeave, sendMessageToGpt } from "../../services/messageService";
 import { ModeStage, SessionData } from "../session";
 import { cancelAction, cancelButton } from "../../lib/dialog";
 
@@ -21,12 +21,11 @@ scene.enter(modeSelectionHandler);
 async function modeSelectionHandler(ctx: BotContext) {
   setStage(ctx.session, "modeSelection");
 
-  if (!ctx.from) {
-    await ctx.scene.leave();
+  const user = await getUserOrLeave(ctx);
+
+  if (!user) {
     return;
   }
-
-  const user = await getOrAddUser(ctx.from);
 
   const messages = [
     `Текущий режим: <b>${getModeName(user)}</b>`,
@@ -50,7 +49,7 @@ async function modeSelectionHandler(ctx: BotContext) {
 
 addOtherCommandHandlers(scene, commands.mode);
 
-scene.action(cancelAction, async (ctx) => {
+scene.action(cancelAction, async ctx => {
   if (isStage(ctx.session, "modeSelection")) {
     await backToMainDialogHandler(ctx);
     return;
@@ -61,7 +60,7 @@ scene.action(cancelAction, async (ctx) => {
 });
 
 getModes().forEach(mode => {
-  scene.action(mode.code, async (ctx) => {
+  scene.action(mode.code, async ctx => {
     if (isStage(ctx.session, "modeSelection") && ctx.from) {
       await clearInlineKeyboard(ctx);
 
@@ -122,13 +121,13 @@ getModes().forEach(mode => {
   });
 });
 
-scene.action(selectFreeModeAction, async (ctx) => {
-  if (!ctx.from) {
+scene.action(selectFreeModeAction, async ctx => {
+  const user = await getUserOrLeave(ctx);
+
+  if (!user) {
     return;
   }
 
-  // switch to free mode
-  const user = await getOrAddUser(ctx.from);
   await setFreeMode(user);
 
   await replyBackToMainDialog(
@@ -138,7 +137,7 @@ scene.action(selectFreeModeAction, async (ctx) => {
 });
 
 getPrompts().forEach(prompt => {
-  scene.action(prompt.code, async (ctx) => {
+  scene.action(prompt.code, async ctx => {
     if (isStage(ctx.session, "roleSelection") && ctx.from) {
       // set prompt
       const user = await getOrAddUser(ctx.from);
@@ -153,7 +152,7 @@ getPrompts().forEach(prompt => {
   });
 });
 
-scene.action(customPromptAction, async (ctx) => {
+scene.action(customPromptAction, async ctx => {
   await clearInlineKeyboard(ctx);
 
   setStage(ctx.session, "customPromptInput");
@@ -165,13 +164,13 @@ scene.action(customPromptAction, async (ctx) => {
   );
 });
 
-scene.action(backToCustomPromptAction, async (ctx) => {
-  if (!ctx.from) {
+scene.action(backToCustomPromptAction, async ctx => {
+  const user = await getUserOrLeave(ctx);
+
+  if (!user) {
     return;
   }
 
-  // switch to old custom prompt
-  const user = await getOrAddUser(ctx.from);
   await backToCustomPrompt(user);
 
   await replyBackToMainDialog(
@@ -180,7 +179,7 @@ scene.action(backToCustomPromptAction, async (ctx) => {
   );
 });
 
-scene.on(message("text"), async (ctx) => {
+scene.on(message("text"), async ctx => {
   if (isStage(ctx.session, "customPromptInput")) {
     await clearAndLeave(ctx);
 
@@ -214,7 +213,10 @@ scene.use(dunnoHandler);
 export const modeScene = scene;
 
 function setStage(session: SessionData, stage: ModeStage) {
-  session.modeData = { stage };
+  session.modeData = {
+    ...session.modeData ?? {},
+    stage
+  };
 }
 
 function isStage(session: SessionData, stage: ModeStage): boolean {

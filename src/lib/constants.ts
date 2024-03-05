@@ -11,7 +11,7 @@ export const commands = {
 } as const;
 
 export const commonMessages = {
-  backToMainDialog: "Возвращаемся к основному диалогу...",
+  backToMainDialog: "💬 Возвращаемся к основному диалогу...",
   useTheKeyboard: "Используйте кнопки диалога. 👆"
 } as const;
 

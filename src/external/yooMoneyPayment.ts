@@ -3,8 +3,11 @@ import { v4 as uuid } from "uuid";
 import { Money } from "../entities/money";
 import { Result } from "../lib/error";
 import { putMetric } from "../services/metricService";
+import { User } from "../entities/user";
+import { phoneToItu } from "../lib/common";
 
 export type YooMoneyPaymentData = {
+  user: User;
   total: Money;
   description: string;
 };
@@ -27,6 +30,19 @@ const config = {
 };
 
 export async function yooMoneyPayment(paymentData: YooMoneyPaymentData): Promise<Result<PaymentResponse>> {
+  const user = paymentData.user;
+  const phoneNumber = phoneToItu(user.phoneNumber);
+
+  if (!phoneNumber) {
+    const error = new Error(`У пользователя ${user.id} отсутствует номер телефона.`);
+
+    console.error(error);
+    await putMetric("Error");
+    await putMetric("EmptyUserPhoneNumberError");
+
+    return error;
+  }
+
   const totalAmount = paymentData.total.amount.toFixed(2);
   const totalCurrency = paymentData.total.currency;
 
@@ -43,7 +59,7 @@ export async function yooMoneyPayment(paymentData: YooMoneyPaymentData): Promise
     "description": paymentData.description,
     "receipt": {
       "customer": {
-        "email": "user@example.com"
+        "phone": phoneNumber
       },
       "items": [
         {

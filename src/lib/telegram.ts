@@ -1,4 +1,4 @@
-import { InlineKeyboardButton, InlineKeyboardMarkup, Message, User } from "telegraf/types";
+import { InlineKeyboardButton, InlineKeyboardMarkup, Message, ReplyKeyboardMarkup, ReplyKeyboardRemove, User } from "telegraf/types";
 import { toText } from "./common";
 import { Markup } from "telegraf";
 import { settings } from "./constants";
@@ -40,6 +40,16 @@ export async function clearInlineKeyboard(ctx: AnyContext) {
 export async function clearAndLeave(ctx: AnyContext) {
   await clearInlineKeyboard(ctx);
   await ctx.scene.leave();
+}
+
+export function emptyKeyboard(): Markup.Markup<ReplyKeyboardRemove> {
+  return Markup.removeKeyboard();
+}
+
+export function contactKeyboard(): Markup.Markup<ReplyKeyboardMarkup> {
+  return Markup.keyboard([
+    Markup.button.contactRequest("📱 Отправить номер")
+  ]).resize();
 }
 
 export function sliceButtons<T extends Button>(buttons: T[], limit: number = 2, maxLength: number = settings.telegram.maxButtonTextLength): T[][] {

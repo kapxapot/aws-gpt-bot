@@ -46,17 +46,29 @@ app.use(express.json());
 app.post("/bot", async function (req: ApiRequest, res: ApiResponse) {
   console.log("Received a Telegram request.");
 
+  if (isDebugMode()) {
+    console.log(req);
+  }
+
   await handle(req, res, botHook);
 });
 
 app.post("/yoomoney", async function (req: ApiRequest, res: ApiResponse) {
   console.log("Received a YooMoney request.");
 
+  if (isDebugMode()) {
+    console.log(req);
+  }
+
   await handle(req, res, youMoneyHook);
 });
 
 app.post("/broadcast", async function (req: ApiRequest, res: ApiResponse) {
   console.log("Received a broadcast request.");
+
+  if (isDebugMode()) {
+    console.log(req);
+  }
 
   await handle(req, res, broadcastHook);
 });

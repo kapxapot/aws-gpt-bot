@@ -1,7 +1,6 @@
 import { User } from "../entities/user";
 import { isProd } from "./envService";
-import { getUserPlanSettings } from "./planService";
-import { isTester } from "./userService";
+import { getUserPlanSettings, isTester } from "./userService";
 
 export const canMakePurchases = (user: User) => isProd() || isTester(user);
 

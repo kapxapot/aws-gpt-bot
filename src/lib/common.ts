@@ -29,3 +29,11 @@ export function first<T>(array: T[]): T | null {
 function isEmpty<T>(array: T[]): boolean {
   return array.length === 0;
 }
+
+export function phoneToItu(phone: string | undefined): string | null {
+  if (!phone) {
+    return null;
+  }
+
+  return phone.replace(/\D/g, '') || null;
+}

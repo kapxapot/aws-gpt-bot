@@ -4,11 +4,11 @@ import { User } from "../entities/user";
 import { gptChatCompletion } from "../external/gptChatCompletion";
 import { truncate } from "../lib/common";
 import { isSuccess } from "../lib/error";
-import { encodeText, reply } from "../lib/telegram";
+import { clearAndLeave, encodeText, reply } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
-import { addMessageToUser, getLastHistoryMessage, stopWaitingForGptAnswer, waitForGptAnswer } from "./userService";
+import { addMessageToUser, getLastHistoryMessage, getOrAddUser, getUserGptModel, incMessageUsage, isMessageLimitExceeded, stopWaitingForGptAnswer, waitForGptAnswer } from "./userService";
 import { commands } from "../lib/constants";
-import { formatUserSubscription, getMessageLimitString, getUserGptModel, incMessageUsage, messageLimitExceeded } from "./planService";
+import { formatUserSubscription } from "./subscriptionService";
 import { getCurrentHistory } from "./contextService";
 import { getCaseByNumber } from "../lib/cases";
 import { Completion } from "../entities/message";
@@ -17,6 +17,7 @@ import { isDebugMode } from "./userSettingsService";
 import { gptTimeout } from "./gptService";
 import { happened } from "./dateService";
 import { AnyContext } from "../telegram/botContext";
+import { getMessageLimitString } from "./messageLimitService";
 
 const config = {
   messageInterval: parseInt(process.env.THROTTLE_TIMEOUT ?? "30"), // seconds
@@ -35,7 +36,7 @@ export async function sendMessageToGpt(ctx: AnyContext, user: User, question: st
     }
   }
 
-  if (await messageLimitExceeded(user)) {
+  if (await isMessageLimitExceeded(user)) {
     await reply(
       ctx,
       "Вы превысили лимит сообщений на сегодня. 😥",
@@ -184,4 +185,20 @@ export async function showInfo(ctx: AnyContext, user: User, answer: Completion |
   }
 
   await reply(ctx, chunks.join(", "));
+}
+
+export async function getUserOrLeave(ctx: AnyContext): Promise<User | null> {
+  if (ctx.from) {
+    return await getOrAddUser(ctx.from);
+  }
+
+  if (ctx.scene) {
+    await clearAndLeave(ctx);
+  }
+
+  console.error(new Error("User not found (empty ctx.from)."));
+  await putMetric("Error");
+  await putMetric("UserNotFoundError");
+
+  return null;
 }

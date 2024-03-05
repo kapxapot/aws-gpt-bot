@@ -7,6 +7,13 @@ import { Prompt, customPromptCode, noPromptCode } from "../entities/prompt";
 import { getUserHistorySize } from "./userSettingsService";
 import { addMessageToHistory, createContext, cutoffMessages, getCurrentHistory, getCurrentPrompt } from "./contextService";
 import { isSuccess } from "../lib/error";
+import { PlanSettings } from "../entities/planSettings";
+import { getCurrentSubscription } from "./subscriptionService";
+import { getPlanSettings } from "./planSettingsService";
+import { GptModel } from "../lib/openai";
+import { At } from "../entities/at";
+import { startOfToday } from "./dateService";
+import { Plan } from "../entities/plan";
 
 type CurrentContext = {
   prompt: string | null;
@@ -166,7 +173,38 @@ export async function stopWaitingForGptImageGeneration(user: User): Promise<User
   );
 }
 
-export async function updateUsageStats(user: User, usageStats: UsageStats): Promise<User> {
+export async function isMessageLimitExceeded(user: User): Promise<boolean> {
+  if (!user.usageStats) {
+    return false;
+  }
+
+  const stats = user.usageStats;
+  const startOfDay = startOfToday();
+
+  if (stats.startOfDay === startOfDay) {
+    return stats.messageCount >= getUserMessageLimit(user);
+  }
+
+  return false;
+}
+
+export async function incMessageUsage(user: User, requestedAt: At): Promise<User> {
+  const startOfDay = startOfToday();
+
+  const messageCount = (user.usageStats?.startOfDay === startOfDay)
+    ? user.usageStats.messageCount + 1
+    : 1;
+
+  user.usageStats = {
+    messageCount,
+    startOfDay,
+    lastMessageAt: requestedAt
+  };
+
+  return await updateUsageStats(user, user.usageStats);
+}
+
+async function updateUsageStats(user: User, usageStats: UsageStats): Promise<User> {
   return await updateUser(
     user,
     {
@@ -177,4 +215,24 @@ export async function updateUsageStats(user: User, usageStats: UsageStats): Prom
 
 export function isTester(user: User) {
   return user.isTester === true;
+}
+
+function getUserPlan(user: User): Plan {
+  const subscription = getCurrentSubscription(user);
+  return subscription.details.plan;
+}
+
+export function getUserPlanSettings(user: User): PlanSettings {
+  const plan = getUserPlan(user);
+  return getPlanSettings(plan);
+}
+
+export function getUserMessageLimit(user: User): number {
+  const settings = getUserPlanSettings(user);
+  return settings.text.dailyMessageLimit;
+}
+
+export function getUserGptModel(user: User): GptModel {
+  const settings = getUserPlanSettings(user);
+  return settings.text.model;
 }

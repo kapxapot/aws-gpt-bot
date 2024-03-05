@@ -1,24 +1,24 @@
 import { BaseScene } from "telegraf/scenes";
 import { BotContext } from "../botContext";
 import { commands, scenes, settings } from "../../lib/constants";
-import { getOrAddUser } from "../../services/userService";
 import { addOtherCommandHandlers, backToMainDialogHandler, dunnoHandler, kickHandler } from "../handlers";
 import { canRequestImageGeneration } from "../../services/permissionService";
-import { clearAndLeave, clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
+import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { message } from "telegraf/filters";
 import { generateImageWithGpt } from "../../services/imageService";
 import { ImageStage, SessionData } from "../session";
 import { cancelAction, cancelButton } from "../../lib/dialog";
+import { getUserOrLeave } from "../../services/messageService";
 
 const scene = new BaseScene<BotContext>(scenes.image);
 
-scene.enter(async (ctx) => {
-  if (!ctx.from) {
-    await ctx.scene.leave();
+scene.enter(async ctx => {
+  const user = await getUserOrLeave(ctx);
+
+  if (!user) {
     return;
   }
 
-  const user = await getOrAddUser(ctx.from);
   const imageGenerationAllowed = canRequestImageGeneration(user);
 
   if (!imageGenerationAllowed) {
@@ -40,13 +40,18 @@ addOtherCommandHandlers(scene, commands.image);
 
 scene.action(cancelAction, backToMainDialogHandler);
 
-scene.on(message("text"), async (ctx) => {
+scene.on(message("text"), async ctx => {
   if (isStage(ctx.session, "imagePromptInput")) {
     await clearInlineKeyboard(ctx);
 
     const imagePrompt = ctx.message.text;
-    const user = await getOrAddUser(ctx.from);
 
+    const user = await getUserOrLeave(ctx);
+
+    if (!user) {
+      return;
+    }
+  
     const result = await generateImageWithGpt(ctx, user, imagePrompt);
 
     if (result) {
@@ -69,7 +74,10 @@ scene.use(dunnoHandler);
 export const imageScene = scene;
 
 function setStage(session: SessionData, stage: ImageStage) {
-  session.imageData = { stage };
+  session.imageData = {
+    ...session.imageData ?? {},
+    stage
+  };
 }
 
 function isStage(session: SessionData, stage: ImageStage): boolean {

@@ -26,6 +26,7 @@ export type User = Entity & {
   firstName?: string;
   lastName?: string;
   username?: string;
+  phoneNumber?: string;
   context?: Context;
   events?: UserEvent[];
   waitingForGptAnswer?: boolean;

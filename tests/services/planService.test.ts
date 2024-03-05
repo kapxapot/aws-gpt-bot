@@ -1,7 +1,7 @@
 import { now } from "../../src/entities/at";
 import { isPurchasedProduct, monthlyPremiumSubscription, monthlyUnlimitedSubscription } from "../../src/entities/product";
 import { User } from "../../src/entities/user";
-import { getCurrentSubscription } from "../../src/services/planService";
+import { getCurrentSubscription } from "../../src/services/subscriptionService";
 
 describe('getCurrentSubscription', () => {
   test('should return unlimited sub in case of premium + unlimited', () => {

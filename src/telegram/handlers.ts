@@ -6,7 +6,7 @@ import { clearAndLeave, clearInlineKeyboard, inlineKeyboard, reply, replyWithKey
 import { historySizeHandler } from "./handlers/historySizeHandler";
 import { temperatureHandler } from "./handlers/temperatureHandler";
 import { getLastHistoryMessage, getOrAddUser } from "../services/userService";
-import { showLastHistoryMessage, showStatus } from "../services/messageService";
+import { getUserOrLeave, showLastHistoryMessage, showStatus } from "../services/messageService";
 import { isDebugMode } from "../services/userSettingsService";
 import { remindButton } from "../lib/dialog";
 import { getModeName } from "../entities/prompt";
@@ -69,11 +69,11 @@ async function supportHandler(ctx: AnyContext) {
 }
 
 async function statusHandler(ctx: AnyContext) {
-  if (!ctx.from) {
+  const user = await getUserOrLeave(ctx);
+
+  if (!user) {
     return;
   }
-
-  const user = await getOrAddUser(ctx.from);
 
   await showStatus(ctx, user);
 }
@@ -111,11 +111,11 @@ export async function dunnoHandler(ctx: AnyContext) {
 export async function backToMainDialogHandler(ctx: AnyContext) {
   await clearAndLeave(ctx);
 
-  if (!ctx.from) {
+  const user = await getUserOrLeave(ctx);
+
+  if (!user) {
     return;
   }
-
-  const user = await getOrAddUser(ctx.from);
 
   const hasMessage = await userHasMessage(user);
   const buttons = hasMessage ? [remindButton] : []
@@ -137,11 +137,11 @@ async function userHasMessage(user: User): Promise<boolean> {
 export async function remindHandler(ctx: AnyContext) {
   await clearInlineKeyboard(ctx);
 
-  if (!ctx.from) {
+  const user = await getUserOrLeave(ctx);
+
+  if (!user) {
     return;
   }
-
-  const user = await getOrAddUser(ctx.from);
 
   await showLastHistoryMessage(ctx, user, "Похоже, разговор только начался. В истории пусто.");
 }

@@ -3,22 +3,6 @@ import { Case } from "./case";
 import { Money } from "./money";
 import { Plan } from "./plan";
 
-export type Product = {
-  code: "subscription-premium-30-days" | "subscription-unlimited-30-days";
-  name: string;
-  displayNames: Partial<Record<Case, string>>;
-  price: Money;
-  details: {
-    type: "subscription";
-    plan: Plan;
-    term: {
-      range: number;
-      unit: "day";
-    };
-    priority: number;
-  };
-};
-
 export type Subscription = {
   name: string;
   displayNames: Partial<Record<Case, string>>;
@@ -27,11 +11,24 @@ export type Subscription = {
   };
 };
 
+export type Product = Subscription & {
+  code: "subscription-premium-30-days" | "subscription-unlimited-30-days";
+  price: Money;
+  details: {
+    type: "subscription";
+    term: {
+      range: number;
+      unit: "day";
+    };
+    priority: number;
+  };
+};
+
 export type PurchasedProduct = Product & {
   purchasedAt: At;
 };
 
-export function isPurchasedProduct(product: PurchasedProduct | Subscription): product is PurchasedProduct {
+export function isPurchasedProduct(product: Subscription): product is PurchasedProduct {
   return "purchasedAt" in product;
 }
 
@@ -95,7 +92,7 @@ export function monthlyUnlimitedSubscription(): Product {
   };
 }
 
-export function getProductDisplayName(product: Product | Subscription, targetCase?: Case) {
+export function getProductDisplayName(product: Subscription, targetCase?: Case) {
   return (targetCase ? product.displayNames[targetCase] : null)
     ?? product.displayNames["Nom"]
     ?? product.name;

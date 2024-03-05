@@ -1,19 +1,21 @@
 import { CloudWatchClient, PutMetricDataCommand } from "@aws-sdk/client-cloudwatch";
 
 export type MetricName =
-  "MessageSent"
-  | "TokensUsed"
-  | "UserRegistered"
-  | "UsersTotal"
-  | "BroadcastMessageSent"
-  | "BroadcastMessageFailed"
-  | "ImageGenerated"
-  | "Error"
-  | "PaymentUserNotFoundError"
-  | "PaymentNotFoundError"
-  | "ApiProcessingError"
-  | "YooMoneyError"
-  | "OpenAiError";
+  "MessageSent" |
+  "TokensUsed" |
+  "UserRegistered" |
+  "UsersTotal" |
+  "BroadcastMessageSent" |
+  "BroadcastMessageFailed" |
+  "ImageGenerated" |
+  "Error" |
+  "PaymentUserNotFoundError" |
+  "PaymentNotFoundError" |
+  "ApiProcessingError" |
+  "YooMoneyError" |
+  "OpenAiError" |
+  "UserNotFoundError" |
+  "EmptyUserPhoneNumberError";
 
 const config = {
   env: process.env.ENV,
