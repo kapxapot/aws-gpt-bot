@@ -1,10 +1,11 @@
-import { GptModel, ImageModel, ImageSize } from "../lib/openai";
+import { GptModel, ImageModel, ImageSize } from "./model";
 import { Plan } from "./plan";
 
 export type PlanSettings = {
   active: boolean;
   text: {
     dailyMessageLimit: number;
+    monthlyMessageLimit?: number;
     model: GptModel;
   }
   images: {
@@ -20,8 +21,9 @@ export const planSettings: Record<Plan, PlanSettings> = {
   "free": {
     active: true,
     text: {
-      dailyMessageLimit: 20,
-      model: "gpt-3.5-turbo"
+      dailyMessageLimit: 5,
+      monthlyMessageLimit: 100,
+      model: "gpt-3.5-turbo-0125"
     },
     images: {
       model: "dall-e-3",
@@ -35,7 +37,7 @@ export const planSettings: Record<Plan, PlanSettings> = {
     active: true,
     text: {
       dailyMessageLimit: 100,
-      model: "gpt-4-1106-preview"
+      model: "gpt-4-0125-preview"
     },
     images: {
       model: "dall-e-3",
@@ -49,7 +51,7 @@ export const planSettings: Record<Plan, PlanSettings> = {
     active: false,
     text: {
       dailyMessageLimit: Number.POSITIVE_INFINITY,
-      model: "gpt-4-1106-preview"
+      model: "gpt-4-0125-preview"
     },
     images: {
       model: "dall-e-3",

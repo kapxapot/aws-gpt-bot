@@ -1,4 +1,4 @@
-type Currency = "RUB";
+import { Currency } from "./currency";
 
 export type Money = {
   currency: Currency;

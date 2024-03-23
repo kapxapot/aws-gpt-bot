@@ -1,6 +1,6 @@
 import { Image } from "openai/resources/images.mjs";
 import { Result } from "../lib/error";
-import { ImageModel, ImageQuality, ImageResponseFormat, ImageSize } from "../lib/openai";
+import { ImageModel, ImageQuality, ImageResponseFormat, ImageSize } from "../lib/openAi";
 import { Entity } from "../lib/types";
 import { At } from "./at";
 

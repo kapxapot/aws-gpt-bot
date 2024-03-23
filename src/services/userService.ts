@@ -10,10 +10,10 @@ import { isSuccess } from "../lib/error";
 import { PlanSettings } from "../entities/planSettings";
 import { getCurrentSubscription } from "./subscriptionService";
 import { getPlanSettings } from "./planSettingsService";
-import { GptModel } from "../lib/openai";
 import { At } from "../entities/at";
 import { startOfToday } from "./dateService";
 import { Plan } from "../entities/plan";
+import { GptModel } from "../entities/model";
 
 type CurrentContext = {
   prompt: string | null;
@@ -181,36 +181,11 @@ export async function isMessageLimitExceeded(user: User): Promise<boolean> {
   const stats = user.usageStats;
   const startOfDay = startOfToday();
 
-  if (stats.startOfDay === startOfDay) {
+  if (stats.startOfDay === startOfDay && stats.messageCount) {
     return stats.messageCount >= getUserMessageLimit(user);
   }
 
   return false;
-}
-
-export async function incMessageUsage(user: User, requestedAt: At): Promise<User> {
-  const startOfDay = startOfToday();
-
-  const messageCount = (user.usageStats?.startOfDay === startOfDay)
-    ? user.usageStats.messageCount + 1
-    : 1;
-
-  user.usageStats = {
-    messageCount,
-    startOfDay,
-    lastMessageAt: requestedAt
-  };
-
-  return await updateUsageStats(user, user.usageStats);
-}
-
-async function updateUsageStats(user: User, usageStats: UsageStats): Promise<User> {
-  return await updateUser(
-    user,
-    {
-      usageStats
-    }
-  );
 }
 
 export function isTester(user: User) {

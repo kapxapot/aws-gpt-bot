@@ -3,7 +3,7 @@ import { settings } from "../lib/constants";
 import { Result } from "../lib/error";
 import { ImageRequest } from "../entities/imageRequest";
 import { Image } from "openai/resources/images.mjs";
-import { isOpenAiError, openai } from "../lib/openai";
+import { getOpenAiClient, isOpenAiError } from "../lib/openAi";
 import { putMetric } from "../services/metricService";
 
 const config = {
@@ -17,7 +17,8 @@ export async function gptImageGeneration(imageRequest: ImageRequest): Promise<Re
     : imageRequest.prompt;
 
   try {
-    const response = await openai().images.generate(
+    const openAiClient = getOpenAiClient();
+    const response = await openAiClient.images.generate(
       {
         model: imageRequest.model,
         prompt: prompt.substring(0, config.maxImagePromptLength),

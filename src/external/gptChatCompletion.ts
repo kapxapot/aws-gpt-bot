@@ -1,13 +1,14 @@
 import { Completion } from "../entities/message";
 import { Result, isSuccess } from "../lib/error";
 import { User } from "../entities/user";
-import { getCurrentContext, getUserGptModel } from "../services/userService";
+import { getCurrentContext } from "../services/userService";
 import { getUserHistorySize, getUserTemperature } from "../services/userSettingsService";
 import { settings } from "../lib/constants";
 import { gptTimeout } from "../services/gptService";
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
-import { isOpenAiError, openai } from "../lib/openai";
+import { getOpenAiClient, isOpenAiError } from "../lib/openAi";
 import { putMetric } from "../services/metricService";
+import { GptModel } from "../entities/model";
 
 const config = {
   gptTimeout: gptTimeout * 1000,
@@ -15,7 +16,7 @@ const config = {
   maxHistoryMessageLength: settings.maxHistoryMessageLength
 };
 
-export async function gptChatCompletion(user: User, userMessage: string): Promise<Result<Completion>> {
+export async function gptChatCompletion(user: User, model: GptModel, userMessage: string): Promise<Result<Completion>> {
   const messages: ChatCompletionMessageParam[] = [];
 
   const historySize = getUserHistorySize(user);
@@ -50,9 +51,10 @@ export async function gptChatCompletion(user: User, userMessage: string): Promis
   });
 
   try {
-    const response = await openai().chat.completions.create(
+    const openAiClient = getOpenAiClient();
+    const response = await openAiClient.chat.completions.create(
       {
-        model: getUserGptModel(user),
+        model,
         temperature: getUserTemperature(user),
         messages: messages
       },

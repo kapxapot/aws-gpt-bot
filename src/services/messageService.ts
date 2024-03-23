@@ -6,7 +6,7 @@ import { truncate } from "../lib/common";
 import { isSuccess } from "../lib/error";
 import { clearAndLeave, encodeText, reply } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
-import { addMessageToUser, getLastHistoryMessage, getOrAddUser, getUserGptModel, incMessageUsage, isMessageLimitExceeded, stopWaitingForGptAnswer, waitForGptAnswer } from "./userService";
+import { addMessageToUser, getLastHistoryMessage, getOrAddUser, getUserGptModel, isMessageLimitExceeded, stopWaitingForGptAnswer, waitForGptAnswer } from "./userService";
 import { commands } from "../lib/constants";
 import { formatUserSubscription } from "./subscriptionService";
 import { getCurrentHistory } from "./contextService";
@@ -18,12 +18,17 @@ import { gptTimeout } from "./gptService";
 import { happened } from "./dateService";
 import { AnyContext } from "../telegram/botContext";
 import { getMessageLimitString } from "./messageLimitService";
+import { GptModel } from "../entities/model";
+import { incMessageUsage } from "./usageStatsService";
 
 const config = {
-  messageInterval: parseInt(process.env.THROTTLE_TIMEOUT ?? "30"), // seconds
+  messageInterval: parseInt(process.env.MESSAGE_INTERVAL ?? "15"), // seconds
 };
 
 export async function sendMessageToGpt(ctx: AnyContext, user: User, question: string, requestedAt?: number) {
+  const model = getUserGptModel(user);
+
+  // 
   const lastMessageAt = user.usageStats?.lastMessageAt;
 
   if (user.waitingForGptAnswer) {
@@ -63,7 +68,7 @@ export async function sendMessageToGpt(ctx: AnyContext, user: User, question: st
   const messages = await reply(ctx, "🤔 Думаю над ответом, подождите... ⏳");
 
   await waitForGptAnswer(user);
-  const answer = await gptChatCompletion(user, question);
+  const answer = await gptChatCompletion(user, model, question);
   await stopWaitingForGptAnswer(user);
 
   await ctx.deleteMessage(messages[0].message_id);
@@ -88,7 +93,7 @@ export async function sendMessageToGpt(ctx: AnyContext, user: User, question: st
         : "Нет ответа от ChatGPT. 😣"
     );
 
-    await incMessageUsage(user, message.requestedAt);
+    user = await incMessageUsage(user, message.requestedAt);
   } else {
     let errorMessage = answer.message;
 
@@ -108,6 +113,7 @@ export async function sendMessageToGpt(ctx: AnyContext, user: User, question: st
   showInfo(
     ctx,
     user,
+    model,
     isSuccess(answer) ? answer : null
   );
 
@@ -146,7 +152,7 @@ function formatGptMessage(message: string): string {
     return `🤖 ${encodeText(message)}`;
 }
 
-export async function showInfo(ctx: AnyContext, user: User, answer: Completion | null) {
+export async function showInfo(ctx: AnyContext, user: User, model: GptModel, answer: Completion | null) {
   const chunks = [];
 
   chunks.push(`📌 Режим: <b>${getModeName(user)}</b>`);
@@ -173,7 +179,7 @@ export async function showInfo(ctx: AnyContext, user: User, answer: Completion |
       }
     }
 
-    chunks.push(`модель запроса: ${getUserGptModel(user)}`);
+    chunks.push(`модель запроса: ${model}`);
 
     if (answer?.model) {
       chunks.push(`модель ответа: ${answer.model}`);
