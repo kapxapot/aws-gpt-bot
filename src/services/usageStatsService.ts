@@ -13,7 +13,7 @@ async function updateUsageStats(user: User, usageStats: UsageStats): Promise<Use
   );
 }
 
-function getModelUsage(usageStats: UsageStats, model: Model): ModelUsage | null {
+export function getModelUsage(usageStats: UsageStats, model: Model): ModelUsage | null {
   return usageStats.modelUsages
     ? usageStats.modelUsages[model] ?? null
     : null;
