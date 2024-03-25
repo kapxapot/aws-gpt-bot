@@ -11,26 +11,26 @@ import { putMetric } from "./metricService";
 import { getUserPlanSettings, stopWaitingForGptImageGeneration, waitForGptImageGeneration } from "./userService";
 import { PassThrough } from "stream";
 
-// const config = {
-//   imageInterval: parseInt(process.env.IMAGE_INTERVAL ?? "60"), // seconds
-// };
+const config = {
+  imageInterval: parseInt(process.env.IMAGE_INTERVAL ?? "60"), // seconds
+};
 
 export async function generateImageWithGpt(ctx: AnyContext, user: User, prompt: string): Promise<boolean> {
   const requestedAt = now();
 
-  // if (config.messageInterval > 0 && lastMessageAt) {
-  //   const elapsed = (ts() - lastMessageAt.timestamp) / 1000;
-  //   const diff = Math.round(config.messageInterval - elapsed);
+  if (config.messageInterval > 0 && lastMessageAt) {
+    const elapsed = (ts() - lastMessageAt.timestamp) / 1000;
+    const diff = Math.round(config.messageInterval - elapsed);
 
-  //   if (diff > 0) {
-  //     await reply(
-  //       ctx,
-  //       `Вы отправляете сообщения слишком часто. Подождите ${diff} ${getCaseByNumber("секунда", diff)}... ⏳`
-  //     );
+    if (diff > 0) {
+      await reply(
+        ctx,
+        `Вы отправляете сообщения слишком часто. Подождите ${diff} ${getCaseByNumber("секунда", diff)}... ⏳`
+      );
 
-  //     return;
-  //   }
-  // }
+      return;
+    }
+  }
 
   const messages = await reply(ctx, "👨‍🎨 Рисую вашу картинку, подождите... ⏳");
 

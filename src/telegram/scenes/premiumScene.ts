@@ -14,7 +14,7 @@ import { canMakePurchases, canPurchaseProduct } from "../../services/permissionS
 import { cancelAction, cancelButton } from "../../lib/dialog";
 import { getUserOrLeave } from "../../services/messageService";
 import { getUserPlan, getUserPlanSettings } from "../../services/userService";
-import { getPlanSettings, getPlanSettingsLimitText } from "../../services/planSettingsService";
+import { getPlanSettings, getPlanSettingsGptModel, getPlanSettingsLimitText } from "../../services/planSettingsService";
 import { SessionData } from "../session";
 import { phoneToItu, toText } from "../../lib/common";
 import { message } from "telegraf/filters";
@@ -23,7 +23,6 @@ import { updateUser } from "../../storage/userStorage";
 const scene = new BaseScene<BotContext>(scenes.premium);
 
 const buyPremiumAction = "buy-premium";
-const buyUnlimitedAction = "buy-unlimited";
 
 scene.enter(async ctx => {
   const user = await getUserOrLeave(ctx);
@@ -34,21 +33,21 @@ scene.enter(async ctx => {
 
   // get plan messages
   const userPlanSettings = getUserPlanSettings(user);
-  const premiumSettings = getPlanSettings("premium");
-  const unlimitedSettings = getPlanSettings("unlimited");
+  const userGptModel = getPlanSettingsGptModel(userPlanSettings);
 
+  const premiumSettings = getPlanSettings("premium");
+  const premiumGptModel = getPlanSettingsGptModel(premiumSettings);
   const premiumActive = premiumSettings.active;
-  const unlimitedActive = unlimitedSettings.active;
 
   const messages = [
     "Текущий тариф:",
 
     `${formatUserSubscription(user)}:
-◽ модель <b>${userPlanSettings.text.model}</b>
-◽ ${getPlanSettingsLimitText(userPlanSettings)}`
+◽ модель <b>${userGptModel}</b>
+◽ ${getPlanSettingsLimitText(userPlanSettings, userGptModel, "day")}`
   ];
 
-  if (premiumActive || unlimitedActive) {
+  if (premiumActive) {
     messages.push(
       "Если вам нужно больше ежедневных запросов к <b>ChatGPT</b> или вы хотите работать с <b>GPT-4</b>, оформите подписку на один из платных тарифов:"
     );
@@ -56,18 +55,9 @@ scene.enter(async ctx => {
     if (premiumActive) {
       messages.push(
         `💚 Тариф <b>«Премиум»</b>:
-◽ модель <b>${premiumSettings.text.model}</b>
-◽ ${getPlanSettingsLimitText(premiumSettings)}
+◽ модель <b>${premiumGptModel}</b>
+◽ ${getPlanSettingsLimitText(premiumSettings, premiumGptModel, "day")}
 ◽ 290 рублей на 30 дней`
-      );
-    }
-
-    if (unlimitedActive) {
-      messages.push(
-        `💛 Тариф <b>«Безлимит»</b>:
-◽ модель <b>${unlimitedSettings.text.model}</b>
-◽ ${getPlanSettingsLimitText(unlimitedSettings)}
-◽ 390 рублей на 30 дней`
       );
     }
   } else {
@@ -94,27 +84,10 @@ scene.enter(async ctx => {
         buttons.push(["Купить Премиум", buyPremiumAction]);
       }
 
-      if (unlimitedActive) {
-        buttons.push(["Купить Безлимит", buyUnlimitedAction]);
-      }
-
       break;
 
     case "premium":
-      if (unlimitedActive) {
-        buttons.push(
-          ["Купить Безлимит", buyUnlimitedAction]
-        );
-
-        messages.push("⚠ Ваш текущий тариф <b>«Премиум»</b>. Вы можете приобрести <b>«Безлимит»</b>, который заменит текущий тариф <b>без компенсации средств</b>.");
-      } else {
-        messages.push("⚠ Ваш текущий тариф <b>«Премиум»</b>. Вы не можете приобрести другие тарифы, пока у вас не закончится текущий.");
-      }
-
-      break;
-
-    case "unlimited":
-      messages.push("⚠ Ваш текущий тариф <b>«Безлимит»</b>. Вы не можете приобрести другие тарифы, пока у вас не закончится текущий.");
+      messages.push("⚠ Ваш текущий тариф <b>«Премиум»</b>. Вы не можете приобрести другие тарифы, пока у вас не закончится текущий.");
 
       break;
   }
@@ -133,11 +106,6 @@ scene.action(
   async ctx => await buyAction(ctx, "subscription-premium-30-days")
 );
 
-scene.action(
-  buyUnlimitedAction,
-  async ctx => await buyAction(ctx, "subscription-unlimited-30-days")
-);
-
 async function buyAction(ctx: AnyContext, productCode: ProductCode) {
   await clearInlineKeyboard(ctx);
 
@@ -152,7 +120,7 @@ async function buyAction(ctx: AnyContext, productCode: ProductCode) {
     return;
   }
 
-  // ask for phone number and then buy unlimited
+  // ask for phone number and then buy the product
   setTargetProductCode(ctx.session, productCode);
   await askForPhone(ctx);
 }

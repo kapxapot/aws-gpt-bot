@@ -29,9 +29,5 @@ export function canPurchaseProduct(user: User, productCode: ProductCode) {
     return false;
   }
 
-  if (userPlan === "unlimited") {
-    return false;
-  }
-
   return isPlanActive(plan);
 }

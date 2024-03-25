@@ -12,8 +12,7 @@ export type Subscription = {
 };
 
 export type ProductCode =
-  "subscription-premium-30-days" |
-  "subscription-unlimited-30-days";
+  "subscription-premium-30-days";
 
 export type Product = Subscription & {
   code: ProductCode;
@@ -72,30 +71,6 @@ export function monthlyPremiumSubscription(): Product {
   };
 }
 
-export function monthlyUnlimitedSubscription(): Product {
-  return {
-    code: "subscription-unlimited-30-days",
-    name: "Unlimited Subscription - 30 Days",
-    displayNames: {
-      "Nom": "Безлимит на 30 дней",
-      "Gen": "Безлимита на 30 дней"
-    },
-    price: {
-      currency: "RUB",
-      amount: 390
-    },
-    details: {
-      type: "subscription",
-      plan: "unlimited",
-      term: {
-        range: 30,
-        unit: "day"
-      },
-      priority: 200
-    }
-  };
-}
-
 export function getProductDisplayName(product: Subscription, targetCase?: Case) {
   return (targetCase ? product.displayNames[targetCase] : null)
     ?? product.displayNames["Nom"]
@@ -106,8 +81,5 @@ export function getProductByCode(code: ProductCode): Product {
   switch (code) {
     case "subscription-premium-30-days":
       return monthlyPremiumSubscription();
-
-    case "subscription-unlimited-30-days":
-      return monthlyUnlimitedSubscription();
   }
 }

@@ -21,11 +21,11 @@ export function startOfDay(dateLike?: DateLike): number {
   return start;
 }
 
-export function startOfWeek(dateLike?: DateLike): number {
+function startOfWeek(dateLike?: DateLike): number {
   return startOfDay(dateLike);
 }
 
-export function startOfMonth(dateLike?: DateLike): number {
+function startOfMonth(dateLike?: DateLike): number {
   return startOfDay(dateLike);
 }
 

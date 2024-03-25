@@ -9,10 +9,9 @@ import { addMessageToHistory, createContext, cutoffMessages, getCurrentHistory, 
 import { isSuccess } from "../lib/error";
 import { PlanSettings } from "../entities/planSettings";
 import { getCurrentSubscription } from "./subscriptionService";
-import { getPlanSettings } from "./planSettingsService";
-import { startOfDay } from "./dateService";
+import { getPlanSettings, getPlanSettingsGptModel, getPlanSettingsImageModel } from "./planSettingsService";
 import { Plan } from "../entities/plan";
-import { GptModel } from "../entities/model";
+import { GptModel, ImageModel } from "../entities/model";
 
 type CurrentContext = {
   prompt: string | null;
@@ -172,21 +171,6 @@ export async function stopWaitingForGptImageGeneration(user: User): Promise<User
   );
 }
 
-export async function isMessageLimitExceeded(user: User): Promise<boolean> {
-  if (!user.usageStats) {
-    return false;
-  }
-
-  const stats = user.usageStats;
-  const start = startOfDay();
-
-  if (stats.startOfDay === start && stats.messageCount) {
-    return stats.messageCount >= getUserMessageLimit(user);
-  }
-
-  return false;
-}
-
 export function isTester(user: User) {
   return user.isTester === true;
 }
@@ -201,12 +185,12 @@ export function getUserPlanSettings(user: User): PlanSettings {
   return getPlanSettings(plan);
 }
 
-export function getUserMessageLimit(user: User): number {
-  const settings = getUserPlanSettings(user);
-  return settings.text.dailyMessageLimit;
-}
-
 export function getUserGptModel(user: User): GptModel {
   const settings = getUserPlanSettings(user);
-  return settings.text.model;
+  return getPlanSettingsGptModel(settings);
+}
+
+export function getUserImageModel(user: User): ImageModel {
+  const settings = getUserPlanSettings(user);
+  return getPlanSettingsImageModel(settings);
 }

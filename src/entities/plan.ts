@@ -1,1 +1,1 @@
-export type Plan = "free" | "premium" | "unlimited";
+export type Plan = "free" | "premium";

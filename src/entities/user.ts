@@ -26,11 +26,11 @@ export type ModelUsage = {
 export type ModelUsages = Partial<Record<Model, ModelUsage>>;
 
 export type UsageStats = {
-  /** @deprecated */
+  /** @deprecated Remove in 0.3.0 */
   startOfDay?: number;
-  /** @deprecated */
+  /** @deprecated Remove in 0.3.0 */
   messageCount?: number;
-  /** @deprecated */
+  /** @deprecated Remove in 0.3.0 */
   lastMessageAt?: At;
   modelUsages?: ModelUsages;
 };

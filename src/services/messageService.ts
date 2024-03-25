@@ -6,7 +6,7 @@ import { truncate } from "../lib/common";
 import { isSuccess } from "../lib/error";
 import { clearAndLeave, encodeText, reply } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
-import { addMessageToUser, getLastHistoryMessage, getOrAddUser, getUserGptModel, isMessageLimitExceeded, stopWaitingForGptAnswer, waitForGptAnswer } from "./userService";
+import { addMessageToUser, getLastHistoryMessage, getOrAddUser, getUserGptModel, stopWaitingForGptAnswer, waitForGptAnswer } from "./userService";
 import { commands } from "../lib/constants";
 import { formatUserSubscription } from "./subscriptionService";
 import { getCurrentHistory } from "./contextService";
@@ -17,9 +17,9 @@ import { isDebugMode } from "./userSettingsService";
 import { gptTimeout } from "./gptService";
 import { happened } from "./dateService";
 import { AnyContext } from "../telegram/botContext";
-import { getMessageLimitString } from "./messageLimitService";
+import { getUsageLimitString } from "./usageLimitService";
 import { GptModel } from "../entities/model";
-import { getLastUsedAt, incModelUsage } from "./usageStatsService";
+import { getLastUsedAt, getUsageCount, incUsage, isUsageLimitExceeded } from "./usageStatsService";
 
 const config = {
   messageInterval: parseInt(process.env.MESSAGE_INTERVAL ?? "15"), // seconds
@@ -39,7 +39,8 @@ export async function sendMessageToGpt(ctx: AnyContext, user: User, question: st
     }
   }
 
-  if (await isMessageLimitExceeded(user)) {
+  // todo: add other intervals
+  if (await isUsageLimitExceeded(user, model, "day")) {
     await reply(
       ctx,
       "Вы превысили лимит сообщений на сегодня. 😥",
@@ -91,7 +92,7 @@ export async function sendMessageToGpt(ctx: AnyContext, user: User, question: st
         : "Нет ответа от ChatGPT. 😣"
     );
 
-    user = await incModelUsage(user, model, message.requestedAt);
+    user = await incUsage(user, model, message.requestedAt);
   } else {
     let errorMessage = answer.message;
 
@@ -185,7 +186,7 @@ export async function showInfo(ctx: AnyContext, user: User, model: GptModel, ans
   }
 
   if (user.usageStats) {
-    chunks.push(`сообщений сегодня: ${user.usageStats.messageCount}/${getMessageLimitString(user)}`);
+    chunks.push(`сообщений сегодня: ${getUsageCount(user.usageStats, model, "day")}/${getUsageLimitString(user, model, "day")}`);
   }
 
   await reply(ctx, chunks.join(", "));
