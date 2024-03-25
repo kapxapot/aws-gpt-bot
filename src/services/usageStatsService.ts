@@ -1,8 +1,9 @@
-import { At } from "../entities/at";
+import { At, at, now } from "../entities/at";
+import { Interval, intervals } from "../entities/interval";
 import { Model } from "../entities/model";
-import { ModelUsage, UsageStats, User } from "../entities/user";
+import { IntervalUsage, IntervalUsages, ModelUsage, UsageStats, User } from "../entities/user";
 import { updateUser } from "../storage/userStorage";
-import { startOfToday } from "./dateService";
+import { startOf, startOfDay, startOfMonth, startOfWeek } from "./dateService";
 
 async function updateUsageStats(user: User, usageStats: UsageStats): Promise<User> {
   return await updateUser(
@@ -17,6 +18,32 @@ export function getModelUsage(usageStats: UsageStats, model: Model): ModelUsage 
   return usageStats.modelUsages
     ? usageStats.modelUsages[model] ?? null
     : null;
+}
+
+function setModelUsage(usageStats: UsageStats, model: Model, modelUsage: ModelUsage): UsageStats {
+  return {
+    ...usageStats,
+    modelUsages: {
+      ...usageStats.modelUsages,
+      [model]: modelUsage
+    }
+  };
+}
+
+function getIntervalUsage(modelUsage: ModelUsage, interval: Interval): IntervalUsage | null {
+  return modelUsage.intervalUsages
+    ? modelUsage.intervalUsages[interval] ?? null
+    : null;
+}
+
+function setIntervalUsage(modelUsage: ModelUsage, interval: Interval, intervalUsage: IntervalUsage): ModelUsage {
+  return {
+    ...modelUsage,
+    intervalUsages: {
+      ...modelUsage.intervalUsages,
+      [interval]: intervalUsage
+    }
+  };
 }
 
 export function getLastUsedAt(usageStats: UsageStats | undefined, model: Model): At | null {
@@ -38,19 +65,52 @@ export function getLastUsedAt(usageStats: UsageStats | undefined, model: Model):
   return null;
 }
 
-export async function incMessageUsage(user: User, lastMessageAt: At): Promise<User> {
-  const startOfDay = startOfToday();
+export async function incModelUsage(user: User, model: Model, usedAt: At): Promise<User> {
+  const usageStats = user.usageStats ?? {};
+  let modelUsage = getModelUsage(usageStats, model);
+  const then = now();
 
-  const messageCount = (user.usageStats?.startOfDay === startOfDay)
-    ? (user.usageStats.messageCount ?? 0) + 1
-    : 1;
+  if (modelUsage) {
+    // update interval usages
+    for (const interval of intervals) {
+      const start = startOf(interval, then);
+      let intervalUsage = getIntervalUsage(modelUsage, interval);
+
+      if (intervalUsage && intervalUsage.startedAt.timestamp === start) {
+        intervalUsage.count++;
+      } else {
+        intervalUsage = buildIntervalUsage(interval, then);
+      }
+
+      modelUsage = setIntervalUsage(modelUsage, interval, intervalUsage);
+    }
+  } else {
+    // build fresh model usage
+    modelUsage = buildModelUsage(usedAt, then);
+  }
 
   return await updateUsageStats(
     user,
-    {
-      messageCount,
-      startOfDay,
-      lastMessageAt
-    }
+    setModelUsage(usageStats, model, modelUsage)
   );
+}
+
+function buildModelUsage(usedAt: At, now: At): ModelUsage {
+  return {
+    intervalUsages: intervals.reduce(
+      (accum: IntervalUsages, val: Interval) => ({
+        ...accum,
+        [val]: buildIntervalUsage(val, now)
+      }),
+      {}
+    ),
+    lastUsedAt: usedAt
+  };
+}
+
+function buildIntervalUsage(interval: Interval, now: At): IntervalUsage {
+  return {
+    startedAt: at(startOf(interval, now)),
+    count: 1
+  };
 }

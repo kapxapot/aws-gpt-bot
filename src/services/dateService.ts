@@ -1,35 +1,49 @@
 import { format } from "date-fns";
 import { settings } from "../lib/constants";
-import { ts } from "../entities/at";
+import { At, ts } from "../entities/at";
+import { Interval } from "../entities/interval";
 
-/**
- * One day in milliseconds.
- */
-const oneDay = 1000 * 60 * 60 * 24;
-
-export function isInRange(dot: DateOrTs, start: number, end: number): boolean {
-  const ts = toTs(dot);
-  return ts >= start && ts < end;
-}
+type DateLike = At | Date | number;
 
 /**
  * Returns *system* start of the day for a given date. In case of `undefined` uses the current date.
  */
-export function startOfToday(dot?: DateOrTs): number {
-  const date = dot ? toDate(dot) : new Date();
+export function startOfDay(dateLike?: DateLike): number {
+  const date = dateLike ? toDate(dateLike) : new Date();
   let start = addHours(utcStartOfDay(date), settings.systemTimeOffset);
 
   const ts = toTs(date);
 
-  while (ts > start + oneDay) {
+  while (ts > addDays(start, 1)) {
     start = addDays(start, 1);
   }
 
   return start;
 }
 
-export function utcStartOfDay(dot?: DateOrTs): Date {
-  const date = dot ? toDate(dot) : new Date();
+export function startOfWeek(dateLike?: DateLike): number {
+  return startOfDay(dateLike);
+}
+
+export function startOfMonth(dateLike?: DateLike): number {
+  return startOfDay(dateLike);
+}
+
+export function startOf(interval: Interval, dateLike?: DateLike): number {
+  switch (interval) {
+    case "day":
+      return startOfDay(dateLike);
+
+    case "week":
+      return startOfWeek(dateLike);
+
+    case "month":
+      return startOfMonth(dateLike);
+  }
+}
+
+export function utcStartOfDay(dateLike?: DateLike): Date {
+  const date = dateLike ? toDate(dateLike) : new Date();
 
   const y = String(date.getUTCFullYear());
   const m = String(date.getUTCMonth() + 1).padStart(2, "0");
@@ -40,42 +54,52 @@ export function utcStartOfDay(dot?: DateOrTs): Date {
   return new Date(ds);
 }
 
-export function formatDate(dot: DateOrTs, formatStr: string): string {
-  const adjustedTs = addHours(dot, -settings.systemTimeOffset);
+export function formatDate(dateLike: DateLike, formatStr: string): string {
+  const adjustedTs = addHours(dateLike, -settings.systemTimeOffset);
 
   return format(adjustedTs, formatStr);
 }
 
-export function addDays(dot: DateOrTs, days: number): number {
-  const date = toDate(dot);
+export function addDays(dateLike: DateLike, days: number): number {
+  const date = toDate(dateLike);
   return date.setDate(date.getDate() + days);
 }
 
-export function addHours(dot: DateOrTs, hours: number): number {
-  const date = toDate(dot);
+export function addHours(dateLike: DateLike, hours: number): number {
+  const date = toDate(dateLike);
   return date.setHours(date.getHours() + hours);
 }
 
-type DateOrTs = Date | number;
+function toDate(date: DateLike): Date {
+  if (date instanceof Date) {
+    return date;
+  }
 
-function toDate(date: DateOrTs): Date {
   return typeof date === "number"
     ? new Date(date)
-    : date;
+    : new Date(date.timestamp);
 }
 
-function toTs(date: DateOrTs): number {
+function toTs(date: DateLike): number {
+  if (date instanceof Date) {
+    return date.getTime();
+  }
+
   return typeof date === "number"
     ? date
-    : date.getTime();
+    : date.timestamp;
 }
 
 /**
  * @param {number} start A timestamp in the past.
  * @param {number} interval The interval to check (in milliseconds).
- * @param {number|undefined} now Optional date that is used instead of current time.
+ * @param {number|undefined} timestamp Optional date that is used instead of current time.
  */
-export function happened(start: number, interval: number, now?: number): boolean {
-  now = now ?? ts();
-  return now >= start + interval;
+export function happened(start: number, interval: number, timestamp?: number): boolean {
+  return (timestamp ?? ts()) >= start + interval;
+}
+
+export function isInRange(dateLike: DateLike, start: number, end: number): boolean {
+  const ts = toTs(dateLike);
+  return ts >= start && ts < end;
 }

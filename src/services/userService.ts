@@ -1,6 +1,6 @@
 import { User as TelegrafUser } from "telegraf/types";
 import { Message } from "../entities/message";
-import { UsageStats, User, UserEvent } from "../entities/user";
+import { User, UserEvent } from "../entities/user";
 import { getUserByTelegramId, storeUser, updateUser } from "../storage/userStorage";
 import { Context } from "../entities/context";
 import { Prompt, customPromptCode, noPromptCode } from "../entities/prompt";
@@ -10,8 +10,7 @@ import { isSuccess } from "../lib/error";
 import { PlanSettings } from "../entities/planSettings";
 import { getCurrentSubscription } from "./subscriptionService";
 import { getPlanSettings } from "./planSettingsService";
-import { At } from "../entities/at";
-import { startOfToday } from "./dateService";
+import { startOfDay } from "./dateService";
 import { Plan } from "../entities/plan";
 import { GptModel } from "../entities/model";
 
@@ -179,9 +178,9 @@ export async function isMessageLimitExceeded(user: User): Promise<boolean> {
   }
 
   const stats = user.usageStats;
-  const startOfDay = startOfToday();
+  const start = startOfDay();
 
-  if (stats.startOfDay === startOfDay && stats.messageCount) {
+  if (stats.startOfDay === start && stats.messageCount) {
     return stats.messageCount >= getUserMessageLimit(user);
   }
 

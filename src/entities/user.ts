@@ -11,15 +11,19 @@ export type UserEvent = {
   at: At;
 };
 
-type IntervalUsage = {
+export type IntervalUsage = {
   startedAt: At;
   count: number;
 }
 
+export type IntervalUsages = Partial<Record<Interval, IntervalUsage>>;
+
 export type ModelUsage = {
   lastUsedAt: At;
-  intervalUsages: Partial<Record<Interval, IntervalUsage>>;
+  intervalUsages: IntervalUsages;
 }
+
+export type ModelUsages = Partial<Record<Model, ModelUsage>>;
 
 export type UsageStats = {
   /** @deprecated */
@@ -28,7 +32,7 @@ export type UsageStats = {
   messageCount?: number;
   /** @deprecated */
   lastMessageAt?: At;
-  modelUsages?: Partial<Record<Model, ModelUsage>>;
+  modelUsages?: ModelUsages;
 };
 
 export type UserSettings = {

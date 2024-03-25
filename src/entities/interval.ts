@@ -1,1 +1,2 @@
-export type Interval = "day" | "week" | "month";
+export const intervals = ["day", "week", "month"] as const;
+export type Interval = typeof intervals[number];

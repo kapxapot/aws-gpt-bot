@@ -19,7 +19,7 @@ import { happened } from "./dateService";
 import { AnyContext } from "../telegram/botContext";
 import { getMessageLimitString } from "./messageLimitService";
 import { GptModel } from "../entities/model";
-import { incMessageUsage } from "./usageStatsService";
+import { getLastUsedAt, incModelUsage } from "./usageStatsService";
 
 const config = {
   messageInterval: parseInt(process.env.MESSAGE_INTERVAL ?? "15"), // seconds
@@ -27,9 +27,7 @@ const config = {
 
 export async function sendMessageToGpt(ctx: AnyContext, user: User, question: string, requestedAt?: number) {
   const model = getUserGptModel(user);
-
-  // 
-  const lastMessageAt = user.usageStats?.lastMessageAt;
+  const lastMessageAt = getLastUsedAt(user.usageStats, model);
 
   if (user.waitingForGptAnswer) {
     if (lastMessageAt && happened(lastMessageAt.timestamp, gptTimeout * 1000)) {
@@ -93,7 +91,7 @@ export async function sendMessageToGpt(ctx: AnyContext, user: User, question: st
         : "Нет ответа от ChatGPT. 😣"
     );
 
-    user = await incMessageUsage(user, message.requestedAt);
+    user = await incModelUsage(user, model, message.requestedAt);
   } else {
     let errorMessage = answer.message;
 
