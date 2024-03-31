@@ -1,18 +1,17 @@
+import { PartialRecord } from "../lib/types";
 import { Interval } from "./interval";
-import { ImageModel, ImageSize, Model } from "./model";
+import { Model } from "./model";
 import { Plan } from "./plan";
 
-type IntervalLimits = Partial<Record<Interval, number>>;
-type ModelLimits = Partial<Record<Model, IntervalLimits>>;
-type ImageVariants = Partial<Record<ImageModel, ImageSize[]>>;
+export type IntervalLike = Interval | "product";
+
+type IntervalLimits = PartialRecord<IntervalLike, number>;
+type ModelLimits = PartialRecord<Model, IntervalLimits>;
 
 export type PlanSettings = {
   active: boolean;
-  limits: ModelLimits;
-  imageVariants: ImageVariants;
-  permissions: {
-    canRequestImageGeneration: boolean;
-  }
+  limits?: ModelLimits;
+  gptokens?: number;
 };
 
 export const planSettings: Record<Plan, PlanSettings> = {
@@ -26,30 +25,38 @@ export const planSettings: Record<Plan, PlanSettings> = {
       "dall-e-3": {
         "week": 1
       }
-    },
-    imageVariants: {
-      "dall-e-3": ["1024x1024"]
-    },
-    permissions: {
-      canRequestImageGeneration: true
     }
   },
   "premium": {
+    active: false,
+    limits: {
+      "gpt-3.5-turbo-0125": {
+        "day": 100
+      }
+    }
+  },
+  "unlimited": {
+    active: false,
+    limits: {
+      "gpt-3.5-turbo-0125": {
+        "day": Number.POSITIVE_INFINITY
+      }
+    }
+  },
+  "starter": {
     active: true,
     limits: {
-      "gpt-4-0125-preview": {
-        "day": 20,
-        "month": 200
-      },
-      "dall-e-3": {
-        "week": 10
+      "gpt-3.5-turbo-0125": {
+        "product": 500
       }
-    },
-    imageVariants: {
-      "dall-e-3": ["1024x1024", "1024x1792", "1792x1024"]
-    },
-    permissions: {
-      canRequestImageGeneration: true
     }
+  },
+  "creative": {
+    active: true,
+    gptokens: 100
+  },
+  "pro": {
+    active: true,
+    gptokens: 300
   }
 };

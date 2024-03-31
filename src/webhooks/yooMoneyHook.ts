@@ -1,7 +1,7 @@
 import { at, ts } from "../entities/at";
-import { getProductDisplayName } from "../entities/product";
 import { toText } from "../lib/common";
 import { putMetric } from "../services/metricService";
+import { getProductDisplayName } from "../services/productService";
 import { addUserEvent } from "../services/userService";
 import { getPayment, updatePayment } from "../storage/paymentStorage";
 import { getUser } from "../storage/userStorage";
@@ -77,7 +77,7 @@ export async function youMoneyHook(requestData: YouMoneyRequestData) {
       }
     );
 
-    let productName = `<b>${getProductDisplayName(product, "Acc")}</b>`;
+    let productName = `<b>${getProductDisplayName(product, "Accusative")}</b>`;
 
     if (product.details.type === "subscription") {
       productName = `тариф ${productName}`;

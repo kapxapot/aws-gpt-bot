@@ -10,19 +10,19 @@ import { addMessageToUser, getLastHistoryMessage, getOrAddUser, getUserGptModel,
 import { commands } from "../lib/constants";
 import { formatUserSubscription } from "./subscriptionService";
 import { getCurrentHistory } from "./contextService";
-import { getCaseByNumber } from "../lib/cases";
+import { getCaseByNumber } from "./grammarService";
 import { Completion } from "../entities/message";
 import { putMetric } from "./metricService";
 import { isDebugMode } from "./userSettingsService";
 import { gptTimeout } from "./gptService";
-import { happened } from "./dateService";
+import { happened, timeLeft } from "./dateService";
 import { AnyContext } from "../telegram/botContext";
 import { getUsageLimitString } from "./usageLimitService";
 import { GptModel } from "../entities/model";
 import { getLastUsedAt, getUsageCount, incUsage, isUsageLimitExceeded } from "./usageStatsService";
 
 const config = {
-  messageInterval: parseInt(process.env.MESSAGE_INTERVAL ?? "15"), // seconds
+  messageInterval: parseInt(process.env.MESSAGE_INTERVAL ?? "15") * 1000, // milliseconds
 };
 
 export async function sendMessageToGpt(ctx: AnyContext, user: User, question: string, requestedAt?: number) {
@@ -51,13 +51,14 @@ export async function sendMessageToGpt(ctx: AnyContext, user: User, question: st
   }
 
   if (config.messageInterval > 0 && lastMessageAt) {
-    const elapsed = (ts() - lastMessageAt.timestamp) / 1000;
-    const diff = Math.round(config.messageInterval - elapsed);
+    const seconds = Math.ceil(
+      timeLeft(lastMessageAt.timestamp, config.messageInterval) / 1000
+    );
 
-    if (diff > 0) {
+    if (seconds > 0) {
       await reply(
         ctx,
-        `Вы отправляете сообщения слишком часто. Подождите ${diff} ${getCaseByNumber("секунда", diff)}... ⏳`
+        `Вы отправляете сообщения слишком часто. Подождите ${seconds} ${getCaseByNumber("секунда", seconds)}... ⏳`
       );
 
       return;

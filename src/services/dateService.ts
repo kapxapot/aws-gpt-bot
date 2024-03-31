@@ -91,12 +91,26 @@ function toTs(date: DateLike): number {
 }
 
 /**
- * @param {number} start A timestamp in the past.
+ * Checks if the interval has passed since the start.
+ *
+ * @param {number} start The starting timestamp.
  * @param {number} interval The interval to check (in milliseconds).
  * @param {number|undefined} timestamp Optional date that is used instead of current time.
  */
 export function happened(start: number, interval: number, timestamp?: number): boolean {
-  return (timestamp ?? ts()) >= start + interval;
+  return timeLeft(start, interval, timestamp) <= 0;
+}
+
+/**
+ * Calculates time that is yet to pass from the start till the interval elapses.
+ *
+ * @param {number} start The starting timestamp.
+ * @param {number} interval The interval to check (in milliseconds).
+ * @param {number|undefined} timestamp Optional date that is used instead of current time.
+ */
+export function timeLeft(start: number, interval: number, timestamp?: number): number {
+  const time = timestamp ?? ts();
+  return start + interval - time;
 }
 
 export function isInRange(dateLike: DateLike, start: number, end: number): boolean {

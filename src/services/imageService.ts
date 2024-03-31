@@ -1,45 +1,73 @@
 import { now } from "../entities/at";
+import { defaultImageSize } from "../entities/model";
 import { User } from "../entities/user";
 import { gptImageGeneration } from "../external/gptImageGeneration";
+import { getCaseByNumber } from "./grammarService";
 import { toText } from "../lib/common";
+import { commands } from "../lib/constants";
 import { cancelButton } from "../lib/dialog";
 import { isSuccess } from "../lib/error";
 import { inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
 import { storeImageRequest, updateImageRequest } from "../storage/imageRequestStorage";
 import { AnyContext } from "../telegram/botContext";
+import { happened, timeLeft } from "./dateService";
+import { gptTimeout } from "./gptService";
 import { putMetric } from "./metricService";
-import { getUserPlanSettings, stopWaitingForGptImageGeneration, waitForGptImageGeneration } from "./userService";
+import { getLastUsedAt, isUsageLimitExceeded } from "./usageStatsService";
+import { getUserImageModel, stopWaitingForGptImageGeneration, waitForGptImageGeneration } from "./userService";
 import { PassThrough } from "stream";
 
 const config = {
-  imageInterval: parseInt(process.env.IMAGE_INTERVAL ?? "60"), // seconds
+  imageInterval: parseInt(process.env.IMAGE_INTERVAL ?? "60") * 1000, // milliseconds
 };
 
 export async function generateImageWithGpt(ctx: AnyContext, user: User, prompt: string): Promise<boolean> {
   const requestedAt = now();
+  const model = getUserImageModel(user);
+  const lastImageAt = getLastUsedAt(user.usageStats, model);
 
-  if (config.messageInterval > 0 && lastMessageAt) {
-    const elapsed = (ts() - lastMessageAt.timestamp) / 1000;
-    const diff = Math.round(config.messageInterval - elapsed);
+  if (user.waitingForGptImageGeneration) {
+    if (lastImageAt && happened(lastImageAt.timestamp, gptTimeout * 1000)) {
+      // we have waited enough for the GPT answer
+      await stopWaitingForGptImageGeneration(user);
+    } else {
+      await reply(ctx, "Ваша предыдущая картинка еще не готова, подождите... ⏳");
+      return false;
+    }
+  }
 
-    if (diff > 0) {
+  // todo: add other intervals
+  if (await isUsageLimitExceeded(user, model, "week")) {
+    await reply(
+      ctx,
+      "Вы превысили лимит генерации картинок на эту неделю. 😥",
+      `Подождите следующей недели или перейдите на тариф с более высоким лимитом: /${commands.premium}`
+    );
+
+    return false;
+  }
+
+  if (config.imageInterval > 0 && lastImageAt) {
+    const seconds = Math.ceil(
+      timeLeft(lastImageAt.timestamp, config.imageInterval) / 1000
+    );
+
+    if (seconds > 0) {
       await reply(
         ctx,
-        `Вы отправляете сообщения слишком часто. Подождите ${diff} ${getCaseByNumber("секунда", diff)}... ⏳`
+        `Вы отправляете запросы слишком часто. Подождите ${seconds} ${getCaseByNumber("секунда", seconds)}... ⏳`
       );
 
-      return;
+      return false;
     }
   }
 
   const messages = await reply(ctx, "👨‍🎨 Рисую вашу картинку, подождите... ⏳");
 
-  const planSettings = getUserPlanSettings(user);
-
   let imageRequest = await storeImageRequest({
     userId: user.id,
-    model: planSettings.images.model,
-    size: planSettings.images.size,
+    model,
+    size: defaultImageSize,
     prompt,
     responseFormat: "url",
     requestedAt,

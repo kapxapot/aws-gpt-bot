@@ -1,4 +1,4 @@
 /**
  * In seconds.
  */
-export const gptTimeout = parseInt(process.env.GPT_TIMEOUT ?? "0");
+export const gptTimeout = parseInt(process.env.GPT_TIMEOUT ?? "300");

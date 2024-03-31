@@ -1,4 +1,4 @@
-import { Entity } from "../lib/types";
+import { Entity, PartialRecord } from "../lib/types";
 import { At } from "./at";
 import { Context } from "./context";
 import { Interval } from "./interval";
@@ -16,14 +16,14 @@ export type IntervalUsage = {
   count: number;
 }
 
-export type IntervalUsages = Partial<Record<Interval, IntervalUsage>>;
+export type IntervalUsages = PartialRecord<Interval, IntervalUsage>;
 
 export type ModelUsage = {
   lastUsedAt: At;
   intervalUsages: IntervalUsages;
 }
 
-export type ModelUsages = Partial<Record<Model, ModelUsage>>;
+export type ModelUsages = PartialRecord<Model, ModelUsage>;
 
 export type UsageStats = {
   /** @deprecated Remove in 0.3.0 */

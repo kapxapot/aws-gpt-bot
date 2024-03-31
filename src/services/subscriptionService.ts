@@ -1,8 +1,9 @@
 import { ts } from "../entities/at";
-import { PurchasedProduct, Subscription, freeSubscription, getProductDisplayName, isPurchasedProduct } from "../entities/product";
+import { PurchasedProduct, Subscription, freeSubscription, isPurchasedProduct } from "../entities/product";
 import { User } from "../entities/user";
 import { first } from "../lib/common";
 import { addDays, formatDate, isInRange } from "./dateService";
+import { getProductDisplayName } from "./productService";
 
 type SubscriptionDisplayInfo = {
   name: string;

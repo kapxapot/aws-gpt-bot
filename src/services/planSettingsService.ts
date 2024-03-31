@@ -1,14 +1,19 @@
 import { Interval } from "../entities/interval";
-import { GptModel, ImageModel, Model, defaultGptModel, defaultImageModel, isGptModel, isImageModel } from "../entities/model";
+import { GptModel, ImageModel, Model, defaultGptModel, defaultImageModel } from "../entities/model";
 import { Plan } from "../entities/plan";
-import { PlanSettings, planSettings } from "../entities/planSettings";
+import { IntervalLike, PlanSettings, planSettings } from "../entities/planSettings";
+import { gptokenGptModel, gptokenImageModel, isGptModel, isImageModel } from "./modelService";
 import { getUsageLimitDisplayInfo } from "./usageLimitService";
 
 export function getPlanSettings(plan: Plan): PlanSettings {
   return planSettings[plan];
 }
 
-export function getPlanSettingsLimit(settings: PlanSettings, model: Model, interval: Interval): number {
+export function getPlanSettingsLimit(settings: PlanSettings, model: Model, interval: IntervalLike): number {
+  if (!settings.limits) {
+    return 0;
+  }
+
   const modelLimits = settings.limits[model];
 
   return modelLimits
@@ -24,6 +29,10 @@ export function getPlanSettingsLimitText(planSettings: PlanSettings, model: Mode
 }
 
 export function getPlanSettingsGptModel(settings: PlanSettings): GptModel {
+  if (settings.gptokens) {
+    return gptokenGptModel;
+  }
+
   for (const key in settings.limits) {
     const model = key as Model;
 
@@ -36,6 +45,10 @@ export function getPlanSettingsGptModel(settings: PlanSettings): GptModel {
 }
 
 export function getPlanSettingsImageModel(settings: PlanSettings): ImageModel {
+  if (settings.gptokens) {
+    return gptokenImageModel;
+  }
+
   for (const key in settings.limits) {
     const model = key as Model;
 

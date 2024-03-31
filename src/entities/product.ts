@@ -1,24 +1,31 @@
+import { PartialRecord } from "../lib/types";
 import { At } from "./at";
-import { Case } from "./case";
+import { GrammarCase } from "./grammar";
 import { Money } from "./money";
 import { Plan } from "./plan";
 
 export type Subscription = {
   name: string;
-  displayNames: Partial<Record<Case, string>>;
+  displayNames: PartialRecord<GrammarCase, string>;
   details: {
     plan: Plan;
   };
 };
 
 export type ProductCode =
-  "subscription-premium-30-days";
+  "subscription-premium-30-days" |
+  "subscription-unlimited-30-days" |
+  "bundle-starter-30-days" |
+  "bundle-creative-30-days" |
+  "bundle-pro-30-days";
+
+export type ProductType = "subscription" | "bundle";
 
 export type Product = Subscription & {
   code: ProductCode;
   price: Money;
   details: {
-    type: "subscription";
+    type: ProductType;
     term: {
       range: number;
       unit: "day";
@@ -39,7 +46,7 @@ export function freeSubscription(): Subscription {
   return {
     name: "Free Subscription",
     displayNames: {
-      "Nom": "Бесплатный"
+      "Nominative": "Бесплатный"
     },
     details: {
       plan: "free"
@@ -52,8 +59,8 @@ export function monthlyPremiumSubscription(): Product {
     code: "subscription-premium-30-days",
     name: "Premium Subscription - 30 Days",
     displayNames: {
-      "Nom": "Премиум на 30 дней",
-      "Gen": "Премиума на 30 дней"
+      "Nominative": "Премиум на 30 дней",
+      "Genitive": "Премиума на 30 дней"
     },
     price: {
       currency: "RUB",
@@ -71,15 +78,98 @@ export function monthlyPremiumSubscription(): Product {
   };
 }
 
-export function getProductDisplayName(product: Subscription, targetCase?: Case) {
-  return (targetCase ? product.displayNames[targetCase] : null)
-    ?? product.displayNames["Nom"]
-    ?? product.name;
+export function monthlyUnlimitedSubscription(): Product {
+  return {
+    code: "subscription-unlimited-30-days",
+    name: "Unlimited Subscription - 30 Days",
+    displayNames: {
+      "Nominative": "Безлимит на 30 дней",
+      "Genitive": "Безлимита на 30 дней"
+    },
+    price: {
+      currency: "RUB",
+      amount: 390
+    },
+    details: {
+      type: "subscription",
+      plan: "unlimited",
+      term: {
+        range: 30,
+        unit: "day"
+      },
+      priority: 200
+    }
+  };
 }
 
-export function getProductByCode(code: ProductCode): Product {
-  switch (code) {
-    case "subscription-premium-30-days":
-      return monthlyPremiumSubscription();
-  }
+export function monthlyStarterBundle(): Product {
+  return {
+    code: "bundle-starter-30-days",
+    name: "Starter Bundle - 30 Days",
+    displayNames: {
+      "Nominative": "Начальный на 30 дней",
+      "Genitive": "Начального на 30 дней"
+    },
+    price: {
+      currency: "RUB",
+      amount: 199
+    },
+    details: {
+      type: "bundle",
+      plan: "starter",
+      term: {
+        range: 30,
+        unit: "day"
+      },
+      priority: 300
+    }
+  };
+}
+
+export function monthlyCreativeBundle(): Product {
+  return {
+    code: "bundle-creative-30-days",
+    name: "Creative Bundle - 30 Days",
+    displayNames: {
+      "Nominative": "Творческий на 30 дней",
+      "Genitive": "Творческого на 30 дней"
+    },
+    price: {
+      currency: "RUB",
+      amount: 299
+    },
+    details: {
+      type: "bundle",
+      plan: "creative",
+      term: {
+        range: 30,
+        unit: "day"
+      },
+      priority: 400
+    }
+  };
+}
+
+export function monthlyProBundle(): Product {
+  return {
+    code: "bundle-pro-30-days",
+    name: "Pro Bundle - 30 Days",
+    displayNames: {
+      "Nominative": "Профессиональный на 30 дней",
+      "Genitive": "Профессионального на 30 дней"
+    },
+    price: {
+      currency: "RUB",
+      amount: 749
+    },
+    details: {
+      type: "bundle",
+      plan: "pro",
+      term: {
+        range: 30,
+        unit: "day"
+      },
+      priority: 500
+    }
+  };
 }

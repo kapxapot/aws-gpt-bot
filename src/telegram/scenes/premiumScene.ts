@@ -7,7 +7,7 @@ import { PaymentEvent } from "../../entities/payment";
 import { storePayment } from "../../storage/paymentStorage";
 import { yooMoneyPayment } from "../../external/yooMoneyPayment";
 import { now } from "../../entities/at";
-import { ProductCode, getProductByCode, getProductDisplayName } from "../../entities/product";
+import { ProductCode } from "../../entities/product";
 import { isError } from "../../lib/error";
 import { formatUserSubscription } from "../../services/subscriptionService";
 import { canMakePurchases, canPurchaseProduct } from "../../services/permissionService";
@@ -19,6 +19,7 @@ import { SessionData } from "../session";
 import { phoneToItu, toText } from "../../lib/common";
 import { message } from "telegraf/filters";
 import { updateUser } from "../../storage/userStorage";
+import { getProductByCode, getProductDisplayName } from "../../services/productService";
 
 const scene = new BaseScene<BotContext>(scenes.premium);
 
@@ -235,7 +236,7 @@ async function buyProduct(ctx: BotContext, productCode: ProductCode) {
 
   await replyBackToMainDialog(
     ctx,
-    `💳 Для оплаты <b>${getProductDisplayName(product, "Gen")}</b> пройдите по ссылке:`,
+    `💳 Для оплаты <b>${getProductDisplayName(product, "Genitive")}</b> пройдите по ссылке:`,
     paymentUrl,
     `⚠ Время действия ссылки ограничено. Если вы не успеете оплатить счет, вы можете получить новую ссылку с помощью команды /${commands.premium}`,
     "Мы сообщим вам, когда получим оплату."
