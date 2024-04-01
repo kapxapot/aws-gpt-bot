@@ -5,7 +5,7 @@ describe("getCase", () => {
     expect([
       getCase("тариф", "Instrumental", "Plural"),
       getCase("пакет", "Genitive"),
-    ]).toBe([
+    ]).toEqual([
       "тарифами",
       "пакета",
     ]);
@@ -25,7 +25,7 @@ describe("getCase", () => {
       getCaseByNumber("минута", 4),
       getCaseByNumber("копия", 8),
       getCaseByNumber("слово", 6),
-    ]).toBe([
+    ]).toEqual([
       "секунда",
       "секунды",
       "секунд",
@@ -61,7 +61,7 @@ describe("getCase", () => {
       getCaseByNumber("секунда", 1, "Prepositional"),
       getCaseByNumber("секунда", 2, "Prepositional"),
       getCaseByNumber("секунда", 5, "Prepositional"),
-    ]).toBe([
+    ]).toEqual([
       "секунда", // кто? что? одна секунда
       "секунды", // кто? что? две секунды
       "секунд", // кто? что? пять секунд

@@ -1,4 +1,4 @@
-import { CaseForms, GrammarCase, GrammarNumber, KnownWord, TemplateWord, caseTemplates, cases, derivedCaseData, genuineCaseData, templateWords } from "../entities/grammar";
+import { GrammarCase, GrammarNumber, KnownWord, TemplateWord, caseTemplates, cases, derivedCaseData, genuineCaseData, templateWords } from "../entities/grammar";
 
 type GroupSetting = {
   case: GrammarCase,

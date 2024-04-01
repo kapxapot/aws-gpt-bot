@@ -8,7 +8,7 @@ import { clearAndLeave, encodeText, reply } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
 import { addMessageToUser, getLastHistoryMessage, getOrAddUser, getUserGptModel, stopWaitingForGptAnswer, waitForGptAnswer } from "./userService";
 import { commands } from "../lib/constants";
-import { formatUserSubscription } from "./subscriptionService";
+import { formatSubscription, getCurrentSubscription } from "./subscriptionService";
 import { getCurrentHistory } from "./contextService";
 import { getCaseByNumber } from "./grammarService";
 import { Completion } from "../entities/message";
@@ -20,6 +20,7 @@ import { AnyContext } from "../telegram/botContext";
 import { getUsageLimitString } from "./usageLimitService";
 import { GptModel } from "../entities/model";
 import { getLastUsedAt, getUsageCount, incUsage, isUsageLimitExceeded } from "./usageStatsService";
+import { getProductTypeDisplayName } from "./productService";
 
 const config = {
   messageInterval: parseInt(process.env.MESSAGE_INTERVAL ?? "15") * 1000, // milliseconds
@@ -131,7 +132,9 @@ async function addMessageMetrics(completion: Completion) {
 }
 
 export async function showStatus(ctx: AnyContext, user: User) {
-  await reply(ctx, `Текущий тариф: ${formatUserSubscription(user)}`);
+  const subscription = getCurrentSubscription(user);
+
+  await reply(ctx, `Текущий ${getProductTypeDisplayName(subscription)}: ${formatSubscription(subscription)}`);
   await reply(ctx, `Текущий режим: <b>${getModeName(user)}</b>`);
   await showLastHistoryMessage(ctx, user);
 }

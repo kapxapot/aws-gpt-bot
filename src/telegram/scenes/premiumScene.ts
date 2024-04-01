@@ -9,7 +9,7 @@ import { yooMoneyPayment } from "../../external/yooMoneyPayment";
 import { now } from "../../entities/at";
 import { ProductCode } from "../../entities/product";
 import { isError } from "../../lib/error";
-import { formatUserSubscription } from "../../services/subscriptionService";
+import { formatSubscription, getCurrentSubscription } from "../../services/subscriptionService";
 import { canMakePurchases, canPurchaseProduct } from "../../services/permissionService";
 import { cancelAction, cancelButton } from "../../lib/dialog";
 import { getUserOrLeave } from "../../services/messageService";
@@ -19,7 +19,7 @@ import { SessionData } from "../session";
 import { phoneToItu, toText } from "../../lib/common";
 import { message } from "telegraf/filters";
 import { updateUser } from "../../storage/userStorage";
-import { getProductByCode, getProductDisplayName } from "../../services/productService";
+import { getProductByCode, getProductFullDisplayName, getProductTypeDisplayName } from "../../services/productService";
 
 const scene = new BaseScene<BotContext>(scenes.premium);
 
@@ -40,10 +40,11 @@ scene.enter(async ctx => {
   const premiumGptModel = getPlanSettingsGptModel(premiumSettings);
   const premiumActive = premiumSettings.active;
 
-  const messages = [
-    "Текущий тариф:",
+  const subscription = getCurrentSubscription(user);
 
-    `${formatUserSubscription(user)}:
+  const messages = [
+    `Текущий ${getProductTypeDisplayName(subscription)}:`,
+    `${formatSubscription(subscription)}:
 ◽ модель <b>${userGptModel}</b>
 ◽ ${getPlanSettingsLimitText(userPlanSettings, userGptModel, "day")}`
   ];
@@ -236,7 +237,7 @@ async function buyProduct(ctx: BotContext, productCode: ProductCode) {
 
   await replyBackToMainDialog(
     ctx,
-    `💳 Для оплаты <b>${getProductDisplayName(product, "Genitive")}</b> пройдите по ссылке:`,
+    `💳 Для оплаты ${getProductFullDisplayName(product, "Genitive")} пройдите по ссылке:`,
     paymentUrl,
     `⚠ Время действия ссылки ограничено. Если вы не успеете оплатить счет, вы можете получить новую ссылку с помощью команды /${commands.premium}`,
     "Мы сообщим вам, когда получим оплату."

@@ -1,13 +1,21 @@
 import { PartialRecord } from "../lib/types";
 import { At } from "./at";
-import { GrammarCase } from "./grammar";
+import { GrammarCase, KnownWord } from "./grammar";
 import { Money } from "./money";
 import { Plan } from "./plan";
+
+export type ProductType = "subscription" | "bundle";
+
+export const productTypeDisplayNames: Record<ProductType, KnownWord> = {
+  "subscription": "тариф",
+  "bundle": "пакет"
+};
 
 export type Subscription = {
   name: string;
   displayNames: PartialRecord<GrammarCase, string>;
   details: {
+    type: ProductType;
     plan: Plan;
   };
 };
@@ -19,13 +27,10 @@ export type ProductCode =
   "bundle-creative-30-days" |
   "bundle-pro-30-days";
 
-export type ProductType = "subscription" | "bundle";
-
 export type Product = Subscription & {
   code: ProductCode;
   price: Money;
   details: {
-    type: ProductType;
     term: {
       range: number;
       unit: "day";
@@ -49,6 +54,7 @@ export function freeSubscription(): Subscription {
       "Nominative": "Бесплатный"
     },
     details: {
+      type: "subscription",
       plan: "free"
     }
   };

@@ -15,20 +15,18 @@ type TimestampRange = {
   end: number;
 };
 
-export function formatUserSubscription(user: User): string {
-  const { name, expiresAt } = getUserSubscriptionDisplayInfo(user);
-  const nameStr = `<b>${name}</b>`;
+export function formatSubscription(subscription: Subscription): string {
+  const { name, expiresAt } = getSubscriptionDisplayInfo(subscription);
 
   if (!expiresAt) {
-    return nameStr;
+    return name;
   }
 
-  return `${nameStr} (действует по ${formatDate(expiresAt, "dd.MM.yyyy")})`;
+  return `${name} (действует по ${formatDate(expiresAt, "dd.MM.yyyy")})`;
 }
 
-function getUserSubscriptionDisplayInfo(user: User): SubscriptionDisplayInfo {
-  const subscription = getCurrentSubscription(user);
-  const name = getProductDisplayName(subscription);
+function getSubscriptionDisplayInfo(subscription: Subscription): SubscriptionDisplayInfo {
+  const name = `<b>${getProductDisplayName(subscription)}</b>`;
 
   let expiresAt = null;
 
