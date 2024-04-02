@@ -1,12 +1,9 @@
-import { at, now } from "../../src/entities/at";
-import { isPurchasedProduct, monthlyPremiumSubscription } from "../../src/entities/product";
+import { isPurchasedProduct } from "../../src/entities/product";
 import { User } from "../../src/entities/user";
-import { addDays } from "../../src/services/dateService";
 import { getCurrentSubscription } from "../../src/services/subscriptionService";
 
-describe('getCurrentSubscription', () => {
-  // todo: rewrite this (no unlimited anymore)
-  test('should return newer sub in case of premium + premium', () => {
+describe("getCurrentSubscription", () => {
+  test("should return newer sub in case of several ones", () => {
     const user: User = {
       id: "",
       telegramId: 1,
@@ -16,14 +13,58 @@ describe('getCurrentSubscription', () => {
       updatedAtIso: "",
       events: [
         {
-          at: now(),
-          details: monthlyPremiumSubscription(),
-          type: "purchase"
+          "at": {
+            "date": "2024-03-06T08:42:57.490Z",
+            "timestamp": 1709714577490
+          },
+          "details": {
+            "code": "subscription-premium-30-days",
+            "details": {
+              "plan": "premium",
+              "term": {
+                "range": 30,
+                "unit": "day"
+              },
+              "type": "subscription"
+            },
+            "displayNames": {
+              "Genitive": "Премиума на 30 дней",
+              "Nominative": "Премиум на 30 дней"
+            },
+            "name": "Premium Subscription - 30 Days",
+            "price": {
+              "amount": 290,
+              "currency": "RUB"
+            }
+          },
+          "type": "purchase"
         },
         {
-          at: at(addDays(now(), 1)),
-          details: monthlyPremiumSubscription(),
-          type: "purchase"
+          "at": {
+            "date": "2024-04-02T09:58:16.938Z",
+            "timestamp": 1712051896938
+          },
+          "details": {
+            "code": "bundle-creative-30-days",
+            "details": {
+              "plan": "creative",
+              "term": {
+                "range": 30,
+                "unit": "day"
+              },
+              "type": "bundle"
+            },
+            "displayNames": {
+              "Genitive": "Творческого на 30 дней",
+              "Nominative": "Творческий на 30 дней"
+            },
+            "name": "Creative Bundle - 30 Days",
+            "price": {
+              "amount": 299,
+              "currency": "RUB"
+            }
+          },
+          "type": "purchase"
         }
       ]
     };
@@ -35,7 +76,7 @@ describe('getCurrentSubscription', () => {
     ).toBe(true);
 
     if (isPurchasedProduct(currentSubscription)) {
-      expect(currentSubscription.code).toBe("subscription-premium-30-days");
+      expect(currentSubscription.code).toBe("bundle-creative-30-days");
     }
   });
 });

@@ -40,7 +40,7 @@ function getSubscriptionDisplayInfo(subscription: Subscription): SubscriptionDis
 
 export function getCurrentSubscription(user: User): Subscription {
   const activeSubscriptions = getActiveSubscriptions(user)
-    .sort((a, b) => b.details.priority - a.details.priority);
+    .sort((a, b) => b.purchasedAt.timestamp - a.purchasedAt.timestamp);
 
   return first(activeSubscriptions) ?? freeSubscription();
 }
@@ -64,13 +64,17 @@ function getPurchasedProducts(user: User): PurchasedProduct[] {
 }
 
 function isActiveSubscription(product: PurchasedProduct): boolean {
-  if (product.details.type !== "subscription") {
-    return false;
-  }
+  return !isProductExpired(product) && !isProductExhausted(product);
+}
 
+function isProductExpired(product: PurchasedProduct): boolean {
   const { start, end } = getProductTimestampRange(product);
 
-  return isInRange(ts(), start, end);
+  return !isInRange(ts(), start, end);
+}
+
+function isProductExhausted(product: PurchasedProduct): boolean {
+  return false;
 }
 
 function getProductTimestampRange(product: PurchasedProduct): TimestampRange {

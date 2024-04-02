@@ -38,7 +38,6 @@ export type Product = Subscription & {
       range: number;
       unit: "day";
     };
-    priority: number;
   };
 };
 
@@ -81,8 +80,7 @@ export function monthlyPremiumSubscription(): Product {
       term: {
         range: 30,
         unit: "day"
-      },
-      priority: 100
+      }
     }
   };
 }
@@ -105,8 +103,7 @@ export function monthlyUnlimitedSubscription(): Product {
       term: {
         range: 30,
         unit: "day"
-      },
-      priority: 200
+      }
     }
   };
 }
@@ -129,8 +126,7 @@ export function monthlyStarterBundle(): Product {
       term: {
         range: 30,
         unit: "day"
-      },
-      priority: 300
+      }
     }
   };
 }
@@ -153,8 +149,7 @@ export function monthlyCreativeBundle(): Product {
       term: {
         range: 30,
         unit: "day"
-      },
-      priority: 400
+      }
     }
   };
 }
@@ -177,8 +172,7 @@ export function monthlyProBundle(): Product {
       term: {
         range: 30,
         unit: "day"
-      },
-      priority: 500
+      }
     }
   };
 }
