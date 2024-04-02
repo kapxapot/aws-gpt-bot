@@ -1,8 +1,8 @@
 import { Image } from "openai/resources/images.mjs";
 import { Result } from "../lib/error";
-import { ImageModel, ImageQuality, ImageResponseFormat, ImageSize } from "../lib/openAi";
 import { Entity } from "../lib/types";
 import { At } from "./at";
+import { ImageModel, ImageQuality, ImageResponseFormat, ImageSize } from "./model";
 
 export type ImageRequest = Entity & {
   userId: string;

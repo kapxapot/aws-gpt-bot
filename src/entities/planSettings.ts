@@ -6,7 +6,7 @@ import { Plan } from "./plan";
 export type IntervalLike = Interval | "product";
 
 type IntervalLimits = PartialRecord<IntervalLike, number>;
-type ModelLimits = PartialRecord<Model, IntervalLimits>;
+export type ModelLimits = PartialRecord<Model, IntervalLimits>;
 
 export type PlanSettings = {
   active: boolean;

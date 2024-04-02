@@ -20,12 +20,15 @@ export type Subscription = {
   };
 };
 
-export type ProductCode =
-  "subscription-premium-30-days" |
-  "subscription-unlimited-30-days" |
-  "bundle-starter-30-days" |
-  "bundle-creative-30-days" |
-  "bundle-pro-30-days";
+export const productCodes = [
+  "subscription-premium-30-days",
+  "subscription-unlimited-30-days",
+  "bundle-starter-30-days",
+  "bundle-creative-30-days",
+  "bundle-pro-30-days",
+] as const;
+
+export type ProductCode = typeof productCodes[number];
 
 export type Product = Subscription & {
   code: ProductCode;

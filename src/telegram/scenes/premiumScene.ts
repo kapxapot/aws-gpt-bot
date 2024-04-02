@@ -7,23 +7,22 @@ import { PaymentEvent } from "../../entities/payment";
 import { storePayment } from "../../storage/paymentStorage";
 import { yooMoneyPayment } from "../../external/yooMoneyPayment";
 import { now } from "../../entities/at";
-import { ProductCode } from "../../entities/product";
+import { Product, ProductCode, productCodes } from "../../entities/product";
 import { isError } from "../../lib/error";
-import { formatSubscription, getCurrentSubscription } from "../../services/subscriptionService";
+import { getSubscriptionPlan } from "../../services/subscriptionService";
 import { canMakePurchases, canPurchaseProduct } from "../../services/permissionService";
 import { cancelAction, cancelButton } from "../../lib/dialog";
 import { getUserOrLeave } from "../../services/messageService";
-import { getUserPlan, getUserPlanSettings } from "../../services/userService";
-import { getPlanSettings, getPlanSettingsGptModel, getPlanSettingsLimitText } from "../../services/planSettingsService";
+import { getUserPlan } from "../../services/userService";
 import { SessionData } from "../session";
 import { phoneToItu, toText } from "../../lib/common";
 import { message } from "telegraf/filters";
 import { updateUser } from "../../storage/userStorage";
-import { getProductByCode, getProductFullDisplayName, getProductTypeDisplayName } from "../../services/productService";
+import { getProductByCode, getProductDisplayName, getProductFullDisplayName } from "../../services/productService";
+import { User } from "../../entities/user";
+import { getPlanDescription } from "../../services/planService";
 
 const scene = new BaseScene<BotContext>(scenes.premium);
-
-const buyPremiumAction = "buy-premium";
 
 scene.enter(async ctx => {
   const user = await getUserOrLeave(ctx);
@@ -32,41 +31,33 @@ scene.enter(async ctx => {
     return;
   }
 
-  // get plan messages
-  const userPlanSettings = getUserPlanSettings(user);
-  const userGptModel = getPlanSettingsGptModel(userPlanSettings);
-
-  const premiumSettings = getPlanSettings("premium");
-  const premiumGptModel = getPlanSettingsGptModel(premiumSettings);
-  const premiumActive = premiumSettings.active;
-
-  const subscription = getCurrentSubscription(user);
+  const plan = getUserPlan(user);
+  const purchasableProducts = getPurchasableProducts(user);
 
   const messages = [
-    `Текущий ${getProductTypeDisplayName(subscription)}:`,
-    `${formatSubscription(subscription)}:
-◽ модель <b>${userGptModel}</b>
-◽ ${getPlanSettingsLimitText(userPlanSettings, userGptModel, "day")}`
+    `Текущий тариф:`,
+    getPlanDescription(plan)
   ];
 
-  if (premiumActive) {
+  const buttons: string[][] = [];
+
+  if (!purchasableProducts.length) {
+    messages.push("На данный момент других тарифов нет.");
+  } else {
     messages.push(
-      "Если вам нужно больше ежедневных запросов к <b>ChatGPT</b> или вы хотите работать с <b>GPT-4</b>, оформите подписку на один из платных тарифов:"
+      `Если вам нужно больше запросов к <b>ChatGPT</b> и <b>DALL-E</b> или вы хотите работать с <b>GPT-4</b>, приобретите один из платных пакетов:`
     );
 
-    if (premiumActive) {
-      messages.push(
-        `💚 Тариф <b>«Премиум»</b>:
-◽ модель <b>${premiumGptModel}</b>
-◽ ${getPlanSettingsLimitText(premiumSettings, premiumGptModel, "day")}
-◽ 290 рублей на 30 дней`
-      );
-    }
-  } else {
-    messages.push("На данный момент других тарифов нет.");
-  }
+    for (const product of purchasableProducts) {
+      const productPlan = getSubscriptionPlan(product);
 
-  const buttons: string[][] = [];
+      messages.push(getPlanDescription(productPlan));
+      buttons.push([
+        `Купить ${getProductDisplayName(product)}`,
+        getProductBuyAction(product.code)
+      ]);
+    }
+  }
 
   if (!canMakePurchases(user)) {
     await replyBackToMainDialog(
@@ -78,22 +69,6 @@ scene.enter(async ctx => {
     return;
   }
 
-  const plan = getUserPlan(user);
-
-  switch (plan) {
-    case "free":
-      if (premiumActive) {
-        buttons.push(["Купить Премиум", buyPremiumAction]);
-      }
-
-      break;
-
-    case "premium":
-      messages.push("⚠ Ваш текущий тариф <b>«Премиум»</b>. Вы не можете приобрести другие тарифы, пока у вас не закончится текущий.");
-
-      break;
-  }
-
   await replyWithKeyboard(
     ctx,
     inlineKeyboard(...buttons, cancelButton),
@@ -103,10 +78,12 @@ scene.enter(async ctx => {
 
 addOtherCommandHandlers(scene, commands.premium);
 
-scene.action(
-  buyPremiumAction,
-  async ctx => await buyAction(ctx, "subscription-premium-30-days")
-);
+for (const productCode of productCodes) {
+  scene.action(
+    getProductBuyAction(productCode),
+    async ctx => await buyAction(ctx, productCode)
+  );
+}
 
 async function buyAction(ctx: AnyContext, productCode: ProductCode) {
   await clearInlineKeyboard(ctx);
@@ -260,4 +237,14 @@ function setTargetProductCode(session: SessionData, targetProductCode: ProductCo
 
 function getTargetProductCode(session: SessionData): ProductCode | null {
   return session.premiumData?.targetProductCode ?? null;
+}
+
+function getPurchasableProducts(user: User): Product[] {
+  return productCodes
+    .filter(code => canPurchaseProduct(user, code))
+    .map(code => getProductByCode(code));
+}
+
+function getProductBuyAction(code: ProductCode): string {
+  return `buy-${code}`;
 }

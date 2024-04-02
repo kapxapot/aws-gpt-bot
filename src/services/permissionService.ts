@@ -3,6 +3,7 @@ import { User } from "../entities/user";
 import { isProd } from "./envService";
 import { isPlanActive } from "./planService";
 import { getProductByCode } from "./productService";
+import { getSubscriptionPlan } from "./subscriptionService";
 import { getUserPlan, isTester } from "./userService";
 
 export const canMakePurchases = (user: User) => isProd() || isTester(user);
@@ -20,7 +21,7 @@ export function canPurchaseProduct(user: User, productCode: ProductCode) {
   }
 
   const product = getProductByCode(productCode);
-  const plan = product.details.plan;
+  const plan = getSubscriptionPlan(product);
   const userPlan = getUserPlan(user);
 
   if (userPlan === plan) {

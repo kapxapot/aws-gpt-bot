@@ -8,7 +8,7 @@ import { getUserHistorySize } from "./userSettingsService";
 import { addMessageToHistory, createContext, cutoffMessages, getCurrentHistory, getCurrentPrompt } from "./contextService";
 import { isSuccess } from "../lib/error";
 import { PlanSettings } from "../entities/planSettings";
-import { getCurrentSubscription } from "./subscriptionService";
+import { getCurrentSubscription, getSubscriptionPlan } from "./subscriptionService";
 import { getPlanSettings, getPlanSettingsGptModel, getPlanSettingsImageModel } from "./planSettingsService";
 import { Plan } from "../entities/plan";
 import { GptModel, ImageModel } from "../entities/model";
@@ -177,7 +177,7 @@ export function isTester(user: User) {
 
 export function getUserPlan(user: User): Plan {
   const subscription = getCurrentSubscription(user);
-  return subscription.details.plan;
+  return getSubscriptionPlan(subscription);
 }
 
 export function getUserPlanSettings(user: User): PlanSettings {
