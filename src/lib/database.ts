@@ -1,6 +1,6 @@
 import { DeleteCommand, DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, QueryCommandInput, ScanCommand, ScanCommandInput, ScanCommandOutput, UpdateCommand, UpdateCommandInput } from "@aws-sdk/lib-dynamodb";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
-import { v4 as uuidv4 } from "uuid";
+import { v4 as uuid } from "uuid";
 import { timestamps, updatedTimestamps } from "../entities/at";
 import { Entity, Unsaved } from "./types";
 
@@ -32,7 +32,7 @@ export async function putItem<T extends Entity>(table: string, item: Unsaved<T>)
     TableName: table,
     Item: {
       ...item,
-      id: item.id ?? uuidv4(),
+      id: item.id ?? uuid(),
       ...timestamps()
     }
   };

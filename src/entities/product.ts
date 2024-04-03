@@ -1,6 +1,7 @@
 import { PartialRecord } from "../lib/types";
 import { At } from "./at";
 import { GrammarCase, KnownWord } from "./grammar";
+import { Model } from "./model";
 import { Money } from "./money";
 import { Plan } from "./plan";
 
@@ -41,8 +42,16 @@ export type Product = Subscription & {
   };
 };
 
+type ModelUsage = {
+  count: number;
+}
+
+type ProductUsage = PartialRecord<Model, ModelUsage>;
+
 export type PurchasedProduct = Product & {
+  id: string;
   purchasedAt: At;
+  usage: ProductUsage;
 };
 
 export function isPurchasedProduct(product: Subscription): product is PurchasedProduct {

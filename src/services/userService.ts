@@ -1,3 +1,4 @@
+import { v4 as uuid } from "uuid";
 import { User as TelegrafUser } from "telegraf/types";
 import { Message } from "../entities/message";
 import { User, UserEvent } from "../entities/user";
@@ -12,6 +13,7 @@ import { getCurrentSubscription, getSubscriptionPlan } from "./subscriptionServi
 import { getPlanSettings, getPlanSettingsGptModel, getPlanSettingsImageModel } from "./planSettingsService";
 import { Plan } from "../entities/plan";
 import { GptModel, ImageModel } from "../entities/model";
+import { PurchasedProduct } from "../entities/product";
 
 type CurrentContext = {
   prompt: string | null;
@@ -19,60 +21,78 @@ type CurrentContext = {
 };
 
 export const getOrAddUser = async (userData: TelegrafUser): Promise<User> => {
-  return await getUserByTelegramId(userData.id)
+  const user = await getUserByTelegramId(userData.id)
     ?? await storeUser(userData);
+
+  return await checkUserIntegrity(user);
+}
+
+/**
+ * Creates products for events if they are not defined.
+ */
+async function checkUserIntegrity(user: User): Promise<User> {
+  if (!user.events) {
+    return user;
+  }
+
+  return await updateUser(
+    user,
+    {
+      products: user.events.map(event => userEventToProduct(event))
+    }
+  );
 }
 
 /**
  * Adds the message to the recent user's messages and sets a prompt if there is none.
  */
 export const addMessageToUser = async (user: User, message: Message): Promise<User> => {
-  const context = getContext(user);
+  const context = getUserContext(user);
   const historySize = getUserHistorySize(user);
 
   addMessageToHistory(context, message, historySize);
 
-  return await updateContext(user, context);
+  return await updateUserContext(user, context);
 }
 
 export const newCustomPrompt = async (user: User, customPrompt: string): Promise<User> => {
-  const context = getContext(user);
+  const context = getUserContext(user);
 
   context.modeCode = "prompt";
   context.promptCode = customPromptCode;
   context.customPrompt = customPrompt;
 
-  return await updateContext(user, context);
+  return await updateUserContext(user, context);
 }
 
 export const backToCustomPrompt = async (user: User): Promise<User> => {
-  const context = getContext(user);
+  const context = getUserContext(user);
 
   context.modeCode = "prompt";
   context.promptCode = customPromptCode;
 
-  return await updateContext(user, context);
+  return await updateUserContext(user, context);
 }
 
 export const setPrompt = async (user: User, prompt: Prompt): Promise<User> => {
-  const context = getContext(user);
+  const context = getUserContext(user);
 
   context.modeCode = "role";
   context.promptCode = prompt.code;
 
-  return await updateContext(user, context);
+  return await updateUserContext(user, context);
 }
 
 export const setFreeMode = async (user: User): Promise<User> => {
-  const context = getContext(user);
+  const context = getUserContext(user);
 
   context.modeCode = "free";
   context.promptCode = noPromptCode;
 
-  return await updateContext(user, context);
+  return await updateUserContext(user, context);
 }
 
-export function getContext(user: User): Context {
+export function getUserContext(user: User): Context {
   if (!user.context) {
     user.context = createContext();
   }
@@ -80,7 +100,7 @@ export function getContext(user: User): Context {
   return user.context;
 }
 
-async function updateContext(user: User, context: Context): Promise<User> {
+async function updateUserContext(user: User, context: Context): Promise<User> {
   return await updateUser(
     user,
     {
@@ -124,9 +144,34 @@ export function getLastHistoryMessage(user: User): string | null {
 
 export async function addUserEvent(user: User, event: UserEvent): Promise<User> {
   const events = user.events ?? [];
-
   events.push(event);
 
+  const changes: Partial<User> = {
+    events
+  };
+
+  if (event.type === "purchase") {
+    // add product
+    const products = user.products ?? [];
+    const product = userEventToProduct(event);
+    products.push(product);
+
+    changes.products = products;
+  }
+
+  return await updateUser(user, changes);
+}
+
+function userEventToProduct(event: UserEvent): PurchasedProduct {
+  return {
+    ...event.details,
+    purchasedAt: event.at,
+    id: uuid(),
+    usage: {}
+  };
+}
+
+export async function updateUserEvents(user: User, events: UserEvent[]): Promise<User> {
   return await updateUser(
     user,
     {

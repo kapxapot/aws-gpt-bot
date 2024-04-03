@@ -45,10 +45,9 @@ export function getCurrentSubscription(user: User): Subscription {
   return first(activeSubscriptions) ?? freeSubscription();
 }
 
-function getActiveSubscriptions(user: User): PurchasedProduct[] {
-  return getPurchasedProducts(user)
+const getActiveSubscriptions = (user: User): PurchasedProduct[] =>
+  getPurchasedProducts(user)
     .filter(pp => isActiveSubscription(pp));
-}
 
 function getPurchasedProducts(user: User): PurchasedProduct[] {
   if (!user.events) {
@@ -73,6 +72,7 @@ function isProductExpired(product: PurchasedProduct): boolean {
   return !isInRange(ts(), start, end);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function isProductExhausted(product: PurchasedProduct): boolean {
   return false;
 }

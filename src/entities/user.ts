@@ -3,7 +3,7 @@ import { At } from "./at";
 import { Context } from "./context";
 import { Interval } from "./interval";
 import { Model } from "./model";
-import { Product } from "./product";
+import { Product, PurchasedProduct } from "./product";
 
 export type UserEvent = {
   type: "purchase";
@@ -49,6 +49,7 @@ export type User = Entity & {
   phoneNumber?: string;
   context?: Context;
   events?: UserEvent[];
+  products?: PurchasedProduct[];
   waitingForGptAnswer?: boolean;
   waitingForGptImageGeneration?: boolean;
   usageStats?: UsageStats;

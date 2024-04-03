@@ -1,5 +1,5 @@
 import { toText } from "../lib/common";
-import { getContext } from "../services/userService";
+import { getUserContext } from "../services/userService";
 import { User } from "./user";
 
 export const noPromptCode = "_none";
@@ -165,7 +165,7 @@ export function getModeByCode(code: string): Mode | null {
 }
 
 export function getModeName(user: User): string | null {
-  const context = getContext(user);
+  const context = getUserContext(user);
 
   if (!context) {
     return "Неизвестный режим";
