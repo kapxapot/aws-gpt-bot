@@ -11,60 +11,58 @@ describe("getCurrentSubscription", () => {
       createdAtIso: "",
       updatedAt: 1,
       updatedAtIso: "",
-      events: [
+      products: [
         {
-          "at": {
-            "date": "2024-03-06T08:42:57.490Z",
-            "timestamp": 1709714577490
-          },
-          "details": {
-            "code": "subscription-premium-30-days",
-            "details": {
-              "plan": "premium",
-              "term": {
-                "range": 30,
-                "unit": "day"
-              },
-              "type": "subscription"
+          id: "",
+          code: "subscription-premium-30-days",
+          details: {
+            plan: "premium",
+            term: {
+              range: 30,
+              unit: "day"
             },
-            "displayNames": {
-              "Genitive": "Премиума на 30 дней",
-              "Nominative": "Премиум на 30 дней"
-            },
-            "name": "Premium Subscription - 30 Days",
-            "price": {
-              "amount": 290,
-              "currency": "RUB"
-            }
+            type: "subscription"
           },
-          "type": "purchase"
+          displayNames: {
+            "Genitive": "Премиума на 30 дней",
+            "Nominative": "Премиум на 30 дней"
+          },
+          name: "Premium Subscription - 30 Days",
+          price: {
+            amount: 290,
+            currency: "RUB"
+          },
+          purchasedAt: {
+            date: "2024-03-06T08:42:57.490Z",
+            timestamp: 1709714577490
+          },
+          usage: {}
         },
         {
-          "at": {
-            "date": "2024-04-02T09:58:16.938Z",
-            "timestamp": 1712051896938
-          },
-          "details": {
-            "code": "bundle-creative-30-days",
-            "details": {
-              "plan": "creative",
-              "term": {
-                "range": 30,
-                "unit": "day"
-              },
-              "type": "bundle"
+          id: "",
+          code: "bundle-creative-30-days",
+          details: {
+            plan: "creative",
+            term: {
+              range: 30,
+              unit: "day"
             },
-            "displayNames": {
-              "Genitive": "Творческого на 30 дней",
-              "Nominative": "Творческий на 30 дней"
-            },
-            "name": "Creative Bundle - 30 Days",
-            "price": {
-              "amount": 299,
-              "currency": "RUB"
-            }
+            type: "bundle"
           },
-          "type": "purchase"
+          displayNames: {
+            "Genitive": "Творческого на 30 дней",
+            "Nominative": "Творческий на 30 дней"
+          },
+          name: "Creative Bundle - 30 Days",
+          price: {
+            amount: 299,
+            currency: "RUB"
+          },
+          purchasedAt: {
+            date: "2024-04-02T09:58:16.938Z",
+            timestamp: 1712051896938
+          },
+          usage: {}
         }
       ]
     };

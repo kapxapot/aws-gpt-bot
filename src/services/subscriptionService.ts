@@ -50,16 +50,7 @@ const getActiveSubscriptions = (user: User): PurchasedProduct[] =>
     .filter(pp => isActiveSubscription(pp));
 
 function getPurchasedProducts(user: User): PurchasedProduct[] {
-  if (!user.events) {
-    return [];
-  }
-
-  return user.events
-    .filter(ev => ev.type === "purchase")
-    .map(ev => ({
-      ...ev.details,
-      purchasedAt: ev.at
-    }));
+  return user.products ?? [];
 }
 
 function isActiveSubscription(product: PurchasedProduct): boolean {
