@@ -7,7 +7,8 @@ import { isNumber } from "../lib/common";
 type DateLike = At | Date | number;
 
 /**
- * Returns *system* start of the day for a given date. In case of `undefined` uses the current date.
+ * Returns *system* start of the day for a given date.
+ * In case of `undefined` uses the current date.
  */
 export function startOfDay(dateLike?: DateLike): number {
   const date = dateLike ? toDate(dateLike) : new Date();
@@ -22,12 +23,30 @@ export function startOfDay(dateLike?: DateLike): number {
   return start;
 }
 
-function startOfWeek(dateLike?: DateLike): number {
-  return startOfDay(dateLike);
+export function startOfWeek(dateLike?: DateLike): number {
+  const start = startOfDay(dateLike);
+  const utcStart = alignWithUtc(start);
+  const weekday = getWeekday(utcStart);
+
+  return addDays(start, 1 - weekday);
 }
 
-function startOfMonth(dateLike?: DateLike): number {
-  return startOfDay(dateLike);
+/**
+ * 1 - Monday, ..., 7 - Sunday
+ */
+function getWeekday(dateLike: DateLike): number {
+  const date = toDate(dateLike);
+  const weekday = date.getDay();
+
+  return weekday > 0 ? weekday : 7;
+}
+
+export function startOfMonth(dateLike?: DateLike): number {
+  const start = startOfDay(dateLike);
+  const utcStartDate = toDate(alignWithUtc(start));
+  const day = utcStartDate.getDate();
+
+  return addDays(start, 1 - day);
 }
 
 export function startOf(interval: Interval, dateLike?: DateLike): number {
@@ -56,9 +75,13 @@ export function utcStartOfDay(dateLike?: DateLike): Date {
 }
 
 export function formatDate(dateLike: DateLike, formatStr: string): string {
-  const adjustedTs = addHours(dateLike, -settings.systemTimeOffset);
-
+  const adjustedTs = alignWithUtc(dateLike);
   return format(adjustedTs, formatStr);
+}
+
+function alignWithUtc(dateLike: DateLike): number {
+  const date = toDate(addHours(dateLike, -settings.systemTimeOffset));
+  return addMinutes(date, date.getTimezoneOffset());
 }
 
 export function addDays(dateLike: DateLike, days: number): number {
@@ -69,6 +92,11 @@ export function addDays(dateLike: DateLike, days: number): number {
 export function addHours(dateLike: DateLike, hours: number): number {
   const date = toDate(dateLike);
   return date.setHours(date.getHours() + hours);
+}
+
+export function addMinutes(dateLike: DateLike, minutes: number): number {
+  const date = toDate(dateLike);
+  return date.setMinutes(date.getMinutes() + minutes);
 }
 
 function toDate(date: DateLike): Date {

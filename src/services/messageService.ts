@@ -18,7 +18,7 @@ import { gptTimeout } from "./gptService";
 import { happened, timeLeft } from "./dateService";
 import { AnyContext } from "../telegram/botContext";
 import { getUsageLimitString } from "./usageLimitService";
-import { PureGptModelCode, defaultGptModelCode } from "../entities/model";
+import { GptModel, PureGptModelCode, defaultGptModelCode } from "../entities/model";
 import { getLastUsedAt, getUsageCount, incUsage, isUsageLimitExceeded } from "./usageStatsService";
 import { getAvailableGptModel, getProductTypeDisplayName } from "./productService";
 import { getGptModelByCode, purifyGptModelCode } from "./modelService";
@@ -153,6 +153,7 @@ export async function sendMessageToGpt(ctx: AnyContext, user: User, question: st
     ctx,
     user,
     pureModelCode,
+    model,
     isSuccess(answer) ? answer : null
   );
 
@@ -193,7 +194,13 @@ function formatGptMessage(message: string): string {
     return `🤖 ${encodeText(message)}`;
 }
 
-export async function showInfo(ctx: AnyContext, user: User, modelCode: PureGptModelCode, answer: Completion | null) {
+export async function showInfo(
+  ctx: AnyContext,
+  user: User,
+  modelCode: PureGptModelCode,
+  model: GptModel,
+  answer: Completion | null
+) {
   const chunks = [];
 
   chunks.push(`📌 Режим: <b>${getModeName(user)}</b>`);
@@ -220,7 +227,7 @@ export async function showInfo(ctx: AnyContext, user: User, modelCode: PureGptMo
       }
     }
 
-    chunks.push(`модель запроса: ${modelCode}`);
+    chunks.push(`модель запроса: ${model}`);
 
     if (answer?.model) {
       chunks.push(`модель ответа: ${answer.model}`);
