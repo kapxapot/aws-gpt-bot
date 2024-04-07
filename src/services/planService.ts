@@ -3,7 +3,7 @@ import { getPlanSettings } from "./planSettingsService";
 
 export function isPlanActive(plan: Plan) {
   const planSettings = getPlanSettings(plan);
-  return planSettings.active;
+  return !planSettings.disabled;
 }
 
 export function getPlanDescription(plan: Plan): string {
@@ -44,5 +44,17 @@ export function getPlanDescription(plan: Plan): string {
 ◽ модель <b>GPT-4</b>
 ◽️ 150 запросов к <b>DALL-E 3</b> или 300 запросов к <b>GPT-4</b>
 ◽️ 749 рублей на 30 дней`;
+
+    case "test-tinygpt3":
+      return `⚠ Тестовый Пакет <b>«Мелкий GPT-3»</b>:
+◽ модель <b>GPT-3</b>
+◽️ 2 запроса
+◽️ 9999 рублей на 1 день`;
+
+    case "test-tinygptokens":
+      return `⚠ Тестовый Пакет <b>«Мелкий GPToken»</b>:
+◽ модель <b>GPT-4</b>
+◽️ 2 запроса к <b>DALL-E 3</b> или 4 запроса к <b>GPT-4</b>
+◽️ 9999 рублей на 1 день`;
   }
 }

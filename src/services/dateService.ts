@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { settings } from "../lib/constants";
 import { At, ts } from "../entities/at";
 import { Interval } from "../entities/interval";
+import { isNumber } from "../lib/common";
 
 type DateLike = At | Date | number;
 
@@ -75,7 +76,7 @@ function toDate(date: DateLike): Date {
     return date;
   }
 
-  return typeof date === "number"
+  return isNumber(date)
     ? new Date(date)
     : new Date(date.timestamp);
 }
@@ -85,7 +86,7 @@ function toTs(date: DateLike): number {
     return date.getTime();
   }
 
-  return typeof date === "number"
+  return isNumber(date)
     ? date
     : date.timestamp;
 }

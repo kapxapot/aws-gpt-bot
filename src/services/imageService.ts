@@ -1,5 +1,5 @@
 import { now } from "../entities/at";
-import { defaultImageSize } from "../entities/model";
+import { defaultImageModelCode, defaultImageSize } from "../entities/model";
 import { User } from "../entities/user";
 import { gptImageGeneration } from "../external/gptImageGeneration";
 import { getCaseByNumber } from "./grammarService";
@@ -13,9 +13,12 @@ import { AnyContext } from "../telegram/botContext";
 import { happened, timeLeft } from "./dateService";
 import { gptTimeout } from "./gptService";
 import { putMetric } from "./metricService";
-import { getLastUsedAt, isUsageLimitExceeded } from "./usageStatsService";
-import { getUserImageModel, stopWaitingForGptImageGeneration, waitForGptImageGeneration } from "./userService";
+import { getLastUsedAt, incUsage, isUsageLimitExceeded } from "./usageStatsService";
+import { getUserActiveProduct, stopWaitingForGptImageGeneration, waitForGptImageGeneration } from "./userService";
 import { PassThrough } from "stream";
+import { getAvailableImageModel } from "./productService";
+import { getImageModelByCode, purifyImageModelCode } from "./modelService";
+import { incProductUsage } from "./productUsageService";
 
 const config = {
   imageInterval: parseInt(process.env.IMAGE_INTERVAL ?? "60") * 1000, // milliseconds
@@ -23,11 +26,22 @@ const config = {
 
 export async function generateImageWithGpt(ctx: AnyContext, user: User, prompt: string): Promise<boolean> {
   const requestedAt = now();
-  const model = getUserImageModel(user);
-  const lastImageAt = getLastUsedAt(user.usageStats, model);
+  const activeProduct = getUserActiveProduct(user);
+
+  const productModelCode = activeProduct
+    ? getAvailableImageModel(activeProduct)
+    : null;
+
+  const freePlan = !activeProduct || !productModelCode;
+
+  const modelCode = productModelCode ?? defaultImageModelCode;
+  const pureModelCode = purifyImageModelCode(modelCode);
+  const model = getImageModelByCode(modelCode);
+
+  const lastUsedAt = getLastUsedAt(user.usageStats, pureModelCode);
 
   if (user.waitingForGptImageGeneration) {
-    if (lastImageAt && happened(lastImageAt.timestamp, gptTimeout * 1000)) {
+    if (lastUsedAt && happened(lastUsedAt.timestamp, gptTimeout * 1000)) {
       // we have waited enough for the GPT answer
       await stopWaitingForGptImageGeneration(user);
     } else {
@@ -36,20 +50,41 @@ export async function generateImageWithGpt(ctx: AnyContext, user: User, prompt: 
     }
   }
 
-  // todo: add other intervals
-  if (await isUsageLimitExceeded(user, model, "week")) {
-    await reply(
-      ctx,
-      "Вы превысили лимит генерации картинок на эту неделю. 😥",
-      `Подождите следующей недели или перейдите на тариф с более высоким лимитом: /${commands.premium}`
-    );
+  if (freePlan) {
+    if (isUsageLimitExceeded(user, pureModelCode, "day")) {
+      await reply(
+        ctx,
+        "Вы превысили лимит генерации картинок на сегодня. 😥",
+        `Подождите до завтра или перейдите на тариф с более высоким лимитом: /${commands.premium}`
+      );
+  
+      return false;
+    }
 
-    return false;
+    if (isUsageLimitExceeded(user, pureModelCode, "week")) {
+      await reply(
+        ctx,
+        "Вы превысили лимит генерации картинок на эту неделю. 😥😥",
+        `Подождите следующей недели или перейдите на тариф с более высоким лимитом: /${commands.premium}`
+      );
+  
+      return false;
+    }
+
+    if (isUsageLimitExceeded(user, pureModelCode, "month")) {
+      await reply(
+        ctx,
+        "Вы превысили лимит генерации картинок на этот месяц. 😥😥😥",
+        `Подождите следующего месяца или перейдите на тариф с более высоким лимитом: /${commands.premium}`
+      );
+  
+      return false;
+    }
   }
 
-  if (config.imageInterval > 0 && lastImageAt) {
+  if (config.imageInterval > 0 && lastUsedAt) {
     const seconds = Math.ceil(
-      timeLeft(lastImageAt.timestamp, config.imageInterval) / 1000
+      timeLeft(lastUsedAt.timestamp, config.imageInterval) / 1000
     );
 
     if (seconds > 0) {
@@ -114,6 +149,12 @@ export async function generateImageWithGpt(ctx: AnyContext, user: User, prompt: 
 
       await ctx.replyWithPhoto({ source: stream });
     }
+
+    if (!freePlan) {
+      user = await incProductUsage(user, activeProduct, modelCode);
+    }
+
+    user = await incUsage(user, pureModelCode, requestedAt);
 
     await putMetric("ImageGenerated");
 

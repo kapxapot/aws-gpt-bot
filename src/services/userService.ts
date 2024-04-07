@@ -10,10 +10,11 @@ import { addMessageToHistory, createContext, cutoffMessages, getCurrentHistory, 
 import { isSuccess } from "../lib/error";
 import { PlanSettings } from "../entities/planSettings";
 import { getCurrentSubscription, getSubscriptionPlan } from "./subscriptionService";
-import { getPlanSettings, getPlanSettingsGptModel, getPlanSettingsImageModel } from "./planSettingsService";
+import { getPlanSettings, getPlanSettingsImageModel } from "./planSettingsService";
 import { Plan } from "../entities/plan";
-import { GptModel, ImageModel } from "../entities/model";
-import { PurchasedProduct } from "../entities/product";
+import { ImageModel } from "../entities/model";
+import { PurchasedProduct, isPurchasedProduct } from "../entities/product";
+import { isActiveProduct } from "./productService";
 
 type CurrentContext = {
   prompt: string | null;
@@ -35,10 +36,24 @@ async function checkUserIntegrity(user: User): Promise<User> {
     return user;
   }
 
+  const products = user.events.map(event => userEventToProduct(event));
+
+  return await updateUserProducts(user, products);
+}
+
+export async function updateUserProduct(user: User, product: PurchasedProduct): Promise<User> {
+  const products = user.products
+    ? user.products.map(up => up.id === product.id ? product : up)
+    : [product];
+
+  return await updateUserProducts(user, products);
+}
+
+export async function updateUserProducts(user: User, products: PurchasedProduct[]): Promise<User> {
   return await updateUser(
     user,
     {
-      products: user.events.map(event => userEventToProduct(event))
+      products
     }
   );
 }
@@ -152,11 +167,10 @@ export async function addUserEvent(user: User, event: UserEvent): Promise<User> 
 
   if (event.type === "purchase") {
     // add product
-    const products = user.products ?? [];
-    const product = userEventToProduct(event);
-    products.push(product);
-
-    changes.products = products;
+    changes.products = [
+      ...(user.products ?? []),
+      userEventToProduct(event)
+    ];
   }
 
   return await updateUser(user, changes);
@@ -230,12 +244,19 @@ export function getUserPlanSettings(user: User): PlanSettings {
   return getPlanSettings(plan);
 }
 
-export function getUserGptModel(user: User): GptModel {
-  const settings = getUserPlanSettings(user);
-  return getPlanSettingsGptModel(settings);
-}
-
 export function getUserImageModel(user: User): ImageModel {
   const settings = getUserPlanSettings(user);
   return getPlanSettingsImageModel(settings);
+}
+
+export function getUserPurchasedProducts(user: User): PurchasedProduct[] {
+  return user.products ?? [];
+}
+
+export function getUserActiveProduct(user: User): PurchasedProduct | null {
+  const subscription = getCurrentSubscription(user);
+
+  return isPurchasedProduct(subscription) && isActiveProduct(subscription)
+    ? subscription
+    : null;
 }

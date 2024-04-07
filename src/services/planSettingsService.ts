@@ -1,61 +1,42 @@
 import { Interval } from "../entities/interval";
-import { GptModel, ImageModel, Model, defaultGptModel, defaultImageModel } from "../entities/model";
+import { ImageModel, ModelCode } from "../entities/model";
 import { Plan } from "../entities/plan";
-import { IntervalLike, PlanSettings, planSettings } from "../entities/planSettings";
-import { gptokenGptModel, gptokenImageModel, isGptModel, isImageModel } from "./modelService";
+import { PlanSettings, planSettings } from "../entities/planSettings";
+import { isNumber } from "../lib/common";
+import { getDefaultImageModel, getImageModelByCode, isImageModelCode } from "./modelService";
 import { getUsageLimitDisplayInfo } from "./usageLimitService";
 
 export function getPlanSettings(plan: Plan): PlanSettings {
   return planSettings[plan];
 }
 
-export function getPlanSettingsLimit(settings: PlanSettings, model: Model, interval: IntervalLike): number {
-  if (!settings.limits) {
-    return 0;
+export function getPlanSettingsLimit(settings: PlanSettings, modelCode: ModelCode, interval?: Interval): number {
+  const modelLimits = settings.limits[modelCode];
+
+  if (isNumber(modelLimits)) {
+    return modelLimits;
   }
 
-  const modelLimits = settings.limits[model];
-
-  return modelLimits
+  return interval && modelLimits
     ? modelLimits[interval] ?? 0
     : 0;
 }
 
-export function getPlanSettingsLimitText(planSettings: PlanSettings, model: Model, interval: Interval) {
-  const limit = getPlanSettingsLimit(planSettings, model, interval);
+export function getPlanSettingsLimitText(planSettings: PlanSettings, modelCode: ModelCode, interval: Interval) {
+  const limit = getPlanSettingsLimit(planSettings, modelCode, interval);
   const displayInfo = getUsageLimitDisplayInfo(limit, interval);
 
   return displayInfo.long;
 }
 
-export function getPlanSettingsGptModel(settings: PlanSettings): GptModel {
-  if (settings.gptokens) {
-    return gptokenGptModel;
-  }
-
-  for (const key in settings.limits) {
-    const model = key as Model;
-
-    if (isGptModel(model)) {
-      return model;
-    }
-  }
-
-  return defaultGptModel;
-}
-
 export function getPlanSettingsImageModel(settings: PlanSettings): ImageModel {
-  if (settings.gptokens) {
-    return gptokenImageModel;
-  }
-
   for (const key in settings.limits) {
-    const model = key as Model;
+    const modelCode = key as ModelCode;
 
-    if (isImageModel(model)) {
-      return model;
+    if (isImageModelCode(modelCode)) {
+      return getImageModelByCode(modelCode);
     }
   }
 
-  return defaultImageModel;
+  return getDefaultImageModel();
 }

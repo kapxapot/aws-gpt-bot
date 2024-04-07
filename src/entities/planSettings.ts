@@ -1,62 +1,70 @@
 import { PartialRecord } from "../lib/types";
+import { isProd } from "../services/envService";
 import { Interval } from "./interval";
-import { Model } from "./model";
+import { ModelCode } from "./model";
 import { Plan } from "./plan";
 
-export type IntervalLike = Interval | "product";
-
-type IntervalLimits = PartialRecord<IntervalLike, number>;
-export type ModelLimits = PartialRecord<Model, IntervalLimits>;
+type IntervalLimits = PartialRecord<Interval, number>;
+type ModelLimits = PartialRecord<ModelCode, IntervalLimits | number>;
 
 export type PlanSettings = {
-  active: boolean;
-  limits?: ModelLimits;
-  gptokens?: number;
+  limits: ModelLimits;
+  disabled?: boolean;
 };
 
 export const planSettings: Record<Plan, PlanSettings> = {
   "free": {
-    active: true,
     limits: {
-      "gpt-3.5-turbo-0125": {
+      "gpt3": {
         "day": 5,
         "month": 100
       },
-      "dall-e-3": {
+      "dalle3": {
         "week": 1
       }
     }
   },
   "premium": {
-    active: false,
     limits: {
-      "gpt-3.5-turbo-0125": {
+      "gpt3": {
         "day": 100
       }
-    }
+    },
+    disabled: true
   },
   "unlimited": {
-    active: false,
     limits: {
-      "gpt-3.5-turbo-0125": {
+      "gpt3": {
         "day": Number.POSITIVE_INFINITY
       }
-    }
+    },
+    disabled: true
   },
   "starter": {
-    active: true,
     limits: {
-      "gpt-3.5-turbo-0125": {
-        "product": 500
-      }
+      "gpt3": 500
     }
   },
   "creative": {
-    active: true,
-    gptokens: 100
+    limits: {
+      "gptokens": 100
+    }
   },
   "pro": {
-    active: true,
-    gptokens: 300
+    limits: {
+      "gptokens": 300
+    }
+  },
+  "test-tinygpt3": {
+    limits: {
+      "gpt3": 2
+    },
+    disabled: isProd()
+  },
+  "test-tinygptokens": {
+    limits: {
+      "gptokens": 4
+    },
+    disabled: isProd()
   }
 };

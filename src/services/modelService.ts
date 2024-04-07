@@ -1,12 +1,33 @@
-import { GptModel, ImageModel, Model } from "../entities/model";
+import { GptModel, GptModelCode, ImageModel, ImageModelCode, ModelCode, PureGptModelCode, PureImageModelCode, defaultGptModelCode, defaultImageModelCode, gptModelMap, imageModelMap } from "../entities/model";
 
-export function isGptModel(model: Model): model is GptModel {
-  return model === "gpt-3.5-turbo-0125" || model === "gpt-4-0125-preview";
+export function isGptModelCode(code: ModelCode): code is GptModelCode {
+  return code === "gpt3" || code === "gpt4" || code === "gptokens";
 }
 
-export function isImageModel(model: Model): model is ImageModel {
-  return model === "dall-e-3";
+export function isImageModelCode(code: ModelCode): code is ImageModelCode {
+  return code === "dalle3" || code === "gptokens";
 }
 
-export const gptokenGptModel: GptModel = "gpt-4-0125-preview";
-export const gptokenImageModel: ImageModel = "dall-e-3";
+export function purifyGptModelCode(code: GptModelCode): PureGptModelCode {
+  return code === "gptokens" ? "gpt4" : code;
+}
+
+export function purifyImageModelCode(code: ImageModelCode): PureImageModelCode {
+  return code === "gptokens" ? "dalle3" : code;
+}
+
+export function getGptModelByCode(code: GptModelCode): GptModel {
+  return gptModelMap[purifyGptModelCode(code)];
+}
+
+export function getImageModelByCode(code: ImageModelCode): ImageModel {
+  return imageModelMap[purifyImageModelCode(code)];
+}
+
+export function getDefaultGptModel(): GptModel {
+  return getGptModelByCode(defaultGptModelCode);
+}
+
+export function getDefaultImageModel(): ImageModel {
+  return getImageModelByCode(defaultImageModelCode);
+}

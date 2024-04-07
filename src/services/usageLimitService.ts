@@ -1,5 +1,5 @@
 import { Interval } from "../entities/interval";
-import { Model } from "../entities/model";
+import { ModelCode } from "../entities/model";
 import { User } from "../entities/user";
 import { getPlanSettingsLimit } from "./planSettingsService";
 import { getUserPlanSettings } from "./userService";
@@ -27,14 +27,14 @@ export function getUsageLimitDisplayInfo(limit: number, interval?: Interval): Us
     };
 }
 
-export function getUsageLimitString(user: User, model: Model, interval: Interval): string {
-  const limit = getUsageLimit(user, model, interval);
+export function getUsageLimitString(user: User, modelCode: ModelCode, interval: Interval): string {
+  const limit = getUsageLimit(user, modelCode, interval);
   const displayInfo = getUsageLimitDisplayInfo(limit, interval);
 
   return displayInfo.short;
 }
 
-export function getUsageLimit(user: User, model: Model, interval: Interval): number {
+export function getUsageLimit(user: User, modelCode: ModelCode, interval: Interval): number {
   const settings = getUserPlanSettings(user);
-  return getPlanSettingsLimit(settings, model, interval);
+  return getPlanSettingsLimit(settings, modelCode, interval);
 }

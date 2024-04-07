@@ -1,5 +1,5 @@
 export function toArray<T>(value: T | T[] | undefined | null): T[] {
-  if (value === null || typeof value === "undefined") {
+  if (value === null || isUndefined(value)) {
     return [];
   }
 
@@ -36,4 +36,12 @@ export function phoneToItu(phone: string | undefined): string | null {
   }
 
   return phone.replace(/\D/g, '') || null;
+}
+
+export function isNumber(v: unknown): v is number {
+  return typeof v === "number";
+}
+
+export function isUndefined(v: unknown): v is undefined {
+  return typeof v === "undefined";
 }

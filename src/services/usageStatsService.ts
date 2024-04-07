@@ -1,122 +1,82 @@
 import { At, at, now } from "../entities/at";
 import { Interval, intervals } from "../entities/interval";
-import { Model } from "../entities/model";
-import { IntervalUsage, IntervalUsages, ModelUsage, UsageStats, User } from "../entities/user";
+import { PureModelCode } from "../entities/model";
+import { UserModelUsage } from "../entities/modelUsage";
+import { UsageStats, User } from "../entities/user";
 import { updateUser } from "../storage/userStorage";
 import { startOf } from "./dateService";
+import { buildIntervalUsages, getIntervalUsage, incIntervalUsage } from "./intervalUsageService";
 import { getUsageLimit } from "./usageLimitService";
 
-async function updateUsageStats(user: User, usageStats: UsageStats): Promise<User> {
-  return await updateUser(
-    user,
-    {
-      usageStats
-    }
-  );
-}
-
-export function getModelUsage(usageStats: UsageStats, model: Model): ModelUsage | null {
-  return usageStats.modelUsages
-    ? usageStats.modelUsages[model] ?? null
-    : null;
-}
-
-function setModelUsage(usageStats: UsageStats, model: Model, modelUsage: ModelUsage): UsageStats {
-  return {
-    ...usageStats,
-    modelUsages: {
-      ...usageStats.modelUsages,
-      [model]: modelUsage
-    }
-  };
-}
-
-function getIntervalUsage(modelUsage: ModelUsage, interval: Interval): IntervalUsage | null {
-  return modelUsage.intervalUsages
-    ? modelUsage.intervalUsages[interval] ?? null
-    : null;
-}
-
-function setIntervalUsage(modelUsage: ModelUsage, interval: Interval, intervalUsage: IntervalUsage): ModelUsage {
-  return {
-    ...modelUsage,
-    intervalUsages: {
-      ...modelUsage.intervalUsages,
-      [interval]: intervalUsage
-    }
-  };
-}
-
-export function getLastUsedAt(usageStats: UsageStats | undefined, model: Model): At | null {
+export function getLastUsedAt(usageStats: UsageStats | undefined, modelCode: PureModelCode): At | null {
   if (!usageStats) {
     return null;
   }
 
-  const modelUsage = getModelUsage(usageStats, model);
+  const modelUsage = getModelUsage(usageStats, modelCode);
 
   if (modelUsage) {
     return modelUsage.lastUsedAt;
   }
 
   // backfill for gpt-3
-  if (model === "gpt-3.5-turbo-0125" && usageStats.lastMessageAt) {
+  if (modelCode === "gpt3" && usageStats.lastMessageAt) {
     return usageStats.lastMessageAt;
   }
 
   return null;
 }
 
-export function getUsageCount(usageStats: UsageStats | undefined, model: Model, interval: Interval): number {
+export function getUsageCount(
+  usageStats: UsageStats | undefined,
+  modelCode: PureModelCode,
+  interval: Interval
+): number {
   if (!usageStats) {
     return 0;
   }
 
-  const modelUsage = getModelUsage(usageStats, model);
+  const then = now();
+  const modelUsage = getModelUsage(usageStats, modelCode);
 
   if (modelUsage) {
     const intervalUsage = getIntervalUsage(modelUsage, interval);
 
-    if (intervalUsage) {
+    if (intervalUsage && intervalUsage.startedAt.timestamp === startOf(interval, then)) {
       return intervalUsage.count;
     }
   }
 
   // backfill for gpt-3
-  if (model === "gpt-3.5-turbo-0125") {
-    return usageStats.messageCount ?? 0;
+  if (modelCode === "gpt3"
+    && usageStats.messageCount
+    && usageStats.startOfDay === startOf("day", then)
+  ) {
+    return usageStats.messageCount;
   }
 
   return 0;
 }
 
-export async function incUsage(user: User, model: Model, usedAt: At): Promise<User> {
+export async function incUsage(user: User, modelCode: PureModelCode, usedAt: At): Promise<User> {
   const usageStats = user.usageStats ?? {};
-  let modelUsage = getModelUsage(usageStats, model);
+  let modelUsage = getModelUsage(usageStats, modelCode);
   const then = now();
 
   if (modelUsage) {
     // update interval usages
     for (const interval of intervals) {
-      const start = startOf(interval, then);
-      let intervalUsage = getIntervalUsage(modelUsage, interval);
-
-      if (intervalUsage && intervalUsage.startedAt.timestamp === start) {
-        intervalUsage.count++;
-      } else {
-        intervalUsage = buildIntervalUsage(interval, then);
-      }
-
-      modelUsage = setIntervalUsage(modelUsage, interval, intervalUsage);
+      modelUsage = incIntervalUsage(modelUsage, interval, then);
     }
   } else {
     // build fresh model usage
     modelUsage = buildModelUsage(usedAt, then);
 
     // backfill for gpt-3
-    if (model === "gpt-3.5-turbo-0125") {
+    if (modelCode === "gpt3") {
       const startOfDay = startOf("day", then);
 
-      if (usageStats.startOfDay === startOfDay && usageStats.messageCount) {
+      if (usageStats.messageCount && usageStats.startOfDay === startOfDay) {
         modelUsage.intervalUsages["day"] = {
           startedAt: at(startOfDay),
           count: usageStats.messageCount + 1
@@ -127,52 +87,57 @@ export async function incUsage(user: User, model: Model, usedAt: At): Promise<Us
 
   return await updateUsageStats(
     user,
-    setModelUsage(usageStats, model, modelUsage)
+    setModelUsage(usageStats, modelCode, modelUsage)
   );
 }
 
-export async function isUsageLimitExceeded(user: User, model: Model, interval: Interval): Promise<boolean> {
-  if (!user.usageStats) {
-    return false;
+export function isUsageLimitExceeded(
+  user: User,
+  modelCode: PureModelCode,
+  interval: Interval
+): boolean {
+  const usageCount = getUsageCount(user.usageStats, modelCode, interval);
+  const limit = getUsageLimit(user, modelCode, interval);
+
+  if (!limit) {
+    return true; // no limit = exceeded
   }
 
-  const modelUsage = getModelUsage(user.usageStats, model);
-
-  if (!modelUsage) {
-    return false;
-  }
-
-  const intervalUsage = getIntervalUsage(modelUsage, interval);
-
-  if (!intervalUsage) {
-    return false;
-  }
-
-  const start = startOf(interval);
-
-  if (intervalUsage.startedAt.timestamp !== start) {
-    return false;
-  }
-
-  return intervalUsage.count >= getUsageLimit(user, model, interval);
+  return usageCount >= limit;
 }
 
-function buildModelUsage(usedAt: At, now: At): ModelUsage {
+export function getModelUsage(usageStats: UsageStats, modelCode: PureModelCode): UserModelUsage | null {
+  return usageStats.modelUsages
+    ? usageStats.modelUsages[modelCode] ?? null
+    : null;
+}
+
+function setModelUsage(
+  usageStats: UsageStats,
+  modelCode: PureModelCode,
+  modelUsage: UserModelUsage
+): UsageStats {
   return {
-    intervalUsages: intervals.reduce(
-      (accum: IntervalUsages, val: Interval) => ({
-        ...accum,
-        [val]: buildIntervalUsage(val, now)
-      }),
-      {}
-    ),
+    ...usageStats,
+    modelUsages: {
+      ...usageStats.modelUsages,
+      [modelCode]: modelUsage
+    }
+  };
+}
+
+function buildModelUsage(usedAt: At, now: At): UserModelUsage {
+  return {
+    intervalUsages: buildIntervalUsages(now),
     lastUsedAt: usedAt
   };
 }
 
-function buildIntervalUsage(interval: Interval, now: At): IntervalUsage {
-  return {
-    startedAt: at(startOf(interval, now)),
-    count: 1
-  };
+async function updateUsageStats(user: User, usageStats: UsageStats): Promise<User> {
+  return await updateUser(
+    user,
+    {
+      usageStats
+    }
+  );
 }

@@ -1,4 +1,4 @@
-import { phoneToItu, toSanitizedArray, toText } from "../../src/lib/common";
+import { isNumber, phoneToItu, toSanitizedArray, toText } from "../../src/lib/common";
 
 describe("toText", () => {
   test("should concat strings into text", () => {
@@ -33,4 +33,22 @@ describe("phoneToItu", () => {
   test("should return only numbers", () => {
     expect(phoneToItu(" adfg89314958dkafljgalg 89 ")).toBe("8931495889");
   })
+});
+
+describe("isNumber", () => {
+  test("works for numbers", () => {
+    expect(isNumber(123)).toBe(true)
+  });
+
+  test("doesn't work for non-numbers", () => {
+    expect([
+      isNumber({}),
+      isNumber(null),
+      isNumber("abc")
+    ]).toEqual([
+      false,
+      false,
+      false
+    ])
+  });
 });

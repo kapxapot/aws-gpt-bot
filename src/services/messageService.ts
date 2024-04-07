@@ -6,7 +6,7 @@ import { truncate } from "../lib/common";
 import { isSuccess } from "../lib/error";
 import { clearAndLeave, encodeText, reply } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
-import { addMessageToUser, getLastHistoryMessage, getOrAddUser, getUserGptModel, stopWaitingForGptAnswer, waitForGptAnswer } from "./userService";
+import { addMessageToUser, getLastHistoryMessage, getOrAddUser, getUserActiveProduct, stopWaitingForGptAnswer, waitForGptAnswer } from "./userService";
 import { commands } from "../lib/constants";
 import { formatSubscription, getCurrentSubscription } from "./subscriptionService";
 import { getCurrentHistory } from "./contextService";
@@ -18,20 +18,33 @@ import { gptTimeout } from "./gptService";
 import { happened, timeLeft } from "./dateService";
 import { AnyContext } from "../telegram/botContext";
 import { getUsageLimitString } from "./usageLimitService";
-import { GptModel } from "../entities/model";
+import { PureGptModelCode, defaultGptModelCode } from "../entities/model";
 import { getLastUsedAt, getUsageCount, incUsage, isUsageLimitExceeded } from "./usageStatsService";
-import { getProductTypeDisplayName } from "./productService";
+import { getAvailableGptModel, getProductTypeDisplayName } from "./productService";
+import { getGptModelByCode, purifyGptModelCode } from "./modelService";
+import { incProductUsage } from "./productUsageService";
 
 const config = {
   messageInterval: parseInt(process.env.MESSAGE_INTERVAL ?? "15") * 1000, // milliseconds
 };
 
 export async function sendMessageToGpt(ctx: AnyContext, user: User, question: string, requestedAt?: number) {
-  const model = getUserGptModel(user);
-  const lastMessageAt = getLastUsedAt(user.usageStats, model);
+  const activeProduct = getUserActiveProduct(user);
+
+  const productModelCode = activeProduct
+    ? getAvailableGptModel(activeProduct)
+    : null;
+
+  const freePlan = !activeProduct || !productModelCode;
+
+  const modelCode = productModelCode ?? defaultGptModelCode;
+  const pureModelCode = purifyGptModelCode(modelCode);
+  const model = getGptModelByCode(modelCode);
+
+  const lastUsedAt = getLastUsedAt(user.usageStats, pureModelCode);
 
   if (user.waitingForGptAnswer) {
-    if (lastMessageAt && happened(lastMessageAt.timestamp, gptTimeout * 1000)) {
+    if (lastUsedAt && happened(lastUsedAt.timestamp, gptTimeout * 1000)) {
       // we have waited enough for the GPT answer
       await stopWaitingForGptAnswer(user);
     } else {
@@ -40,20 +53,41 @@ export async function sendMessageToGpt(ctx: AnyContext, user: User, question: st
     }
   }
 
-  // todo: add other intervals
-  if (await isUsageLimitExceeded(user, model, "day")) {
-    await reply(
-      ctx,
-      "Вы превысили лимит сообщений на сегодня. 😥",
-      `Приходите завтра или перейдите на тариф с более высоким лимитом: /${commands.premium}`
-    );
+  if (freePlan) {
+    if (isUsageLimitExceeded(user, pureModelCode, "day")) {
+      await reply(
+        ctx,
+        "Вы превысили лимит сообщений на сегодня. 😥",
+        `Подождите до завтра или перейдите на тариф с более высоким лимитом: /${commands.premium}`
+      );
 
-    return;
+      return;
+    }
+
+    if (isUsageLimitExceeded(user, pureModelCode, "week")) {
+      await reply(
+        ctx,
+        "Вы превысили лимит сообщений на эту наделю. 😥😥",
+        `Подождите следующей недели или перейдите на тариф с более высоким лимитом: /${commands.premium}`
+      );
+
+      return;
+    }
+
+    if (isUsageLimitExceeded(user, pureModelCode, "month")) {
+      await reply(
+        ctx,
+        "Вы превысили лимит сообщений на этот месяц. 😥😥😥",
+        `Приходите в следующей месяце или перейдите на тариф с более высоким лимитом: /${commands.premium}`
+      );
+
+      return;
+    }
   }
 
-  if (config.messageInterval > 0 && lastMessageAt) {
+  if (config.messageInterval > 0 && lastUsedAt) {
     const seconds = Math.ceil(
-      timeLeft(lastMessageAt.timestamp, config.messageInterval) / 1000
+      timeLeft(lastUsedAt.timestamp, config.messageInterval) / 1000
     );
 
     if (seconds > 0) {
@@ -94,7 +128,11 @@ export async function sendMessageToGpt(ctx: AnyContext, user: User, question: st
         : "Нет ответа от ChatGPT. 😣"
     );
 
-    user = await incUsage(user, model, message.requestedAt);
+    if (!freePlan) {
+      user = await incProductUsage(user, activeProduct, modelCode);
+    }
+
+    user = await incUsage(user, pureModelCode, message.requestedAt);
   } else {
     let errorMessage = answer.message;
 
@@ -114,7 +152,7 @@ export async function sendMessageToGpt(ctx: AnyContext, user: User, question: st
   showInfo(
     ctx,
     user,
-    model,
+    pureModelCode,
     isSuccess(answer) ? answer : null
   );
 
@@ -155,7 +193,7 @@ function formatGptMessage(message: string): string {
     return `🤖 ${encodeText(message)}`;
 }
 
-export async function showInfo(ctx: AnyContext, user: User, model: GptModel, answer: Completion | null) {
+export async function showInfo(ctx: AnyContext, user: User, modelCode: PureGptModelCode, answer: Completion | null) {
   const chunks = [];
 
   chunks.push(`📌 Режим: <b>${getModeName(user)}</b>`);
@@ -182,7 +220,7 @@ export async function showInfo(ctx: AnyContext, user: User, model: GptModel, ans
       }
     }
 
-    chunks.push(`модель запроса: ${model}`);
+    chunks.push(`модель запроса: ${modelCode}`);
 
     if (answer?.model) {
       chunks.push(`модель ответа: ${answer.model}`);
@@ -190,7 +228,7 @@ export async function showInfo(ctx: AnyContext, user: User, model: GptModel, ans
   }
 
   if (user.usageStats) {
-    chunks.push(`сообщений сегодня: ${getUsageCount(user.usageStats, model, "day")}/${getUsageLimitString(user, model, "day")}`);
+    chunks.push(`сообщений сегодня: ${getUsageCount(user.usageStats, modelCode, "day")}/${getUsageLimitString(user, modelCode, "day")}`);
   }
 
   await reply(ctx, chunks.join(", "));

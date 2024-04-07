@@ -1,7 +1,7 @@
 import { PartialRecord } from "../lib/types";
 import { At } from "./at";
 import { GrammarCase, KnownWord } from "./grammar";
-import { Model } from "./model";
+import { ProductUsage } from "./modelUsage";
 import { Money } from "./money";
 import { Plan } from "./plan";
 
@@ -27,6 +27,8 @@ export const productCodes = [
   "bundle-starter-30-days",
   "bundle-creative-30-days",
   "bundle-pro-30-days",
+  "test-bundle-tiny-gpt3-1-day",
+  "test-bundle-tiny-gptokens-1-day"
 ] as const;
 
 export type ProductCode = typeof productCodes[number];
@@ -41,12 +43,6 @@ export type Product = Subscription & {
     };
   };
 };
-
-type ModelUsage = {
-  count: number;
-}
-
-type ProductUsage = PartialRecord<Model, ModelUsage>;
 
 export type PurchasedProduct = Product & {
   id: string;
@@ -180,6 +176,52 @@ export function monthlyProBundle(): Product {
       plan: "pro",
       term: {
         range: 30,
+        unit: "day"
+      }
+    }
+  };
+}
+
+/**
+ * FOR TEST PURPOSES ONLY!
+ */
+export function testTinyGpt3Bundle(): Product {
+  return {
+    code: "test-bundle-tiny-gpt3-1-day",
+    name: "Test Tiny Bundle GPT-3 - 1 Day",
+    displayNames: {},
+    price: {
+      currency: "RUB",
+      amount: 9999
+    },
+    details: {
+      type: "bundle",
+      plan: "test-tinygpt3",
+      term: {
+        range: 1,
+        unit: "day"
+      }
+    }
+  };
+}
+
+/**
+ * FOR TEST PURPOSES ONLY!
+ */
+export function testTinyGptokenBundle(): Product {
+  return {
+    code: "test-bundle-tiny-gptokens-1-day",
+    name: "Test Tiny Bundle GPToken - 1 Day",
+    displayNames: {},
+    price: {
+      currency: "RUB",
+      amount: 9999
+    },
+    details: {
+      type: "bundle",
+      plan: "test-tinygptokens",
+      term: {
+        range: 1,
         unit: "day"
       }
     }

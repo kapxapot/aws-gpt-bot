@@ -1,6 +1,19 @@
+import { ts } from "../entities/at";
 import { GrammarCase } from "../entities/grammar";
-import { Product, ProductCode, Subscription, monthlyCreativeBundle, monthlyPremiumSubscription, monthlyProBundle, monthlyStarterBundle, monthlyUnlimitedSubscription, productTypeDisplayNames } from "../entities/product";
+import { GptModelCode, ImageModelCode, ModelCode } from "../entities/model";
+import { PlanSettings } from "../entities/planSettings";
+import { Product, ProductCode, PurchasedProduct, Subscription, monthlyCreativeBundle, monthlyPremiumSubscription, monthlyProBundle, monthlyStarterBundle, monthlyUnlimitedSubscription, productTypeDisplayNames, testTinyGpt3Bundle, testTinyGptokenBundle } from "../entities/product";
+import { addDays, isInRange } from "./dateService";
 import { getCase } from "./grammarService";
+import { isGptModelCode, isImageModelCode } from "./modelService";
+import { getPlanSettings } from "./planSettingsService";
+import { isProductUsageExceeded } from "./productUsageService";
+import { getSubscriptionPlan } from "./subscriptionService";
+
+type TimestampRange = {
+  start: number;
+  end: number;
+};
 
 export function getProductFullDisplayName(product: Subscription, targetCase?: GrammarCase) {
   const productTypeName = getProductTypeDisplayName(product, targetCase);
@@ -36,5 +49,57 @@ export function getProductByCode(code: ProductCode): Product {
 
     case "bundle-pro-30-days":
       return monthlyProBundle();
+
+    case "test-bundle-tiny-gpt3-1-day":
+      return testTinyGpt3Bundle();
+
+    case "test-bundle-tiny-gptokens-1-day":
+      return testTinyGptokenBundle();
   }
+}
+
+export function isActiveProduct(product: PurchasedProduct): boolean {
+  return !isProductExpired(product) && !isProductExhausted(product);
+}
+
+function isProductExpired(product: PurchasedProduct): boolean {
+  const { start, end } = getProductTimestampRange(product);
+  return !isInRange(ts(), start, end);
+}
+
+const isProductExhausted = (product: PurchasedProduct) =>
+  getProductModels(product)
+    .every(modelCode => isProductUsageExceeded(product, modelCode));
+
+export function getProductTimestampRange(product: PurchasedProduct): TimestampRange {
+  const start = product.purchasedAt.timestamp;
+  const end = addDays(start, product.details.term.range + 1);
+
+  return { start, end };
+}
+
+export function getProductPlanSettings(product: PurchasedProduct): PlanSettings {
+  const plan = getSubscriptionPlan(product);
+  return getPlanSettings(plan);
+}
+
+export function getAvailableGptModel(product: PurchasedProduct): GptModelCode | null {
+  const modelCodes = getProductModels(product)
+    .filter(modelCode => isGptModelCode(modelCode)) as GptModelCode[];
+
+  return modelCodes.find(modelCode => !isProductUsageExceeded(product, modelCode))
+    ?? null;
+}
+
+export function getAvailableImageModel(product: PurchasedProduct): ImageModelCode | null {
+  const modelCodes = getProductModels(product)
+    .filter(modelCode => isImageModelCode(modelCode)) as ImageModelCode[];
+
+  return modelCodes.find(modelCode => !isProductUsageExceeded(product, modelCode))
+    ?? null;
+}
+
+function getProductModels(product: PurchasedProduct): ModelCode[] {
+  const planSettings = getProductPlanSettings(product);
+  return Object.keys(planSettings.limits) as ModelCode[];
 }

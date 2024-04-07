@@ -1,8 +1,7 @@
-import { Entity, PartialRecord } from "../lib/types";
+import { Entity } from "../lib/types";
 import { At } from "./at";
 import { Context } from "./context";
-import { Interval } from "./interval";
-import { Model } from "./model";
+import { UserModelUsages } from "./modelUsage";
 import { Product, PurchasedProduct } from "./product";
 
 export type UserEvent = {
@@ -11,20 +10,6 @@ export type UserEvent = {
   at: At;
 };
 
-export type IntervalUsage = {
-  startedAt: At;
-  count: number;
-}
-
-export type IntervalUsages = PartialRecord<Interval, IntervalUsage>;
-
-export type ModelUsage = {
-  lastUsedAt: At;
-  intervalUsages: IntervalUsages;
-}
-
-export type ModelUsages = PartialRecord<Model, ModelUsage>;
-
 export type UsageStats = {
   /** @deprecated Remove in 0.3.0 */
   startOfDay?: number;
@@ -32,7 +17,7 @@ export type UsageStats = {
   messageCount?: number;
   /** @deprecated Remove in 0.3.0 */
   lastMessageAt?: At;
-  modelUsages?: ModelUsages;
+  modelUsages?: UserModelUsages;
 };
 
 export type UserSettings = {
