@@ -32,7 +32,7 @@ export const getOrAddUser = async (userData: TelegrafUser): Promise<User> => {
  * Creates products for events if they are not defined.
  */
 async function checkUserIntegrity(user: User): Promise<User> {
-  if (!user.events) {
+  if (user.products || !user.events) {
     return user;
   }
 
