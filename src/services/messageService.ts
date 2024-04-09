@@ -1,5 +1,5 @@
 import { ts } from "../entities/at";
-import { getModeByCode, getModeName } from "../entities/prompt";
+import { getModeName } from "../entities/prompt";
 import { User } from "../entities/user";
 import { gptChatCompletion } from "../external/gptChatCompletion";
 import { commatize, truncate } from "../lib/common";
@@ -210,7 +210,7 @@ export async function showInfo(
   answer: Completion | null,
   product: PurchasedProduct | null = null
 ) {
-  const model = getModeByCode(modelCode);
+  const model = getGptModelByCode(modelCode);
   const chunks: string[] = [];
 
   chunks.push(`📌 Режим: <b>${getModeName(user)}</b>`);
