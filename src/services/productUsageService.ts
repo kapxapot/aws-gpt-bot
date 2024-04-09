@@ -3,12 +3,11 @@ import { Interval, intervals } from "../entities/interval";
 import { ModelCode } from "../entities/model";
 import { ProductModelUsage, ProductUsage } from "../entities/modelUsage";
 import { PurchasedProduct } from "../entities/product";
-import { User } from "../entities/user";
 import { isNumber } from "../lib/common";
+import { settings } from "../lib/constants";
 import { startOf } from "./dateService";
 import { buildIntervalUsages, getIntervalUsage, incIntervalUsage } from "./intervalUsageService";
 import { getProductPlanSettings } from "./productService";
-import { updateUserProduct } from "./userService";
 
 export function isProductUsageExceeded(product: PurchasedProduct, modelCode: ModelCode): boolean {
   const usage = product.usage;
@@ -37,30 +36,31 @@ export function isProductUsageExceeded(product: PurchasedProduct, modelCode: Mod
   });
 }
 
-export async function incProductUsage(
-  user: User,
-  product: PurchasedProduct,
-  modelCode: ModelCode
-): Promise<User> {
-  const usage = product.usage;
+/**
+ * @param {At | undefined} when For testing purposes.
+ */
+export function incProductUsage(
+  usage: ProductUsage,
+  modelCode: ModelCode,
+  usagePoints: number = settings.defaultUsagePoints,
+  when?: At
+): ProductUsage {
   let modelUsage = getProductModelUsage(usage, modelCode);
-  const then = now();
+  const then = when ?? now();
 
   if (!modelUsage) {
     // build fresh model usage
-    modelUsage = buildModelUsage(then);
+    modelUsage = buildModelUsage(then, usagePoints);
   } else {
-    modelUsage.count++;
+    modelUsage.count += usagePoints;
 
     // update interval usages
     for (const interval of intervals) {
-      modelUsage = incIntervalUsage(modelUsage, interval, then);
+      modelUsage = incIntervalUsage(modelUsage, interval, then, usagePoints);
     }
   }
 
-  product.usage = setProductModelUsage(usage, modelCode, modelUsage)
-
-  return await updateUserProduct(user, product);
+  return setProductModelUsage(usage, modelCode, modelUsage)
 }
 
 function getProductUsageCount(usage: ProductUsage, modelCode: ModelCode): number {
@@ -90,10 +90,10 @@ function getProductIntervalUsageCount(
     : 0;
 }
 
-function buildModelUsage(now: At): ProductModelUsage {
+export function buildModelUsage(now: At, usagePoints: number): ProductModelUsage {
   return {
-    count: 0,
-    intervalUsages: buildIntervalUsages(now)
+    count: usagePoints,
+    intervalUsages: buildIntervalUsages(now, usagePoints)
   };
 }
 

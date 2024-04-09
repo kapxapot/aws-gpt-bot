@@ -6,7 +6,7 @@ import { truncate } from "../lib/common";
 import { isSuccess } from "../lib/error";
 import { clearAndLeave, encodeText, reply } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
-import { addMessageToUser, getLastHistoryMessage, getOrAddUser, getUserActiveProduct, stopWaitingForGptAnswer, waitForGptAnswer } from "./userService";
+import { addMessageToUser, getLastHistoryMessage, getOrAddUser, getUserActiveProduct, stopWaitingForGptAnswer, updateUserProduct, waitForGptAnswer } from "./userService";
 import { commands } from "../lib/constants";
 import { formatSubscription, getCurrentSubscription } from "./subscriptionService";
 import { getCurrentHistory } from "./contextService";
@@ -23,6 +23,7 @@ import { getLastUsedAt, getUsageCount, incUsage, isUsageLimitExceeded } from "./
 import { getAvailableGptModel, getProductTypeDisplayName } from "./productService";
 import { getGptModelByCode, purifyGptModelCode } from "./modelService";
 import { incProductUsage } from "./productUsageService";
+import { getGptModelUsagePoints } from "./modelUsageService";
 
 const config = {
   messageInterval: parseInt(process.env.MESSAGE_INTERVAL ?? "15") * 1000, // milliseconds
@@ -129,7 +130,15 @@ export async function sendMessageToGpt(ctx: AnyContext, user: User, question: st
     );
 
     if (!freePlan) {
-      user = await incProductUsage(user, activeProduct, modelCode);
+      const usagePoints = getGptModelUsagePoints(modelCode);
+
+      activeProduct.usage = incProductUsage(
+        activeProduct.usage,
+        modelCode,
+        usagePoints
+      );
+
+      user = await updateUserProduct(user, activeProduct);
     }
 
     user = await incUsage(user, pureModelCode, message.requestedAt);

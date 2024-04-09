@@ -1,5 +1,5 @@
 import { now } from "../entities/at";
-import { defaultImageModelCode, defaultImageSize } from "../entities/model";
+import { ImageQuality, ImageSize, defaultImageModelCode, defaultImageSize } from "../entities/model";
 import { User } from "../entities/user";
 import { gptImageGeneration } from "../external/gptImageGeneration";
 import { getCaseByNumber } from "./grammarService";
@@ -14,11 +14,12 @@ import { happened, timeLeft } from "./dateService";
 import { gptTimeout } from "./gptService";
 import { putMetric } from "./metricService";
 import { getLastUsedAt, incUsage, isUsageLimitExceeded } from "./usageStatsService";
-import { getUserActiveProduct, stopWaitingForGptImageGeneration, waitForGptImageGeneration } from "./userService";
+import { getUserActiveProduct, stopWaitingForGptImageGeneration, updateUserProduct, waitForGptImageGeneration } from "./userService";
 import { PassThrough } from "stream";
 import { getAvailableImageModel } from "./productService";
 import { getImageModelByCode, purifyImageModelCode } from "./modelService";
 import { incProductUsage } from "./productUsageService";
+import { getImageModelUsagePoints } from "./modelUsageService";
 
 const config = {
   imageInterval: parseInt(process.env.IMAGE_INTERVAL ?? "60") * 1000, // milliseconds
@@ -99,10 +100,14 @@ export async function generateImageWithGpt(ctx: AnyContext, user: User, prompt: 
 
   const messages = await reply(ctx, "👨‍🎨 Рисую вашу картинку, подождите... ⏳");
 
+  const imageSize: ImageSize = defaultImageSize;
+  const imageQuality: ImageQuality | undefined = undefined;
+
   let imageRequest = await storeImageRequest({
     userId: user.id,
     model,
-    size: defaultImageSize,
+    size: imageSize,
+    quality: imageQuality,
     prompt,
     responseFormat: "url",
     requestedAt,
@@ -151,7 +156,15 @@ export async function generateImageWithGpt(ctx: AnyContext, user: User, prompt: 
     }
 
     if (!freePlan) {
-      user = await incProductUsage(user, activeProduct, modelCode);
+      const usagePoints = getImageModelUsagePoints(modelCode, imageSize, imageQuality);
+
+      activeProduct.usage = incProductUsage(
+        activeProduct.usage,
+        modelCode,
+        usagePoints
+      );
+
+      user = await updateUserProduct(user, activeProduct);
     }
 
     user = await incUsage(user, pureModelCode, requestedAt);

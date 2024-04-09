@@ -2,14 +2,15 @@ import { GptModel, ImageModel, ImageQuality, ImageSize } from "./model";
 import { Money } from "./money";
 
 type TextPrice = {
-  inputPrice: Money;
-  outputPrice: Money;
+  inputPrice: number;
+  outputPrice: number;
+  avgPrice: number;
 };
 
 type ImagePrice = {
   size: ImageSize;
   quality?: ImageQuality;
-  price: Money;
+  price: number;
 }
 
 const gptokenPrice: Money = {
@@ -17,6 +18,7 @@ const gptokenPrice: Money = {
   currency: "USD"
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function gptokens(count: number): Money {
   return {
     amount: gptokenPrice.amount * count,
@@ -26,12 +28,14 @@ function gptokens(count: number): Money {
 
 export const textPrices: Record<GptModel, TextPrice> = {
   "gpt-3.5-turbo-0125": {
-    inputPrice: gptokens(0.025), // 0.0005
-    outputPrice: gptokens(0.075) // 0.0015
+    inputPrice: 0.025, // $0.0005
+    outputPrice: 0.075, // $0.0015
+    avgPrice: 0.05
   },
   "gpt-4-0125-preview": {
-    inputPrice: gptokens(0.5), // 0.01
-    outputPrice: gptokens(1.5) // 0.03
+    inputPrice: 0.5, // $0.01
+    outputPrice: 1.5, // $0.03
+    avgPrice: 1
   }
 };
 
@@ -39,30 +43,30 @@ export const imagePrices: Record<ImageModel, ImagePrice[]> = {
   "dall-e-3": [
     {
       size: "1024x1024",
-      price: gptokens(2) // 0.04
+      price: 2 // $0.04
     },
     {
       size: "1024x1792",
-      price: gptokens(4) // 0.08
+      price: 4 // $0.08
     },
     {
       size: "1792x1024",
-      price: gptokens(4) // 0.08
+      price: 4 // $0.08
     },
     {
       size: "1024x1024",
       quality: "hd",
-      price: gptokens(4) // 0.08
+      price: 4 // $0.08
     },
     {
       size: "1024x1792",
       quality: "hd",
-      price: gptokens(6) // 0.12
+      price: 6 // $0.12
     },
     {
       size: "1792x1024",
       quality: "hd",
-      price: gptokens(6) // 0.12
+      price: 6 // $0.12
     },
   ]
 };

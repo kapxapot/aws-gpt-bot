@@ -3,5 +3,12 @@ import { imagePrices, textPrices } from "../entities/price";
 
 export const getGptModelPrices = (model: GptModel) => textPrices[model];
 
-export const getImageModelPrice = (model: ImageModel, size: ImageSize, quality?: ImageQuality) =>
-  imagePrices[model].find(entry => entry.size === size && entry.quality === quality);
+export const getImageModelPrice = (model: ImageModel, size: ImageSize, quality?: ImageQuality) => {
+  const price = imagePrices[model].find(entry => entry.size === size && entry.quality === quality);
+
+  if (!price) {
+    throw new Error(`The price is not defined for image model ${model}, size ${size} and quality ${quality}.`);
+  }
+
+  return price;
+}

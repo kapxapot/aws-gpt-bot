@@ -40,5 +40,6 @@ export const settings = {
   telegram: {
     maxMessageLength: 4096,
     maxButtonTextLength: 14
-  }
+  },
+  defaultUsagePoints: 1
 } as const;
