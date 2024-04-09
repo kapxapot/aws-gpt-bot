@@ -2,7 +2,7 @@ import { BaseScene } from "telegraf/scenes";
 import { AnyContext, BotContext } from "../botContext";
 import { commands, scenes } from "../../lib/constants";
 import { addOtherCommandHandlers, backToMainDialogHandler, dunnoHandler, kickHandler } from "../handlers";
-import { clearInlineKeyboard, contactKeyboard, emptyKeyboard, inlineKeyboard, reply, replyBackToMainDialog, replyWithKeyboard } from "../../lib/telegram";
+import { clearInlineKeyboard, contactKeyboard, contactRequestLabel, emptyKeyboard, inlineKeyboard, reply, replyBackToMainDialog, replyWithKeyboard } from "../../lib/telegram";
 import { PaymentEvent } from "../../entities/payment";
 import { storePayment } from "../../storage/paymentStorage";
 import { yooMoneyPayment } from "../../external/yooMoneyPayment";
@@ -109,6 +109,7 @@ async function askForPhone(ctx: AnyContext) {
     toText(
       "📱 Пожалуйста, предоставьте номер вашего телефона.",
       "Это нужно для автоматической отправки чеков.",
+      `Нажмите кнопку "${contactRequestLabel}" (Telegram отправит его автоматически).`,
       "👇"
     ),
     contactKeyboard()

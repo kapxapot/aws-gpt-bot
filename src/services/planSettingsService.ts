@@ -1,32 +1,41 @@
 import { Interval } from "../entities/interval";
 import { ImageModel, ModelCode } from "../entities/model";
 import { Plan } from "../entities/plan";
-import { PlanSettings, planSettings } from "../entities/planSettings";
+import { ModelLimit, PlanSettings, planSettings } from "../entities/planSettings";
 import { isNumber } from "../lib/common";
 import { getDefaultImageModel, getImageModelByCode, isImageModelCode } from "./modelService";
-import { getUsageLimitDisplayInfo } from "./usageLimitService";
+import { getUsageLimitText } from "./usageLimitService";
 
 export function getPlanSettings(plan: Plan): PlanSettings {
   return planSettings[plan];
 }
 
-export function getPlanSettingsLimit(settings: PlanSettings, modelCode: ModelCode, interval?: Interval): number {
-  const modelLimits = settings.limits[modelCode];
+export function getPlanSettingsModelLimit(
+  settings: PlanSettings,
+  modelCode: ModelCode
+): ModelLimit | null {
+  return settings.limits[modelCode] ?? null;
+}
 
-  if (isNumber(modelLimits)) {
-    return modelLimits;
+export function getPlanSettingsLimit(settings: PlanSettings, modelCode: ModelCode, interval?: Interval): number {
+  const modelLimit = getPlanSettingsModelLimit(settings, modelCode);
+
+  if (!modelLimit) {
+    return 0;
   }
 
-  return interval && modelLimits
-    ? modelLimits[interval] ?? 0
+  if (isNumber(modelLimit)) {
+    return modelLimit;
+  }
+
+  return interval
+    ? modelLimit[interval] ?? 0
     : 0;
 }
 
 export function getPlanSettingsLimitText(planSettings: PlanSettings, modelCode: ModelCode, interval: Interval) {
   const limit = getPlanSettingsLimit(planSettings, modelCode, interval);
-  const displayInfo = getUsageLimitDisplayInfo(limit, interval);
-
-  return displayInfo.long;
+  return getUsageLimitText(limit, interval);
 }
 
 export function getPlanSettingsImageModel(settings: PlanSettings): ImageModel {

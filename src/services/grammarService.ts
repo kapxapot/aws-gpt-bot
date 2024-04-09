@@ -109,9 +109,11 @@ export function getCase(
     ? genuineCaseData[word]
     : derivedCaseData[word];
 
-  const templateWord = isTemplateWord(word) ? word : derivedCaseData[word].index;
-  const caseForms = caseTemplates[templateWord];
+  const templateWord = isTemplateWord(word)
+    ? word
+    : derivedCaseData[word].template;
 
+  const caseForms = caseTemplates[templateWord];
   const caseIndex = cases.indexOf(grammarCase);
   const template = caseForms[grammarNumber][caseIndex];
 

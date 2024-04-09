@@ -2,11 +2,16 @@ import { At, at, now } from "../entities/at";
 import { Interval, intervals } from "../entities/interval";
 import { PureModelCode } from "../entities/model";
 import { UserModelUsage } from "../entities/modelUsage";
+import { Plan } from "../entities/plan";
 import { UsageStats, User } from "../entities/user";
+import { commatize, isNumber } from "../lib/common";
 import { updateUser } from "../storage/userStorage";
 import { startOf } from "./dateService";
+import { getIntervalString } from "./intervalService";
 import { buildIntervalUsages, getIntervalUsage, incIntervalUsage } from "./intervalUsageService";
-import { getUsageLimit } from "./usageLimitService";
+import { getPlanSettings, getPlanSettingsLimit, getPlanSettingsModelLimit } from "./planSettingsService";
+import { formatLimit } from "./usageLimitService";
+import { getUserPlanSettings } from "./userService";
 
 export function getLastUsedAt(usageStats: UsageStats | undefined, modelCode: PureModelCode): At | null {
   if (!usageStats) {
@@ -97,7 +102,8 @@ export function isUsageLimitExceeded(
   interval: Interval
 ): boolean {
   const usageCount = getUsageCount(user.usageStats, modelCode, interval);
-  const limit = getUsageLimit(user, modelCode, interval);
+  const settings = getUserPlanSettings(user);
+  const limit = getPlanSettingsLimit(settings, modelCode, interval);
 
   if (!limit) {
     return true; // no limit = exceeded
@@ -110,6 +116,42 @@ export function getModelUsage(usageStats: UsageStats, modelCode: PureModelCode):
   return usageStats.modelUsages
     ? usageStats.modelUsages[modelCode] ?? null
     : null;
+}
+
+export function getUsageStatsReport(user: User, plan: Plan, modelCode: PureModelCode): string | null {
+  const usageStats = user.usageStats;
+
+  if (!usageStats) {
+    return null;
+  }
+
+  // get all limits for the plan
+  const settings = getPlanSettings(plan);
+  const limit = getPlanSettingsModelLimit(settings, modelCode);
+
+  // ignore numeric limit for now - it is not used
+  if (!limit || isNumber(limit)) {
+    return null;
+  }
+
+  // for every limit get usage and build string
+  const chunks: string[] = [];
+
+  for (const key in Object.keys(limit)) {
+    const interval = key as Interval;
+    const intervalLimit = limit[interval];
+
+    if (!intervalLimit) {
+      continue;
+    }
+
+    const usageCount = getUsageCount(usageStats, modelCode, interval);
+    const limitString = formatLimit(intervalLimit);
+
+    chunks.push(`сообщений за ${getIntervalString(interval, "Genitive")}: ${usageCount}/${limitString}`);
+  }
+
+  return commatize(chunks);
 }
 
 function setModelUsage(

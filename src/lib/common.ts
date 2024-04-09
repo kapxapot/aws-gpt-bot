@@ -16,6 +16,11 @@ export function toSanitizedArray(strings: string | string[]): string[] {
     .filter(m => !!m);
 }
 
+/**
+ * Sanitizes array and joins it using comma and space.
+ */
+export const commatize = (strings: string | string[]) => toSanitizedArray(strings).join(", ");
+
 export function truncate(str: string, limit: number): string {
   return str.length > limit
     ? `${str.substring(0, limit)}...`

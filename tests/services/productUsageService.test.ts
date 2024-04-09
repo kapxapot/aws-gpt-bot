@@ -2,7 +2,7 @@ import { now } from "../../src/entities/at";
 import { ModelCode } from "../../src/entities/model";
 import { ProductUsage } from "../../src/entities/modelUsage";
 import { settings } from "../../src/lib/constants";
-import { buildModelUsage, incProductUsage } from "../../src/services/productUsageService";
+import { buildProductModelUsage, incProductUsage } from "../../src/services/productUsageService";
 
 describe("incProductUsage", () => {
   const pointsDataSet = [
@@ -36,7 +36,7 @@ describe("incProductUsage", () => {
 
       const usage: ProductUsage = incProductUsage(
         {
-          [modelCode]: buildModelUsage(then, basePoints)
+          [modelCode]: buildProductModelUsage(then, basePoints)
         },
         modelCode,
         points,

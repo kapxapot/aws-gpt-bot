@@ -1,40 +1,15 @@
 import { Interval } from "../entities/interval";
-import { ModelCode } from "../entities/model";
-import { User } from "../entities/user";
-import { getPlanSettingsLimit } from "./planSettingsService";
-import { getUserPlanSettings } from "./userService";
+import { getCaseByNumber } from "./grammarService";
+import { getIntervalString } from "./intervalService";
 
-type UsageLimitDisplayInfo = {
-  long: string;
-  short: string;
-}
-
-export function getUsageLimitDisplayInfo(limit: number, interval?: Interval): UsageLimitDisplayInfo {
-  const intervalStr = interval === "day"
-    ? "день"
-    : interval === "week"
-      ? "неделю"
-      : "месяц";
-
+export function getUsageLimitText(limit: number, interval: Interval): string {
   return limit === Number.POSITIVE_INFINITY
-    ? {
-      long: "неограниченное количество запросов",
-      short: "♾"
-    }
-    : {
-      long: `до ${limit} запросов в ${intervalStr}`,
-      short: String(limit)
-    };
+    ? "неограниченное количество запросов"
+    : `до ${limit} ${getCaseByNumber("запрос", limit)} в ${getIntervalString(interval, "Accusative")}`;
 }
 
-export function getUsageLimitString(user: User, modelCode: ModelCode, interval: Interval): string {
-  const limit = getUsageLimit(user, modelCode, interval);
-  const displayInfo = getUsageLimitDisplayInfo(limit, interval);
-
-  return displayInfo.short;
-}
-
-export function getUsageLimit(user: User, modelCode: ModelCode, interval: Interval): number {
-  const settings = getUserPlanSettings(user);
-  return getPlanSettingsLimit(settings, modelCode, interval);
+export function formatLimit(limit: number): string {
+  return limit === Number.POSITIVE_INFINITY
+    ? "♾"
+    : String(limit);
 }

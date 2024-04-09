@@ -5,6 +5,8 @@ import { settings } from "./constants";
 import { AnyContext } from "../telegram/botContext";
 import { backToMainDialogHandler } from "../telegram/handlers";
 
+export const contactRequestLabel = "📱 Отправить номер";
+
 type Button = InlineKeyboardButton.CallbackButton;
 
 type CommandWithArgs = {
@@ -48,7 +50,7 @@ export function emptyKeyboard(): Markup.Markup<ReplyKeyboardRemove> {
 
 export function contactKeyboard(): Markup.Markup<ReplyKeyboardMarkup> {
   return Markup.keyboard([
-    Markup.button.contactRequest("📱 Отправить номер")
+    Markup.button.contactRequest(contactRequestLabel)
   ]).resize();
 }
 

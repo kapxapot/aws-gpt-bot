@@ -1,8 +1,8 @@
 import { ts } from "../entities/at";
-import { getModeName } from "../entities/prompt";
+import { getModeByCode, getModeName } from "../entities/prompt";
 import { User } from "../entities/user";
 import { gptChatCompletion } from "../external/gptChatCompletion";
-import { truncate } from "../lib/common";
+import { commatize, truncate } from "../lib/common";
 import { isSuccess } from "../lib/error";
 import { clearAndLeave, encodeText, reply } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
@@ -17,13 +17,13 @@ import { isDebugMode } from "./userSettingsService";
 import { gptTimeout } from "./gptService";
 import { happened, timeLeft } from "./dateService";
 import { AnyContext } from "../telegram/botContext";
-import { getUsageLimitString } from "./usageLimitService";
-import { GptModel, PureGptModelCode, defaultGptModelCode } from "../entities/model";
-import { getLastUsedAt, getUsageCount, incUsage, isUsageLimitExceeded } from "./usageStatsService";
+import { GptModelCode, defaultGptModelCode } from "../entities/model";
+import { getLastUsedAt, getUsageStatsReport, incUsage, isUsageLimitExceeded } from "./usageStatsService";
 import { getAvailableGptModel, getProductTypeDisplayName } from "./productService";
 import { getGptModelByCode, purifyGptModelCode } from "./modelService";
-import { incProductUsage } from "./productUsageService";
+import { getProductUsageReport, incProductUsage } from "./productUsageService";
 import { getGptModelUsagePoints } from "./modelUsageService";
+import { PurchasedProduct } from "../entities/product";
 
 const config = {
   messageInterval: parseInt(process.env.MESSAGE_INTERVAL ?? "15") * 1000, // milliseconds
@@ -161,9 +161,9 @@ export async function sendMessageToGpt(ctx: AnyContext, user: User, question: st
   showInfo(
     ctx,
     user,
-    pureModelCode,
-    model,
-    isSuccess(answer) ? answer : null
+    modelCode,
+    isSuccess(answer) ? answer : null,
+    freePlan ? null : activeProduct
   );
 
   if (isSuccess(answer)) {
@@ -206,11 +206,12 @@ function formatGptMessage(message: string): string {
 export async function showInfo(
   ctx: AnyContext,
   user: User,
-  modelCode: PureGptModelCode,
-  model: GptModel,
-  answer: Completion | null
+  modelCode: GptModelCode,
+  answer: Completion | null,
+  product: PurchasedProduct | null = null
 ) {
-  const chunks = [];
+  const model = getModeByCode(modelCode);
+  const chunks: string[] = [];
 
   chunks.push(`📌 Режим: <b>${getModeName(user)}</b>`);
 
@@ -226,9 +227,11 @@ export async function showInfo(
       const messages = getCurrentHistory(context).messages;
 
       if (messages.length) {
+        const truncatedRequests = messages.map(m => `[${truncate(m.request, 20)}]`);
+
         chunks.push(
           encodeText(
-            `история: ${messages.map(m => `[${truncate(m.request, 20)}]`).join(", ")}`
+            `история: ${commatize(truncatedRequests)}`
           )
         );
       } else {
@@ -243,11 +246,21 @@ export async function showInfo(
     }
   }
 
-  if (user.usageStats) {
-    chunks.push(`сообщений сегодня: ${getUsageCount(user.usageStats, modelCode, "day")}/${getUsageLimitString(user, modelCode, "day")}`);
+  if (product) {
+    const productUsageReport = getProductUsageReport(user, product, modelCode);
+
+    if (productUsageReport) {
+      chunks.push(productUsageReport);
+    }
+  } else {
+    const freePlanUsageReport = getUsageStatsReport(user, "free", purifyGptModelCode(modelCode));
+
+    if (freePlanUsageReport) {
+      chunks.push(freePlanUsageReport);
+    }
   }
 
-  await reply(ctx, chunks.join(", "));
+  await reply(ctx, commatize(chunks));
 }
 
 export async function getUserOrLeave(ctx: AnyContext): Promise<User | null> {

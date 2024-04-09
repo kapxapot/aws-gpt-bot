@@ -3,6 +3,7 @@ import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { v4 as uuid } from "uuid";
 import { timestamps, updatedTimestamps } from "../entities/at";
 import { Entity, Unsaved } from "./types";
+import { commatize } from "./common";
 
 type Attributes = Record<string, unknown>;
 
@@ -241,7 +242,7 @@ function recordToSetExpression(record: Record<string, unknown>): string {
     return "";
   }
 
-  return "set " + chunks.join(", ");
+  return `set ${commatize(chunks)}`;
 }
 
 function recordToAttributeNames(record: Record<string, unknown>): Record<string, string> {
@@ -265,5 +266,5 @@ function recordToAttributeValues(record: Record<string, unknown>): Attributes {
 }
 
 function attributesToRemoveExpression(attributes: string[]): string {
-  return `remove ${attributes.join(", ")}`;
+  return `remove ${commatize(attributes)}`;
 }

@@ -13,12 +13,6 @@ export const cases = [
   "Prepositional"
 ] as const;
 
-export type GrammarCase = typeof cases[number];
-
-export type GrammarNumber = "Singular" | "Plural";
-
-type GrammarGender = "Masculine" | "Feminine" | "Neutral" | "Plural";
-
 export const templateWords = [
   "картинка",
   "выпуск",
@@ -27,30 +21,37 @@ export const templateWords = [
   "пользователь",
   "минута",
   "копия",
-  "слово"
+  "слово",
+  "неделя",
+  "месяц"
 ] as const;
-
-export type TemplateWord = typeof templateWords[number];
 
 export const derivedWords = [
   "пакет",
   "секунда",
-  "час"
+  "час",
+  "запрос"
 ] as const;
 
+export type GrammarCase = typeof cases[number];
+export type GrammarNumber = "Singular" | "Plural";
+type GrammarGender = "Masculine" | "Feminine" | "Neutral" | "Plural";
+
+export type TemplateWord = typeof templateWords[number];
 export type DerivedWord = typeof derivedWords[number];
-
 export type KnownWord = TemplateWord | DerivedWord;
-
 export type CaseForms = Record<GrammarNumber, string[]>;
 
 export type CaseData = {
-  base: string,
+  base: string
+};
+
+export type GenuineCaseData = CaseData & {
   gender: GrammarGender
 };
 
 export type DerivedCaseData = CaseData & {
-  index: TemplateWord;
+  template: TemplateWord;
 };
 
 export const caseTemplates: Record<TemplateWord, CaseForms> = {
@@ -64,7 +65,7 @@ export const caseTemplates: Record<TemplateWord, CaseForms> = {
     "Singular": ["%", "%а", "%у", "%", "%ом", "%е"],
     "Plural": ["%и", "%ов", "%ам", "%и", "%ами", "%ах"]
   },
-  // [тариф], [пакет]
+  // [тариф], [пакет], [запрос]
   "тариф": {
     "Singular": ["%", "%а", "%у", "%", "%ом", "%е"],
     "Plural": ["%ы", "%ов", "%ам", "%ы", "%ами", "%ах"]
@@ -93,10 +94,20 @@ export const caseTemplates: Record<TemplateWord, CaseForms> = {
   "слово": {
     "Singular": ["%о", "%а", "%у", "%о", "%ом", "%е"],
     "Plural": ["%а", "%", "%ам", "%а", "%ами", "%ах"]
-  }
+  },
+  // [недел]я
+  "неделя": {
+    "Singular": ["%я", "%и", "%е", "%ю", "%ей", "%е"],
+    "Plural": ["%и", "%ь", "%ям", "%и", "%ями", "%ях"]
+  },
+  // [месяц]
+  "месяц": {
+    "Singular": ["%", "%а", "%у", "%", "%ем", "%е"],
+    "Plural": ["%ы", "%ев", "%ам", "%ы", "%ами", "%ах"]
+  }, 
 };
 
-export const genuineCaseData: Record<TemplateWord, CaseData> = {
+export const genuineCaseData: Record<TemplateWord, GenuineCaseData> = {
   "картинка": { base: "картин", gender: "Feminine" },
   "выпуск": { base: "выпуск", gender: "Masculine" },
   "тариф": { base: "тариф", gender: "Masculine" },
@@ -104,23 +115,14 @@ export const genuineCaseData: Record<TemplateWord, CaseData> = {
   "пользователь": { base: "пользовател", gender: "Masculine" },
   "минута": { base: "минут", gender: "Feminine" },
   "копия": { base: "копи", gender: "Feminine" },
-  "слово": { base: "слов", gender: "Neutral" }
+  "слово": { base: "слов", gender: "Neutral" },
+  "неделя": { base: "недел", gender: "Feminine" },
+  "месяц": { base: "месяц", gender: "Masculine" }
 };
 
 export const derivedCaseData: Record<DerivedWord, DerivedCaseData> = {
-  "пакет": {
-    base: "пакет",
-    index: "тариф",
-    gender: "Masculine"
-  },
-  "секунда": {
-    base: "секунд",
-    index: "минута",
-    gender: "Feminine"
-  },
-  "час": {
-    base: "час",
-    index: "тариф",
-    gender: "Masculine"
-  }
+  "пакет": { base: "пакет", template: "тариф" },
+  "секунда": { base: "секунд", template: "минута" },
+  "час": { base: "час", template: "тариф" },
+  "запрос": { base: "запрос", template: "тариф" }
 };

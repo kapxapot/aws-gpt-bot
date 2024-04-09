@@ -5,7 +5,8 @@ import { ModelCode } from "./model";
 import { Plan } from "./plan";
 
 type IntervalLimits = PartialRecord<Interval, number>;
-type ModelLimits = PartialRecord<ModelCode, IntervalLimits | number>;
+export type ModelLimit = IntervalLimits | number;
+type ModelLimits = PartialRecord<ModelCode, ModelLimit>;
 
 export type PlanSettings = {
   limits: ModelLimits;

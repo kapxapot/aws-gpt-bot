@@ -1,4 +1,11 @@
-import { isNumber, phoneToItu, toSanitizedArray, toText } from "../../src/lib/common";
+import { commatize, isNumber, phoneToItu, toSanitizedArray, toText } from "../../src/lib/common";
+
+const uglyArray = [
+  "",
+  "    ",
+  "   one  ",
+  "    two   "
+];
 
 describe("toText", () => {
   test("should concat strings into text", () => {
@@ -8,16 +15,18 @@ describe("toText", () => {
 
 describe("toSanitizedArray", () => {
   test("should sanitize strings", () => {
-    const array = toSanitizedArray([
-      "",
-      "    ",
-      "   one  ",
-      "    two   "
-    ]);
+    const array = toSanitizedArray(uglyArray);
 
     expect(array).toHaveLength(2);
     expect(array[0]).toBe("one");
     expect(array[1]).toBe("two");
+  });
+});
+
+describe("commatize", () => {
+  test("should sanitize and commatize strings", () => {
+    expect(commatize(uglyArray))
+      .toBe("one, two");
   });
 });
 
