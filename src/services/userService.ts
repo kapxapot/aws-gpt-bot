@@ -10,9 +10,8 @@ import { addMessageToHistory, createContext, cutoffMessages, getCurrentHistory, 
 import { isSuccess } from "../lib/error";
 import { PlanSettings } from "../entities/planSettings";
 import { getCurrentSubscription, getSubscriptionPlan } from "./subscriptionService";
-import { getPlanSettings, getPlanSettingsImageModel } from "./planSettingsService";
+import { getPlanSettings } from "./planSettingsService";
 import { Plan } from "../entities/plan";
-import { ImageModel } from "../entities/model";
 import { PurchasedProduct, isPurchasedProduct } from "../entities/product";
 import { isActiveProduct } from "./productService";
 
@@ -242,11 +241,6 @@ export function getUserPlan(user: User): Plan {
 export function getUserPlanSettings(user: User): PlanSettings {
   const plan = getUserPlan(user);
   return getPlanSettings(plan);
-}
-
-export function getUserImageModel(user: User): ImageModel {
-  const settings = getUserPlanSettings(user);
-  return getPlanSettingsImageModel(settings);
 }
 
 export function getUserPurchasedProducts(user: User): PurchasedProduct[] {

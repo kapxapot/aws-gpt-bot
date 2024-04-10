@@ -3,7 +3,7 @@ import { At } from "./at";
 import { GrammarCase, KnownWord } from "./grammar";
 import { ProductUsage } from "./modelUsage";
 import { Money } from "./money";
-import { Plan } from "./plan";
+import { Plan, defaultPlan } from "./plan";
 
 export type ProductType = "subscription" | "bundle";
 
@@ -62,7 +62,7 @@ export function freeSubscription(): Subscription {
     },
     details: {
       type: "subscription",
-      plan: "free"
+      plan: defaultPlan
     }
   };
 }

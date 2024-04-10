@@ -27,12 +27,12 @@ function gptokens(count: number): Money {
 }
 
 export const textPrices: Record<GptModel, TextPrice> = {
-  "gpt-3.5-turbo-0125": {
+  "gpt-3.5-turbo": {
     inputPrice: 0.025, // $0.0005
     outputPrice: 0.075, // $0.0015
     avgPrice: 0.05
   },
-  "gpt-4-0125-preview": {
+  "gpt-4-turbo": {
     inputPrice: 0.5, // $0.01
     outputPrice: 1.5, // $0.03
     avgPrice: 1

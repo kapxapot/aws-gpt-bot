@@ -91,7 +91,8 @@ export function getProductUsageReport(
   }
 
   if (isNumber(limit)) {
-    return `осталось: ${getProductUsageCount(usage, modelCode)}/${limit}`;
+    const what = modelCode === "gptokens" ? "гптокенов" : "запросов";
+    return `осталось ${what}: ${getProductUsageCount(usage, modelCode)}/${limit}`;
   }
 
   // for every limit get usage and build string

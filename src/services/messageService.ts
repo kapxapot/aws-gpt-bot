@@ -24,6 +24,7 @@ import { getGptModelByCode, purifyGptModelCode } from "./modelService";
 import { getProductUsageReport, incProductUsage } from "./productUsageService";
 import { getGptModelUsagePoints } from "./modelUsageService";
 import { PurchasedProduct } from "../entities/product";
+import { defaultPlan } from "../entities/plan";
 
 const config = {
   messageInterval: parseInt(process.env.MESSAGE_INTERVAL ?? "15") * 1000, // milliseconds
@@ -36,7 +37,7 @@ export async function sendMessageToGpt(ctx: AnyContext, user: User, question: st
     ? getAvailableGptModel(activeProduct)
     : null;
 
-  const freePlan = !activeProduct || !productModelCode;
+  const usingProduct = !!activeProduct && !!productModelCode;
 
   const modelCode = productModelCode ?? defaultGptModelCode;
   const pureModelCode = purifyGptModelCode(modelCode);
@@ -54,7 +55,9 @@ export async function sendMessageToGpt(ctx: AnyContext, user: User, question: st
     }
   }
 
-  if (freePlan) {
+  // we check the user's usage stats if we don't use a product,
+  // but fall back to the defaults
+  if (!usingProduct) {
     if (isUsageLimitExceeded(user, pureModelCode, "day")) {
       await reply(
         ctx,
@@ -129,7 +132,7 @@ export async function sendMessageToGpt(ctx: AnyContext, user: User, question: st
         : "Нет ответа от ChatGPT. 😣"
     );
 
-    if (!freePlan) {
+    if (usingProduct) {
       const usagePoints = getGptModelUsagePoints(modelCode);
 
       activeProduct.usage = incProductUsage(
@@ -163,7 +166,7 @@ export async function sendMessageToGpt(ctx: AnyContext, user: User, question: st
     user,
     modelCode,
     isSuccess(answer) ? answer : null,
-    freePlan ? null : activeProduct
+    usingProduct ? activeProduct : null
   );
 
   if (isSuccess(answer)) {
@@ -253,7 +256,12 @@ export async function showInfo(
       chunks.push(productUsageReport);
     }
   } else {
-    const freePlanUsageReport = getUsageStatsReport(user, "free", purifyGptModelCode(modelCode));
+    // not using product, falling back to the default plan
+    const freePlanUsageReport = getUsageStatsReport(
+      user,
+      defaultPlan,
+      purifyGptModelCode(modelCode)
+    );
 
     if (freePlanUsageReport) {
       chunks.push(freePlanUsageReport);

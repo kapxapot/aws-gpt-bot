@@ -9,7 +9,7 @@ export type ImageModelCode = PureImageModelCode | GptokensCode;
 export type PureModelCode = PureGptModelCode | PureImageModelCode;
 export type ModelCode = GptModelCode | ImageModelCode;
 
-export type GptModel = "gpt-3.5-turbo-0125" | "gpt-4-0125-preview";
+export type GptModel = "gpt-3.5-turbo" | "gpt-4-turbo";
 export type ImageModel = "dall-e-3";
 
 export type Model = GptModel | ImageModel;
@@ -23,8 +23,8 @@ export const defaultImageModelCode: ImageModelCode = "dalle3";
 export const defaultImageSize: ImageSize = "1024x1024";
 
 export const gptModelMap: Record<PureGptModelCode, GptModel> = {
-  "gpt3": "gpt-3.5-turbo-0125",
-  "gpt4": "gpt-4-0125-preview"
+  "gpt3": "gpt-3.5-turbo",
+  "gpt4": "gpt-4-turbo"
 };
 
 export const imageModelMap: Record<PureImageModelCode, ImageModel> = {

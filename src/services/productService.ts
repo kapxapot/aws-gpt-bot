@@ -27,11 +27,12 @@ export function getProductTypeDisplayName(product: Subscription, targetCase: Gra
   return getCase(displayName, targetCase);
 }
 
-export function getProductDisplayName(product: Subscription, targetCase: GrammarCase = "Nominative") {
-  return product.displayNames[targetCase]
+export const getProductDisplayName = (
+  product: Subscription,
+  targetCase: GrammarCase = "Nominative"
+) => product.displayNames[targetCase]
     ?? product.displayNames["Nominative"]
     ?? product.name;
-}
 
 export function getProductByCode(code: ProductCode): Product {
   switch (code) {
@@ -58,9 +59,8 @@ export function getProductByCode(code: ProductCode): Product {
   }
 }
 
-export function isActiveProduct(product: PurchasedProduct): boolean {
-  return !isProductExpired(product) && !isProductExhausted(product);
-}
+export const isActiveProduct = (product: PurchasedProduct) =>
+  !isProductExpired(product) && !isProductExhausted(product);
 
 function isProductExpired(product: PurchasedProduct): boolean {
   const { start, end } = getProductTimestampRange(product);
@@ -83,21 +83,23 @@ export function getProductPlanSettings(product: PurchasedProduct): PlanSettings 
   return getPlanSettings(plan);
 }
 
-export function getAvailableGptModel(product: PurchasedProduct): GptModelCode | null {
-  const modelCodes = getProductModels(product)
+export const getAvailableGptModel = (product: PurchasedProduct) =>
+  getProductGptModels(product)
+    .find(modelCode => !isProductUsageExceeded(product, modelCode))
+      ?? null;
+
+export const getAvailableImageModel = (product: PurchasedProduct) =>
+  getProductImageModels(product)
+    .find(modelCode => !isProductUsageExceeded(product, modelCode))
+      ?? null;
+
+const getProductGptModels = (product: PurchasedProduct) =>
+  getProductModels(product)
     .filter(modelCode => isGptModelCode(modelCode)) as GptModelCode[];
 
-  return modelCodes.find(modelCode => !isProductUsageExceeded(product, modelCode))
-    ?? null;
-}
-
-export function getAvailableImageModel(product: PurchasedProduct): ImageModelCode | null {
-  const modelCodes = getProductModels(product)
+const getProductImageModels = (product: PurchasedProduct) =>
+  getProductModels(product)
     .filter(modelCode => isImageModelCode(modelCode)) as ImageModelCode[];
-
-  return modelCodes.find(modelCode => !isProductUsageExceeded(product, modelCode))
-    ?? null;
-}
 
 function getProductModels(product: PurchasedProduct): ModelCode[] {
   const planSettings = getProductPlanSettings(product);

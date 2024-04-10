@@ -1,9 +1,8 @@
 import { Interval } from "../entities/interval";
-import { ImageModel, ModelCode } from "../entities/model";
+import { ModelCode } from "../entities/model";
 import { Plan } from "../entities/plan";
 import { ModelLimit, PlanSettings, planSettings } from "../entities/planSettings";
 import { isNumber } from "../lib/common";
-import { getDefaultImageModel, getImageModelByCode, isImageModelCode } from "./modelService";
 import { getUsageLimitText } from "./usageLimitService";
 
 export function getPlanSettings(plan: Plan): PlanSettings {
@@ -36,16 +35,4 @@ export function getPlanSettingsLimit(settings: PlanSettings, modelCode: ModelCod
 export function getPlanSettingsLimitText(planSettings: PlanSettings, modelCode: ModelCode, interval: Interval) {
   const limit = getPlanSettingsLimit(planSettings, modelCode, interval);
   return getUsageLimitText(limit, interval);
-}
-
-export function getPlanSettingsImageModel(settings: PlanSettings): ImageModel {
-  for (const key in settings.limits) {
-    const modelCode = key as ModelCode;
-
-    if (isImageModelCode(modelCode)) {
-      return getImageModelByCode(modelCode);
-    }
-  }
-
-  return getDefaultImageModel();
 }
