@@ -1,11 +1,11 @@
 import { ts } from "../entities/at";
 import { GrammarCase } from "../entities/grammar";
-import { GptModelCode, ImageModelCode, ModelCode } from "../entities/model";
+import { TextModelCode, ImageModelCode, ModelCode } from "../entities/model";
 import { PlanSettings } from "../entities/planSettings";
 import { Product, ProductCode, PurchasedProduct, Subscription, monthlyCreativeBundle, monthlyPremiumSubscription, monthlyProBundle, monthlyStarterBundle, monthlyUnlimitedSubscription, productTypeDisplayNames, testTinyGpt3Bundle, testTinyGptokenBundle } from "../entities/product";
 import { addDays, isInRange } from "./dateService";
 import { getCase } from "./grammarService";
-import { isGptModelCode, isImageModelCode } from "./modelService";
+import { isTextModelCode, isImageModelCode } from "./modelService";
 import { getPlanSettings } from "./planSettingsService";
 import { isProductUsageExceeded } from "./productUsageService";
 import { getSubscriptionPlan } from "./subscriptionService";
@@ -83,8 +83,8 @@ export function getProductPlanSettings(product: PurchasedProduct): PlanSettings 
   return getPlanSettings(plan);
 }
 
-export const getAvailableGptModel = (product: PurchasedProduct) =>
-  getProductGptModels(product)
+export const getAvailableTextModel = (product: PurchasedProduct) =>
+  getProductTextModels(product)
     .find(modelCode => !isProductUsageExceeded(product, modelCode))
       ?? null;
 
@@ -93,9 +93,9 @@ export const getAvailableImageModel = (product: PurchasedProduct) =>
     .find(modelCode => !isProductUsageExceeded(product, modelCode))
       ?? null;
 
-const getProductGptModels = (product: PurchasedProduct) =>
+const getProductTextModels = (product: PurchasedProduct) =>
   getProductModels(product)
-    .filter(modelCode => isGptModelCode(modelCode)) as GptModelCode[];
+    .filter(modelCode => isTextModelCode(modelCode)) as TextModelCode[];
 
 const getProductImageModels = (product: PurchasedProduct) =>
   getProductModels(product)

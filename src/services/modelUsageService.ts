@@ -1,9 +1,9 @@
-import { GptModelCode, ImageModelCode, ImageQuality, ImageSize } from "../entities/model";
-import { getGptModelByCode, getImageModelByCode } from "./modelService";
-import { getGptModelPrices, getImageModelPrice } from "./priceService";
+import { TextModelCode, ImageModelCode, ImageQuality, ImageSize } from "../entities/model";
+import { getTextModelByCode, getImageModelByCode } from "./modelService";
+import { getTextModelPrices, getImageModelPrice } from "./priceService";
 
-export function getGptModelUsagePoints(modelCode: GptModelCode): number {
-  const model = getGptModelByCode(modelCode);
+export function getTextModelUsagePoints(modelCode: TextModelCode): number {
+  const model = getTextModelByCode(modelCode);
 
   switch (modelCode) {
     case "gpt3":
@@ -11,7 +11,7 @@ export function getGptModelUsagePoints(modelCode: GptModelCode): number {
       return 1;
 
     case "gptokens":
-      return getGptModelPrices(model).avgPrice;
+      return getTextModelPrices(model).avgPrice;
   }
 }
 

@@ -1,4 +1,4 @@
-import { GptModel, ImageModel, ImageQuality, ImageSize } from "./model";
+import { TextModel, ImageModel, ImageQuality, ImageSize } from "./model";
 import { Money } from "./money";
 
 type TextPrice = {
@@ -26,7 +26,7 @@ function gptokens(count: number): Money {
   };
 }
 
-export const textPrices: Record<GptModel, TextPrice> = {
+export const textPrices: Record<TextModel, TextPrice> = {
   "gpt-3.5-turbo": {
     inputPrice: 0.025, // $0.0005
     outputPrice: 0.075, // $0.0015

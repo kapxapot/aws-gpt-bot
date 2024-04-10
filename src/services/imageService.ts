@@ -1,9 +1,9 @@
 import { now } from "../entities/at";
-import { ImageQuality, ImageSize, defaultImageModelCode, defaultImageSize } from "../entities/model";
+import { ImageModelCode, ImageQuality, ImageSize, defaultImageModelCode, defaultImageSize } from "../entities/model";
 import { User } from "../entities/user";
 import { gptImageGeneration } from "../external/gptImageGeneration";
 import { getCaseByNumber } from "./grammarService";
-import { toText } from "../lib/common";
+import { commatize, toText } from "../lib/common";
 import { commands } from "../lib/constants";
 import { cancelButton } from "../lib/dialog";
 import { isSuccess } from "../lib/error";
@@ -20,6 +20,9 @@ import { getAvailableImageModel } from "./productService";
 import { getImageModelByCode, purifyImageModelCode } from "./modelService";
 import { incProductUsage } from "./productUsageService";
 import { getImageModelUsagePoints } from "./modelUsageService";
+import { getUsageReport } from "./usageService";
+import { getModeName } from "../entities/prompt";
+import { isDebugMode } from "./userSettingsService";
 
 const config = {
   imageInterval: parseInt(process.env.IMAGE_INTERVAL ?? "60") * 1000, // milliseconds
@@ -33,7 +36,7 @@ export async function generateImageWithGpt(ctx: AnyContext, user: User, prompt: 
     ? getAvailableImageModel(activeProduct)
     : null;
 
-  const freePlan = !activeProduct || !productModelCode;
+  const usingProduct = activeProduct && productModelCode;
 
   const modelCode = productModelCode ?? defaultImageModelCode;
   const pureModelCode = purifyImageModelCode(modelCode);
@@ -51,7 +54,9 @@ export async function generateImageWithGpt(ctx: AnyContext, user: User, prompt: 
     }
   }
 
-  if (freePlan) {
+  // we check the user's usage stats if we don't use a product,
+  // but fall back to the defaults
+  if (!usingProduct) {
     if (isUsageLimitExceeded(user, pureModelCode, "day")) {
       await reply(
         ctx,
@@ -155,7 +160,7 @@ export async function generateImageWithGpt(ctx: AnyContext, user: User, prompt: 
       await ctx.replyWithPhoto({ source: stream });
     }
 
-    if (!freePlan) {
+    if (usingProduct) {
       const usagePoints = getImageModelUsagePoints(modelCode, imageSize, imageQuality);
 
       activeProduct.usage = incProductUsage(
@@ -169,6 +174,21 @@ export async function generateImageWithGpt(ctx: AnyContext, user: User, prompt: 
 
     user = await incUsage(user, pureModelCode, requestedAt);
 
+    const usageReport = getUsageReport(
+      user,
+      modelCode,
+      pureModelCode,
+      usingProduct ? activeProduct : null
+    );
+  
+    const info = buildInfo(
+      user,
+      modelCode,
+      usageReport
+    );
+  
+    await reply(ctx, info);
+  
     await putMetric("ImageGenerated");
 
     return true;
@@ -191,4 +211,25 @@ export async function generateImageWithGpt(ctx: AnyContext, user: User, prompt: 
   }
 
   return false;
+}
+
+function buildInfo(
+  user: User,
+  modelCode: ImageModelCode,
+  usageReport: string | null
+) {
+  const model = getImageModelByCode(modelCode);
+  const chunks: string[] = [];
+
+  chunks.push(`📌 Режим: <b>${getModeName(user)}</b>`);
+
+  if (isDebugMode(user)) {
+    chunks.push(`модель запроса: ${model}`);
+  }
+
+  if (usageReport) {
+    chunks.push(usageReport);
+  }
+
+  return commatize(chunks);
 }

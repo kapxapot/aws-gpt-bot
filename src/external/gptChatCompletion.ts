@@ -8,7 +8,7 @@ import { gptTimeout } from "../services/gptService";
 import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import { getOpenAiClient, isOpenAiError } from "../lib/openAi";
 import { putMetric } from "../services/metricService";
-import { GptModel } from "../entities/model";
+import { TextModel } from "../entities/model";
 
 const config = {
   gptTimeout: gptTimeout * 1000,
@@ -16,7 +16,7 @@ const config = {
   maxHistoryMessageLength: settings.maxHistoryMessageLength
 };
 
-export async function gptChatCompletion(user: User, model: GptModel, userMessage: string): Promise<Result<Completion>> {
+export async function gptChatCompletion(user: User, model: TextModel, userMessage: string): Promise<Result<Completion>> {
   const messages: ChatCompletionMessageParam[] = [];
 
   const historySize = getUserHistorySize(user);

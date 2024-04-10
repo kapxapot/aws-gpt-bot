@@ -17,14 +17,13 @@ import { isDebugMode } from "./userSettingsService";
 import { gptTimeout } from "./gptService";
 import { happened, timeLeft } from "./dateService";
 import { AnyContext } from "../telegram/botContext";
-import { GptModelCode, defaultGptModelCode } from "../entities/model";
-import { getLastUsedAt, getUsageStatsReport, incUsage, isUsageLimitExceeded } from "./usageStatsService";
-import { getAvailableGptModel, getProductTypeDisplayName } from "./productService";
-import { getGptModelByCode, purifyGptModelCode } from "./modelService";
-import { getProductUsageReport, incProductUsage } from "./productUsageService";
-import { getGptModelUsagePoints } from "./modelUsageService";
-import { PurchasedProduct } from "../entities/product";
-import { defaultPlan } from "../entities/plan";
+import { TextModelCode, defaultTextModelCode } from "../entities/model";
+import { getLastUsedAt, incUsage, isUsageLimitExceeded } from "./usageStatsService";
+import { getAvailableTextModel, getProductTypeDisplayName } from "./productService";
+import { getTextModelByCode, purifyTextModelCode } from "./modelService";
+import { incProductUsage } from "./productUsageService";
+import { getTextModelUsagePoints } from "./modelUsageService";
+import { getUsageReport } from "./usageService";
 
 const config = {
   messageInterval: parseInt(process.env.MESSAGE_INTERVAL ?? "15") * 1000, // milliseconds
@@ -34,14 +33,14 @@ export async function sendMessageToGpt(ctx: AnyContext, user: User, question: st
   const activeProduct = getUserActiveProduct(user);
 
   const productModelCode = activeProduct
-    ? getAvailableGptModel(activeProduct)
+    ? getAvailableTextModel(activeProduct)
     : null;
 
   const usingProduct = !!activeProduct && !!productModelCode;
 
-  const modelCode = productModelCode ?? defaultGptModelCode;
-  const pureModelCode = purifyGptModelCode(modelCode);
-  const model = getGptModelByCode(modelCode);
+  const modelCode = productModelCode ?? defaultTextModelCode;
+  const pureModelCode = purifyTextModelCode(modelCode);
+  const model = getTextModelByCode(modelCode);
 
   const lastUsedAt = getLastUsedAt(user.usageStats, pureModelCode);
 
@@ -133,7 +132,7 @@ export async function sendMessageToGpt(ctx: AnyContext, user: User, question: st
     );
 
     if (usingProduct) {
-      const usagePoints = getGptModelUsagePoints(modelCode);
+      const usagePoints = getTextModelUsagePoints(modelCode);
 
       activeProduct.usage = incProductUsage(
         activeProduct.usage,
@@ -161,24 +160,24 @@ export async function sendMessageToGpt(ctx: AnyContext, user: User, question: st
     await reply(ctx, `❌ ${errorMessage}`);
   }
 
-  showInfo(
-    ctx,
+  const usageReport = getUsageReport(
     user,
     modelCode,
-    isSuccess(answer) ? answer : null,
+    pureModelCode,
     usingProduct ? activeProduct : null
   );
 
+  const info = buildInfo(
+    user,
+    modelCode,
+    isSuccess(answer) ? answer : null,
+    usageReport
+  );
+
+  await reply(ctx, info);
+
   if (isSuccess(answer)) {
     await addMessageMetrics(answer);
-  }
-}
-
-async function addMessageMetrics(completion: Completion) {
-  await putMetric("MessageSent");
-
-  if (completion.usage) {
-    await putMetric("TokensUsed", completion.usage.totalTokens);
   }
 }
 
@@ -202,18 +201,41 @@ export async function showLastHistoryMessage(ctx: AnyContext, user: User, fallba
   }
 }
 
+export async function getUserOrLeave(ctx: AnyContext): Promise<User | null> {
+  if (ctx.from) {
+    return await getOrAddUser(ctx.from);
+  }
+
+  if (ctx.scene) {
+    await clearAndLeave(ctx);
+  }
+
+  console.error(new Error("User not found (empty ctx.from)."));
+  await putMetric("Error");
+  await putMetric("UserNotFoundError");
+
+  return null;
+}
+
+async function addMessageMetrics(completion: Completion) {
+  await putMetric("MessageSent");
+
+  if (completion.usage) {
+    await putMetric("TokensUsed", completion.usage.totalTokens);
+  }
+}
+
 function formatGptMessage(message: string): string {
     return `🤖 ${encodeText(message)}`;
 }
 
-export async function showInfo(
-  ctx: AnyContext,
+function buildInfo(
   user: User,
-  modelCode: GptModelCode,
+  modelCode: TextModelCode,
   answer: Completion | null,
-  product: PurchasedProduct | null = null
+  usageReport: string | null
 ) {
-  const model = getGptModelByCode(modelCode);
+  const model = getTextModelByCode(modelCode);
   const chunks: string[] = [];
 
   chunks.push(`📌 Режим: <b>${getModeName(user)}</b>`);
@@ -249,40 +271,9 @@ export async function showInfo(
     }
   }
 
-  if (product) {
-    const productUsageReport = getProductUsageReport(user, product, modelCode);
-
-    if (productUsageReport) {
-      chunks.push(productUsageReport);
-    }
-  } else {
-    // not using product, falling back to the default plan
-    const freePlanUsageReport = getUsageStatsReport(
-      user,
-      defaultPlan,
-      purifyGptModelCode(modelCode)
-    );
-
-    if (freePlanUsageReport) {
-      chunks.push(freePlanUsageReport);
-    }
+  if (usageReport) {
+    chunks.push(usageReport);
   }
 
-  await reply(ctx, commatize(chunks));
-}
-
-export async function getUserOrLeave(ctx: AnyContext): Promise<User | null> {
-  if (ctx.from) {
-    return await getOrAddUser(ctx.from);
-  }
-
-  if (ctx.scene) {
-    await clearAndLeave(ctx);
-  }
-
-  console.error(new Error("User not found (empty ctx.from)."));
-  await putMetric("Error");
-  await putMetric("UserNotFoundError");
-
-  return null;
+  return commatize(chunks);
 }
