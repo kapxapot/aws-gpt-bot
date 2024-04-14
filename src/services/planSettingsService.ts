@@ -3,7 +3,6 @@ import { ModelCode } from "../entities/model";
 import { Plan } from "../entities/plan";
 import { ModelLimit, PlanSettings, planSettings } from "../entities/planSettings";
 import { isNumber } from "../lib/common";
-import { getUsageLimitText } from "./usageLimitService";
 
 export function getPlanSettings(plan: Plan): PlanSettings {
   return planSettings[plan];
@@ -30,9 +29,4 @@ export function getPlanSettingsLimit(settings: PlanSettings, modelCode: ModelCod
   return interval
     ? modelLimit[interval] ?? 0
     : 0;
-}
-
-export function getPlanSettingsLimitText(planSettings: PlanSettings, modelCode: ModelCode, interval: Interval) {
-  const limit = getPlanSettingsLimit(planSettings, modelCode, interval);
-  return getUsageLimitText(limit, interval);
 }

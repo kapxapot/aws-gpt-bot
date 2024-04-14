@@ -244,8 +244,8 @@ export function testTinyGpt3Bundle(): Product {
 export function testTinyGptokenBundle(): Product {
   return {
     code: "test-bundle-tiny-gptokens-1-day",
-    name: "Test Tiny Bundle GPToken - 1 Day",
-    displayName: "Мелкий ГПТокен на 1 день",
+    name: "Test Tiny Bundle Gptoken - 1 Day",
+    displayName: "Мелкий Гптокен на 1 день",
     price: {
       currency: "RUB",
       amount: 9999

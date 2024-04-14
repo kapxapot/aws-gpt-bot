@@ -96,7 +96,7 @@ export function getPlanDescription(plan: Plan): string {
 
     case "test-tinygptokens":
       return toCompactText(
-        "🛠 Тестовый Пакет <b>«Мелкий GPToken»</b>:",
+        "🛠 Тестовый Пакет <b>«Мелкий Gptoken»</b>:",
         "📀 4 гптокена",
         "🔸 = 2 запроса к <b>DALL-E 3</b>",
         "🔸 = 4 запроса к <b>GPT-4</b>",

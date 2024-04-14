@@ -4,7 +4,6 @@ export const commands = {
   premium: "premium",
   image: "image",
   support: "support",
-  terms: "terms",
   historySize: "history",
   temperature: "temp",
   status: "status"

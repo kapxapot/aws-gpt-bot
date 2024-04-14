@@ -44,7 +44,6 @@ export function getCommandHandlers(): HandlerTuple[] {
     [commands.mode, sceneHandler(scenes.mode)],
     [commands.premium, sceneHandler(scenes.premium)],
     [commands.image, sceneHandler(scenes.image)],
-    [commands.terms, termsHandler],
     [commands.support, supportHandler],
     [commands.historySize, historySizeHandler],
     [commands.temperature, temperatureHandler],
@@ -56,14 +55,10 @@ function sceneHandler(scene: string): Handler {
   return async (ctx: AnyContext) => await ctx.scene.enter(scene);
 }
 
-async function termsHandler(ctx: AnyContext) {
-  await reply(ctx, process.env.TERMS_URL!);
-}
-
 async function supportHandler(ctx: AnyContext) {
   await reply(
     ctx,
-    "Напишите в техподдержку, чтобы получить ответ на ваш вопрос или обсудить идеи по развитию чат-бота под ваши задачи.",
+    "Напишите в техподдержку, чтобы получить ответ на ваш вопрос или обсудить идеи по развитию чат-бота под ваши задачи:",
     process.env.SUPPORT_URL!
   );
 }
