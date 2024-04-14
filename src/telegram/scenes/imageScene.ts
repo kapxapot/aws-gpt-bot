@@ -11,6 +11,7 @@ import { anotherImageAction, cancelAction, cancelButton } from "../../lib/dialog
 import { getUserOrLeave } from "../../services/messageService";
 import { ImageModel, ModelCode } from "../../entities/model";
 import { getImageModelByCode } from "../../services/modelService";
+import { toCompactText } from "../../lib/common";
 
 const scene = new BaseScene<BotContext>(scenes.image);
 
@@ -76,19 +77,21 @@ async function mainHandler (ctx: BotContext) {
   const imageSettings = getDefaultImageSettings();
 
   const modelDescription: string[] = [
-    `◽ модель: ${model}`,
-    `◽ размер: ${imageSettings.size}`,
+    `🔸 модель: ${model}`,
+    `🔸 размер: ${imageSettings.size}`,
   ];
 
   if (imageSettings.quality) {
-    modelDescription.push(`◽ качество: ${imageSettings.quality}`);
+    modelDescription.push(`🔸 качество: ${imageSettings.quality}`);
   }
 
   await replyWithKeyboard(
     ctx,
     inlineKeyboard(cancelButton),
-    `🖼 В этом режиме вы можете создавать картинки с помощью модели <b>DALL-E</b>:`,
-    ...modelDescription,
+    toCompactText(
+      `🖼 В этом режиме вы можете создавать картинки с помощью <b>DALL-E</b>:`,
+      ...modelDescription,
+    ),
     `💳 У вас осталось N гптокенов = M картинок.`,
     `Опишите картинку, которую вы хотите сгенерировать (до ${settings.maxImagePromptLength} символов):`
   );

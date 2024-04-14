@@ -2,7 +2,7 @@ import { ts } from "../entities/at";
 import { GrammarCase } from "../entities/grammar";
 import { TextModelCode, ImageModelCode, ModelCode } from "../entities/model";
 import { PlanSettings } from "../entities/planSettings";
-import { Product, ProductCode, PurchasedProduct, Subscription, monthlyCreativeBundle, monthlyPremiumSubscription, monthlyProBundle, monthlyStarterBundle, monthlyUnlimitedSubscription, productTypeDisplayNames, testTinyGpt3Bundle, testTinyGptokenBundle } from "../entities/product";
+import { Product, ProductCode, PurchasedProduct, Subscription, bossBundle, creativeBundle, noviceBundle, premiumSubscription, proBundle, productTypeDisplayNames, studentBundle, testTinyGpt3Bundle, testTinyGptokenBundle, trialBundle, unlimitedSubscription } from "../entities/product";
 import { addDays, isInRange } from "./dateService";
 import { getCase } from "./grammarService";
 import { isTextModelCode, isImageModelCode } from "./modelService";
@@ -27,29 +27,36 @@ export function getProductTypeDisplayName(product: Subscription, targetCase: Gra
   return getCase(displayName, targetCase);
 }
 
-export const getProductDisplayName = (
-  product: Subscription,
-  targetCase: GrammarCase = "Nominative"
-) => product.displayNames[targetCase]
-    ?? product.displayNames["Nominative"]
+export const getProductDisplayName = (product: Subscription) =>
+  (product.displayNames ? product.displayNames["Nominative"] : null)
+    ?? product.displayName
     ?? product.name;
 
 export function getProductByCode(code: ProductCode): Product {
   switch (code) {
     case "subscription-premium-30-days":
-      return monthlyPremiumSubscription();
+      return premiumSubscription();
 
     case "subscription-unlimited-30-days":
-      return monthlyUnlimitedSubscription();
+      return unlimitedSubscription();
 
-    case "bundle-starter-30-days":
-      return monthlyStarterBundle();
+    case "bundle-novice-30-days":
+      return noviceBundle();
+
+    case "bundle-student-30-days":
+      return studentBundle();
+
+    case "bundle-trial-30-days":
+      return trialBundle();
 
     case "bundle-creative-30-days":
-      return monthlyCreativeBundle();
+      return creativeBundle();
 
     case "bundle-pro-30-days":
-      return monthlyProBundle();
+      return proBundle();
+
+    case "bundle-boss-30-days":
+      return bossBundle();
 
     case "test-bundle-tiny-gpt3-1-day":
       return testTinyGpt3Bundle();

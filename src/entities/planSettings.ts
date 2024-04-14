@@ -26,46 +26,61 @@ export const planSettings: Record<Plan, PlanSettings> = {
     }
   },
   "premium": {
+    disabled: true,
     limits: {
       "gpt3": {
         "day": 100
       }
-    },
-    disabled: true
+    }
   },
   "unlimited": {
+    disabled: true,
     limits: {
       "gpt3": {
         "day": Number.POSITIVE_INFINITY
       }
-    },
-    disabled: true
+    }
   },
-  "starter": {
+  "novice": {
+    limits: {
+      "gpt3": 200
+    }
+  },
+  "student": {
     limits: {
       "gpt3": 500
     }
   },
+  "trial": {
+    limits: {
+      "gptokens": 20
+    }
+  },
   "creative": {
     limits: {
-      "gptokens": 100
+      "gptokens": 50
     }
   },
   "pro": {
     limits: {
-      "gptokens": 300
+      "gptokens": 150
+    }
+  },
+  "boss": {
+    limits: {
+      "gptokens": 400
     }
   },
   "test-tinygpt3": {
+    disabled: isProd(),
     limits: {
       "gpt3": 2
-    },
-    disabled: isProd()
+    }
   },
   "test-tinygptokens": {
+    disabled: isProd(),
     limits: {
       "gptokens": 4
-    },
-    disabled: isProd()
+    }
   }
 };

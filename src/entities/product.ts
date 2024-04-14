@@ -14,7 +14,9 @@ export const productTypeDisplayNames: Record<ProductType, KnownWord> = {
 
 export type Subscription = {
   name: string;
-  displayNames: PartialRecord<GrammarCase, string>;
+  displayName?: string;
+  /** @deprecated Remove in >1 month after 0.2 release */
+  displayNames?: PartialRecord<GrammarCase, string>;
   details: {
     type: ProductType;
     plan: Plan;
@@ -24,23 +26,38 @@ export type Subscription = {
 export const productCodes = [
   "subscription-premium-30-days",
   "subscription-unlimited-30-days",
-  "bundle-starter-30-days",
+  "bundle-novice-30-days",
+  "bundle-student-30-days",
+  "bundle-trial-30-days",
   "bundle-creative-30-days",
   "bundle-pro-30-days",
+  "bundle-boss-30-days",
   "test-bundle-tiny-gpt3-1-day",
   "test-bundle-tiny-gptokens-1-day"
 ] as const;
 
 export type ProductCode = typeof productCodes[number];
 
+type Term = {
+  range: number;
+  unit: "day";
+};
+
+const days30: Term = {
+  range: 30,
+  unit: "day"
+};
+
+const days1: Term = {
+  range: 1,
+  unit: "day"
+};
+
 export type Product = Subscription & {
   code: ProductCode;
   price: Money;
   details: {
-    term: {
-      range: number;
-      unit: "day";
-    };
+    term: Term;
   };
 };
 
@@ -57,9 +74,7 @@ export function isPurchasedProduct(product: Subscription): product is PurchasedP
 export function freeSubscription(): Subscription {
   return {
     name: "Free Subscription",
-    displayNames: {
-      "Nominative": "Бесплатный"
-    },
+    displayName: "Бесплатный",
     details: {
       type: "subscription",
       plan: defaultPlan
@@ -67,14 +82,11 @@ export function freeSubscription(): Subscription {
   };
 }
 
-export function monthlyPremiumSubscription(): Product {
+export function premiumSubscription(): Product {
   return {
     code: "subscription-premium-30-days",
     name: "Premium Subscription - 30 Days",
-    displayNames: {
-      "Nominative": "Премиум на 30 дней",
-      "Genitive": "Премиума на 30 дней"
-    },
+    displayName: "Премиум на 30 дней",
     price: {
       currency: "RUB",
       amount: 290
@@ -82,22 +94,16 @@ export function monthlyPremiumSubscription(): Product {
     details: {
       type: "subscription",
       plan: "premium",
-      term: {
-        range: 30,
-        unit: "day"
-      }
+      term: days30
     }
   };
 }
 
-export function monthlyUnlimitedSubscription(): Product {
+export function unlimitedSubscription(): Product {
   return {
     code: "subscription-unlimited-30-days",
     name: "Unlimited Subscription - 30 Days",
-    displayNames: {
-      "Nominative": "Безлимит на 30 дней",
-      "Genitive": "Безлимита на 30 дней"
-    },
+    displayName: "Безлимит на 30 дней",
     price: {
       currency: "RUB",
       amount: 390
@@ -105,79 +111,109 @@ export function monthlyUnlimitedSubscription(): Product {
     details: {
       type: "subscription",
       plan: "unlimited",
-      term: {
-        range: 30,
-        unit: "day"
-      }
+      term: days30
     }
   };
 }
 
-export function monthlyStarterBundle(): Product {
+export function noviceBundle(): Product {
   return {
-    code: "bundle-starter-30-days",
-    name: "Starter Bundle - 30 Days",
-    displayNames: {
-      "Nominative": "Начальный на 30 дней",
-      "Genitive": "Начального на 30 дней"
+    code: "bundle-novice-30-days",
+    name: "Novice Bundle - 30 Days",
+    displayName: "Новичок на 30 дней",
+    price: {
+      currency: "RUB",
+      amount: 49
     },
+    details: {
+      type: "bundle",
+      plan: "novice",
+      term: days30
+    }
+  };
+}
+
+export function studentBundle(): Product {
+  return {
+    code: "bundle-student-30-days",
+    name: "Student Bundle - 30 Days",
+    displayName: "Студент на 30 дней",
+    price: {
+      currency: "RUB",
+      amount: 99
+    },
+    details: {
+      type: "bundle",
+      plan: "student",
+      term: days30
+    }
+  };
+}
+
+export function trialBundle(): Product {
+  return {
+    code: "bundle-trial-30-days",
+    name: "Trial Bundle - 30 Days",
+    displayName: "Пробный на 30 дней",
+    price: {
+      currency: "RUB",
+      amount: 99
+    },
+    details: {
+      type: "bundle",
+      plan: "trial",
+      term: days30
+    }
+  };
+}
+
+export function creativeBundle(): Product {
+  return {
+    code: "bundle-creative-30-days",
+    name: "Creative Bundle - 30 Days",
+    displayName: "Творческий на 30 дней",
     price: {
       currency: "RUB",
       amount: 199
     },
     details: {
       type: "bundle",
-      plan: "starter",
-      term: {
-        range: 30,
-        unit: "day"
-      }
-    }
-  };
-}
-
-export function monthlyCreativeBundle(): Product {
-  return {
-    code: "bundle-creative-30-days",
-    name: "Creative Bundle - 30 Days",
-    displayNames: {
-      "Nominative": "Творческий на 30 дней",
-      "Genitive": "Творческого на 30 дней"
-    },
-    price: {
-      currency: "RUB",
-      amount: 299
-    },
-    details: {
-      type: "bundle",
       plan: "creative",
-      term: {
-        range: 30,
-        unit: "day"
-      }
+      term: days30
     }
   };
 }
 
-export function monthlyProBundle(): Product {
+export function proBundle(): Product {
   return {
     code: "bundle-pro-30-days",
     name: "Pro Bundle - 30 Days",
-    displayNames: {
-      "Nominative": "Профессиональный на 30 дней",
-      "Genitive": "Профессионального на 30 дней"
-    },
+    displayName: "Профи на 30 дней",
     price: {
       currency: "RUB",
-      amount: 749
+      amount: 449
     },
     details: {
       type: "bundle",
       plan: "pro",
-      term: {
-        range: 30,
-        unit: "day"
-      }
+      term: days30
+    }
+  };
+}
+
+export function bossBundle(): Product {
+  return {
+    code: "bundle-boss-30-days",
+    name: "Boss Bundle - 30 Days",
+    displayName: "Босс на 30 дней",
+    price: {
+      currency: "RUB",
+      amount: 999
+    },
+    details: {
+      type: "bundle",
+      plan: "boss",
+      term: days30
     }
   };
 }
@@ -189,7 +225,7 @@ export function testTinyGpt3Bundle(): Product {
   return {
     code: "test-bundle-tiny-gpt3-1-day",
     name: "Test Tiny Bundle GPT-3 - 1 Day",
-    displayNames: {},
+    displayName: "Мелкий GPT-3 на 1 день",
     price: {
       currency: "RUB",
       amount: 9999
@@ -197,10 +233,7 @@ export function testTinyGpt3Bundle(): Product {
     details: {
       type: "bundle",
       plan: "test-tinygpt3",
-      term: {
-        range: 1,
-        unit: "day"
-      }
+      term: days1
     }
   };
 }
@@ -212,7 +245,7 @@ export function testTinyGptokenBundle(): Product {
   return {
     code: "test-bundle-tiny-gptokens-1-day",
     name: "Test Tiny Bundle GPToken - 1 Day",
-    displayNames: {},
+    displayName: "Мелкий ГПТокен на 1 день",
     price: {
       currency: "RUB",
       amount: 9999
@@ -220,10 +253,7 @@ export function testTinyGptokenBundle(): Product {
     details: {
       type: "bundle",
       plan: "test-tinygptokens",
-      term: {
-        range: 1,
-        unit: "day"
-      }
+      term: days1
     }
   };
 }

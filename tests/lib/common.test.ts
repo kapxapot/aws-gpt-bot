@@ -1,4 +1,4 @@
-import { commatize, isNumber, phoneToItu, toSanitizedArray, toText } from "../../src/lib/common";
+import { commatize, isNumber, phoneToItu, toCompactText, toSanitizedArray, toText } from "../../src/lib/common";
 
 const uglyArray = [
   "",
@@ -10,6 +10,12 @@ const uglyArray = [
 describe("toText", () => {
   test("should concat strings into text", () => {
     expect(toText("one", "two")).toBe("one\n\ntwo");
+  });
+});
+
+describe("toCompactText", () => {
+  test("should concat strings into compact text", () => {
+    expect(toCompactText("one", "two")).toBe("one\ntwo");
   });
 });
 

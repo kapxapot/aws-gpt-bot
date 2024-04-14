@@ -23,10 +23,7 @@ describe("getCurrentSubscription", () => {
             },
             type: "subscription"
           },
-          displayNames: {
-            "Genitive": "Премиума на 30 дней",
-            "Nominative": "Премиум на 30 дней"
-          },
+          displayName: "Премиум на 30 дней",
           name: "Premium Subscription - 30 Days",
           price: {
             amount: 290,
@@ -49,10 +46,7 @@ describe("getCurrentSubscription", () => {
             },
             type: "bundle"
           },
-          displayNames: {
-            "Genitive": "Творческого на 30 дней",
-            "Nominative": "Творческий на 30 дней"
-          },
+          displayName: "Творческий на 30 дней",
           name: "Creative Bundle - 30 Days",
           price: {
             amount: 299,

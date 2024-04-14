@@ -10,6 +10,10 @@ export function toText(...strings: string[]): string {
   return strings.join("\n\n");
 }
 
+export function toCompactText(...strings: string[]): string {
+  return strings.join("\n");
+}
+
 export function toSanitizedArray(strings: string | string[]): string[] {
   return toArray(strings)
     .map(m => m.trim())
