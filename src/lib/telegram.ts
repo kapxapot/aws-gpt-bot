@@ -7,7 +7,7 @@ import { backToMainDialogHandler } from "../telegram/handlers";
 
 export const contactRequestLabel = "📱 Отправить номер";
 
-type Button = InlineKeyboardButton.CallbackButton;
+type ButtonLike = string[] | InlineKeyboardButton;
 
 type CommandWithArgs = {
   command: string;
@@ -18,8 +18,14 @@ export function userName(user: User): string {
   return user.first_name ?? user.last_name ?? user.username ?? "anonymous";
 }
 
-export function inlineKeyboard(...buttonData: string[][]): Markup.Markup<InlineKeyboardMarkup> {
-  const buttons: Button[] = buttonData.map(data => Markup.button.callback(data[0], data[1]));
+export function inlineKeyboard(...buttonLikes: ButtonLike[]): Markup.Markup<InlineKeyboardMarkup> {
+  const buttons = buttonLikes.map(buttonLike => {
+    if (!Array.isArray(buttonLike)) {
+      return buttonLike;
+    }
+
+    return Markup.button.callback(buttonLike[0], buttonLike[1]);
+  });
 
   return Markup.inlineKeyboard(
     sliceButtons(buttons)
@@ -54,9 +60,13 @@ export function contactKeyboard(): Markup.Markup<ReplyKeyboardMarkup> {
   ]).resize();
 }
 
-export function sliceButtons<T extends Button>(buttons: T[], limit: number = 2, maxLength: number = settings.telegram.maxButtonTextLength): T[][] {
-  const result = [];
-  let accumulator: T[] = [];
+export function sliceButtons(
+  buttons: InlineKeyboardButton[],
+  limit: number = 2,
+  maxLength: number = settings.telegram.maxButtonTextLength
+): InlineKeyboardButton[][] {
+  const result: InlineKeyboardButton[][] = [];
+  let accumulator: InlineKeyboardButton[] = [];
 
   function flush() {
     if (!accumulator.length) {
@@ -77,7 +87,7 @@ export function sliceButtons<T extends Button>(buttons: T[], limit: number = 2, 
 
     accumulator.push(button);
 
-    if (accumulator.length == limit) {
+    if (accumulator.length === limit) {
       flush();
     }
   }

@@ -1,11 +1,10 @@
 import { now } from "../entities/at";
-import { ImageModelCode, ImageQuality, ImageSize, defaultImageModelCode, defaultImageSize } from "../entities/model";
+import { ImageSettings, defaultImageModelCode, defaultImageSize } from "../entities/model";
 import { User } from "../entities/user";
 import { gptImageGeneration } from "../external/gptImageGeneration";
 import { getCaseByNumber } from "./grammarService";
-import { commatize, toText } from "../lib/common";
 import { commands } from "../lib/constants";
-import { cancelButton } from "../lib/dialog";
+import { anotherImageButton, cancelButton } from "../lib/dialog";
 import { isSuccess } from "../lib/error";
 import { inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
 import { storeImageRequest, updateImageRequest } from "../storage/imageRequestStorage";
@@ -20,9 +19,9 @@ import { getAvailableImageModel } from "./productService";
 import { getImageModelByCode, purifyImageModelCode } from "./modelService";
 import { incProductUsage } from "./productUsageService";
 import { getImageModelUsagePoints } from "./modelUsageService";
-import { getUsageReport } from "./usageService";
-import { getModeName } from "../entities/prompt";
-import { isDebugMode } from "./userSettingsService";
+import { intervalPhrases, intervals } from "../entities/interval";
+import { toText } from "../lib/common";
+import { Markup } from "telegraf";
 
 const config = {
   imageInterval: parseInt(process.env.IMAGE_INTERVAL ?? "60") * 1000, // milliseconds
@@ -57,34 +56,18 @@ export async function generateImageWithGpt(ctx: AnyContext, user: User, prompt: 
   // we check the user's usage stats if we don't use a product,
   // but fall back to the defaults
   if (!usingProduct) {
-    if (isUsageLimitExceeded(user, pureModelCode, "day")) {
-      await reply(
-        ctx,
-        "Вы превысили лимит генерации картинок на сегодня. 😥",
-        `Подождите до завтра или перейдите на тариф с более высоким лимитом: /${commands.premium}`
-      );
-  
-      return false;
-    }
+    for (const interval of intervals) {
+      const phrases = intervalPhrases[interval];
 
-    if (isUsageLimitExceeded(user, pureModelCode, "week")) {
-      await reply(
-        ctx,
-        "Вы превысили лимит генерации картинок на эту неделю. 😥😥",
-        `Подождите следующей недели или перейдите на тариф с более высоким лимитом: /${commands.premium}`
-      );
-  
-      return false;
-    }
-
-    if (isUsageLimitExceeded(user, pureModelCode, "month")) {
-      await reply(
-        ctx,
-        "Вы превысили лимит генерации картинок на этот месяц. 😥😥😥",
-        `Подождите следующего месяца или перейдите на тариф с более высоким лимитом: /${commands.premium}`
-      );
-  
-      return false;
+      if (isUsageLimitExceeded(user, pureModelCode, interval)) {
+        await reply(
+          ctx,
+          `Вы превысили лимит генерации картинок на ${phrases.current}. ${phrases.smilies}`,
+          `Подождите ${phrases.next} или перейдите на тариф с более высоким лимитом: /${commands.premium}`
+        );
+    
+        return false;
+      }
     }
   }
 
@@ -105,18 +88,17 @@ export async function generateImageWithGpt(ctx: AnyContext, user: User, prompt: 
 
   const messages = await reply(ctx, "👨‍🎨 Рисую вашу картинку, подождите... ⏳");
 
-  const imageSize: ImageSize = defaultImageSize;
-  const imageQuality: ImageQuality | undefined = undefined;
+  const imageSettings=  getDefaultImageSettings();
 
   let imageRequest = await storeImageRequest({
     userId: user.id,
     model,
-    size: imageSize,
-    quality: imageQuality,
+    size: imageSettings.size,
+    quality: imageSettings.quality,
     prompt,
     responseFormat: "url",
     requestedAt,
-    strict: false
+    strict: true
   });
 
   await waitForGptImageGeneration(user);
@@ -145,11 +127,16 @@ export async function generateImageWithGpt(ctx: AnyContext, user: User, prompt: 
 
       await ctx.replyWithHTML(
         toText(
-          `Вы также можете <a href="${image.url}">скачать картинку</a> в максимальном качестве.`,
-          "⚠ Внимание! Эта ссылка будет работать только 60 минут!"
+          `<a href="${image.url}">Скачать картинку</a> в хорошем качестве.`,
+          "⚠ Ссылка работает 60 минут!"
         ),
-        { 
-          disable_web_page_preview: true 
+        {
+          ...inlineKeyboard(
+            Markup.button.url("Скачать картинку", image.url),
+            anotherImageButton,
+            cancelButton
+          ),
+          disable_web_page_preview: true
         }
       );
     } else if (image.b64_json) {
@@ -161,7 +148,7 @@ export async function generateImageWithGpt(ctx: AnyContext, user: User, prompt: 
     }
 
     if (usingProduct) {
-      const usagePoints = getImageModelUsagePoints(modelCode, imageSize, imageQuality);
+      const usagePoints = getImageModelUsagePoints(modelCode, imageSettings);
 
       activeProduct.usage = incProductUsage(
         activeProduct.usage,
@@ -174,20 +161,20 @@ export async function generateImageWithGpt(ctx: AnyContext, user: User, prompt: 
 
     user = await incUsage(user, pureModelCode, requestedAt);
 
-    const usageReport = getUsageReport(
-      user,
-      modelCode,
-      pureModelCode,
-      usingProduct ? activeProduct : null
-    );
+    // const usageReport = getUsageReport(
+    //   user,
+    //   modelCode,
+    //   pureModelCode,
+    //   usingProduct ? activeProduct : null
+    // );
   
-    const info = buildInfo(
-      user,
-      modelCode,
-      usageReport
-    );
+    // const info = buildInfo(
+    //   user,
+    //   modelCode,
+    //   usageReport
+    // );
   
-    await reply(ctx, info);
+    // await reply(ctx, info);
   
     await putMetric("ImageGenerated");
 
@@ -213,23 +200,30 @@ export async function generateImageWithGpt(ctx: AnyContext, user: User, prompt: 
   return false;
 }
 
-function buildInfo(
-  user: User,
-  modelCode: ImageModelCode,
-  usageReport: string | null
-) {
-  const model = getImageModelByCode(modelCode);
-  const chunks: string[] = [];
+export const getDefaultImageSettings = (): ImageSettings => ({
+  size: defaultImageSize
+});
 
-  chunks.push(`📌 Режим: <b>${getModeName(user)}</b>`);
+export const imageSettingsEqual = (settingsA: ImageSettings, settingsB: ImageSettings) =>
+  settingsA.size === settingsB.size && settingsA.quality === settingsB.quality;
 
-  if (isDebugMode(user)) {
-    chunks.push(`модель запроса: ${model}`);
-  }
+// function buildInfo(
+//   user: User,
+//   modelCode: ImageModelCode,
+//   usageReport: string | null
+// ) {
+//   const model = getImageModelByCode(modelCode);
+//   const chunks: string[] = [];
 
-  if (usageReport) {
-    chunks.push(usageReport);
-  }
+//   chunks.push(`📌 Режим: <b>${getModeName(user)}</b>`);
 
-  return commatize(chunks);
-}
+//   if (isDebugMode(user)) {
+//     chunks.push(`модель запроса: ${model}`);
+//   }
+
+//   if (usageReport) {
+//     chunks.push(usageReport);
+//   }
+
+//   return commatize(chunks);
+// }

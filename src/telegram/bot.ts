@@ -112,7 +112,7 @@ export async function processTelegramRequest(tgRequest: TelegramRequest) {
      }
   });
 
-  bot.handleUpdate(tgRequest.request as Update);
+  await bot.handleUpdate(tgRequest.request as Update);
 }
 
 export async function sendTelegramMessage(user: User, message: string) {

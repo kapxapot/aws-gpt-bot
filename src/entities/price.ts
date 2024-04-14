@@ -1,4 +1,4 @@
-import { TextModel, ImageModel, ImageQuality, ImageSize } from "./model";
+import { TextModel, ImageModel, ImageSettings } from "./model";
 import { Money } from "./money";
 
 type TextPrice = {
@@ -8,8 +8,7 @@ type TextPrice = {
 };
 
 type ImagePrice = {
-  size: ImageSize;
-  quality?: ImageQuality;
+  settings: ImageSettings;
   price: number;
 }
 
@@ -42,30 +41,42 @@ export const textPrices: Record<TextModel, TextPrice> = {
 export const imagePrices: Record<ImageModel, ImagePrice[]> = {
   "dall-e-3": [
     {
-      size: "1024x1024",
+      settings: {
+        size: "1024x1024"
+      },
       price: 2 // $0.04
     },
     {
-      size: "1024x1792",
+      settings: {
+        size: "1024x1792"
+      },
       price: 4 // $0.08
     },
     {
-      size: "1792x1024",
+      settings: {
+        size: "1792x1024"
+      },
       price: 4 // $0.08
     },
     {
-      size: "1024x1024",
-      quality: "hd",
+      settings: {
+        size: "1024x1024",
+        quality: "hd"
+      },
       price: 4 // $0.08
     },
     {
-      size: "1024x1792",
-      quality: "hd",
+      settings: {
+        size: "1024x1792",
+        quality: "hd"
+      },
       price: 6 // $0.12
     },
     {
-      size: "1792x1024",
-      quality: "hd",
+      settings: {
+        size: "1792x1024",
+        quality: "hd"
+      },
       price: 6 // $0.12
     },
   ]

@@ -24,6 +24,7 @@ import { getTextModelByCode, purifyTextModelCode } from "./modelService";
 import { incProductUsage } from "./productUsageService";
 import { getTextModelUsagePoints } from "./modelUsageService";
 import { getUsageReport } from "./usageService";
+import { intervalPhrases, intervals } from "../entities/interval";
 
 const config = {
   messageInterval: parseInt(process.env.MESSAGE_INTERVAL ?? "15") * 1000, // milliseconds
@@ -57,34 +58,18 @@ export async function sendMessageToGpt(ctx: AnyContext, user: User, question: st
   // we check the user's usage stats if we don't use a product,
   // but fall back to the defaults
   if (!usingProduct) {
-    if (isUsageLimitExceeded(user, pureModelCode, "day")) {
-      await reply(
-        ctx,
-        "Вы превысили лимит сообщений на сегодня. 😥",
-        `Подождите до завтра или перейдите на тариф с более высоким лимитом: /${commands.premium}`
-      );
+    for (const interval of intervals) {
+      const phrases = intervalPhrases[interval];
 
-      return;
-    }
-
-    if (isUsageLimitExceeded(user, pureModelCode, "week")) {
-      await reply(
-        ctx,
-        "Вы превысили лимит сообщений на эту наделю. 😥😥",
-        `Подождите следующей недели или перейдите на тариф с более высоким лимитом: /${commands.premium}`
-      );
-
-      return;
-    }
-
-    if (isUsageLimitExceeded(user, pureModelCode, "month")) {
-      await reply(
-        ctx,
-        "Вы превысили лимит сообщений на этот месяц. 😥😥😥",
-        `Приходите в следующей месяце или перейдите на тариф с более высоким лимитом: /${commands.premium}`
-      );
-
-      return;
+      if (isUsageLimitExceeded(user, pureModelCode, interval)) {
+        await reply(
+          ctx,
+          `Вы превысили лимит сообщений на ${phrases.current}. ${phrases.smilies}`,
+          `Подождите ${phrases.next} или перейдите на тариф с более высоким лимитом: /${commands.premium}`
+        );
+  
+        return;
+      }
     }
   }
 

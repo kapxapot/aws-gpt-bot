@@ -18,6 +18,11 @@ export type ImageQuality = "hd";
 export type ImageSize = "1024x1024" | "1024x1792" | "1792x1024";
 export type ImageResponseFormat = "url" | "b64_json";
 
+export type ImageSettings = {
+  size: ImageSize,
+  quality?: ImageQuality
+};
+
 export const defaultTextModelCode: TextModelCode = "gpt3";
 export const defaultImageModelCode: ImageModelCode = "dalle3";
 export const defaultImageSize: ImageSize = "1024x1024";

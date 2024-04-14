@@ -5,36 +5,16 @@ import { addOtherCommandHandlers, backToMainDialogHandler, dunnoHandler, kickHan
 import { canRequestImageGeneration } from "../../services/permissionService";
 import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { message } from "telegraf/filters";
-import { generateImageWithGpt } from "../../services/imageService";
+import { generateImageWithGpt, getDefaultImageSettings } from "../../services/imageService";
 import { ImageStage, SessionData } from "../session";
-import { cancelAction, cancelButton } from "../../lib/dialog";
+import { anotherImageAction, cancelAction, cancelButton } from "../../lib/dialog";
 import { getUserOrLeave } from "../../services/messageService";
+import { ImageModel, ModelCode } from "../../entities/model";
+import { getImageModelByCode } from "../../services/modelService";
 
 const scene = new BaseScene<BotContext>(scenes.image);
 
-scene.enter(async ctx => {
-  const user = await getUserOrLeave(ctx);
-
-  if (!user) {
-    return;
-  }
-
-  const imageGenerationAllowed = canRequestImageGeneration(user);
-
-  if (!imageGenerationAllowed) {
-    await reply(ctx, "⛔ Генерация картинок недоступна.");
-    await ctx.scene.leave();
-    return;
-  }
-
-  setStage(ctx.session, "imagePromptInput");
-
-  await replyWithKeyboard(
-    ctx,
-    inlineKeyboard(cancelButton),
-    `Опишите картинку, которую вы хотите сгенерировать (до ${settings.maxImagePromptLength} символов):`
-  );
-});
+scene.enter(mainHandler);
 
 addOtherCommandHandlers(scene, commands.image);
 
@@ -51,17 +31,18 @@ scene.on(message("text"), async ctx => {
     if (!user) {
       return;
     }
-  
-    const result = await generateImageWithGpt(ctx, user, imagePrompt);
 
-    if (result) {
-      await backToMainDialogHandler(ctx);
-    }
+    await generateImageWithGpt(ctx, user, imagePrompt);
 
     return;
   }
 
   await dunnoHandler(ctx);
+});
+
+scene.action(anotherImageAction, async ctx => {
+  await clearInlineKeyboard(ctx);
+  await mainHandler(ctx);
 });
 
 scene.leave(async ctx => {
@@ -72,6 +53,46 @@ scene.use(kickHandler);
 scene.use(dunnoHandler);
 
 export const imageScene = scene;
+
+async function mainHandler (ctx: BotContext) {
+  const user = await getUserOrLeave(ctx);
+
+  if (!user) {
+    return;
+  }
+
+  const imageGenerationAllowed = canRequestImageGeneration(user);
+
+  if (!imageGenerationAllowed) {
+    await reply(ctx, "⛔ Генерация картинок недоступна.");
+    await ctx.scene.leave();
+    return;
+  }
+
+  setStage(ctx.session, "imagePromptInput");
+
+  const modelCode: ModelCode = "dalle3";
+  const model: ImageModel = getImageModelByCode(modelCode);
+  const imageSettings = getDefaultImageSettings();
+
+  const modelDescription: string[] = [
+    `◽ модель: ${model}`,
+    `◽ размер: ${imageSettings.size}`,
+  ];
+
+  if (imageSettings.quality) {
+    modelDescription.push(`◽ качество: ${imageSettings.quality}`);
+  }
+
+  await replyWithKeyboard(
+    ctx,
+    inlineKeyboard(cancelButton),
+    `🖼 В этом режиме вы можете создавать картинки с помощью модели <b>DALL-E</b>:`,
+    ...modelDescription,
+    `💳 У вас осталось N гптокенов = M картинок.`,
+    `Опишите картинку, которую вы хотите сгенерировать (до ${settings.maxImagePromptLength} символов):`
+  );
+}
 
 function setStage(session: SessionData, stage: ImageStage) {
   session.imageData = {
