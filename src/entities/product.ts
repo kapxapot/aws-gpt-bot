@@ -14,6 +14,7 @@ export const productTypeDisplayNames: Record<ProductType, KnownWord> = {
 
 export type Subscription = {
   name: string;
+  shortName?: string;
   displayName?: string;
   /** @deprecated Remove in >1 month after 0.2 release */
   displayNames?: PartialRecord<GrammarCase, string>;
@@ -86,6 +87,7 @@ export function premiumSubscription(): Product {
   return {
     code: "subscription-premium-30-days",
     name: "Premium Subscription - 30 Days",
+    shortName: "Премиум",
     displayName: "Премиум на 30 дней",
     price: {
       currency: "RUB",
@@ -103,6 +105,7 @@ export function unlimitedSubscription(): Product {
   return {
     code: "subscription-unlimited-30-days",
     name: "Unlimited Subscription - 30 Days",
+    shortName: "Безлимит",
     displayName: "Безлимит на 30 дней",
     price: {
       currency: "RUB",
@@ -120,6 +123,7 @@ export function noviceBundle(): Product {
   return {
     code: "bundle-novice-30-days",
     name: "Novice Bundle - 30 Days",
+    shortName: "Новичок",
     displayName: "Новичок на 30 дней",
     price: {
       currency: "RUB",
@@ -137,6 +141,7 @@ export function studentBundle(): Product {
   return {
     code: "bundle-student-30-days",
     name: "Student Bundle - 30 Days",
+    shortName: "Студент",
     displayName: "Студент на 30 дней",
     price: {
       currency: "RUB",
@@ -154,6 +159,7 @@ export function trialBundle(): Product {
   return {
     code: "bundle-trial-30-days",
     name: "Trial Bundle - 30 Days",
+    shortName: "Пробный",
     displayName: "Пробный на 30 дней",
     price: {
       currency: "RUB",
@@ -171,6 +177,7 @@ export function creativeBundle(): Product {
   return {
     code: "bundle-creative-30-days",
     name: "Creative Bundle - 30 Days",
+    shortName: "Творческий",
     displayName: "Творческий на 30 дней",
     price: {
       currency: "RUB",
@@ -188,6 +195,7 @@ export function proBundle(): Product {
   return {
     code: "bundle-pro-30-days",
     name: "Pro Bundle - 30 Days",
+    shortName: "Профи",
     displayName: "Профи на 30 дней",
     price: {
       currency: "RUB",
@@ -205,6 +213,7 @@ export function bossBundle(): Product {
   return {
     code: "bundle-boss-30-days",
     name: "Boss Bundle - 30 Days",
+    shortName: "Босс",
     displayName: "Босс на 30 дней",
     price: {
       currency: "RUB",
@@ -225,6 +234,7 @@ export function testTinyGpt3Bundle(): Product {
   return {
     code: "test-bundle-tiny-gpt3-1-day",
     name: "Test Tiny Bundle GPT-3 - 1 Day",
+    shortName: "Мелкий GPT-3",
     displayName: "Мелкий GPT-3 на 1 день",
     price: {
       currency: "RUB",
@@ -245,6 +255,7 @@ export function testTinyGptokenBundle(): Product {
   return {
     code: "test-bundle-tiny-gptokens-1-day",
     name: "Test Tiny Bundle Gptoken - 1 Day",
+    shortName: "Мелкий Гптокен",
     displayName: "Мелкий Гптокен на 1 день",
     price: {
       currency: "RUB",

@@ -18,7 +18,7 @@ import { SessionData } from "../session";
 import { phoneToItu, toText } from "../../lib/common";
 import { message } from "telegraf/filters";
 import { updateUser } from "../../storage/userStorage";
-import { getProductByCode, getProductDisplayName, getProductFullDisplayName } from "../../services/productService";
+import { getProductByCode, getProductFullDisplayName, getProductShortName } from "../../services/productService";
 import { User } from "../../entities/user";
 import { getPlanDescription } from "../../services/planService";
 
@@ -45,7 +45,7 @@ scene.enter(async ctx => {
     messages.push("На данный момент других тарифов нет.");
   } else {
     messages.push(
-      `Если вам нужно больше запросов к <b>ChatGPT</b> и <b>DALL-E</b> или вы хотите работать с <b>GPT-4</b>, приобретите один из платных пакетов:`
+      `Если вам нужно больше запросов к <b>GPT-3.5</b> или вы хотите работать с <b>GPT-4</b> и <b>DALL-E</b>, приобретите один из платных пакетов:`
     );
 
     for (const product of purchasableProducts) {
@@ -53,7 +53,7 @@ scene.enter(async ctx => {
 
       messages.push(getPlanDescription(productPlan));
       buttons.push([
-        `Купить ${getProductDisplayName(product)}`,
+        `Купить ${getProductShortName(product)}`,
         getProductBuyAction(product.code)
       ]);
     }

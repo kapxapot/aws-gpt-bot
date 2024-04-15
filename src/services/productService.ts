@@ -27,6 +27,9 @@ export function getProductTypeDisplayName(product: Subscription, targetCase: Gra
   return getCase(displayName, targetCase);
 }
 
+export const getProductShortName = (product: Subscription) =>
+  product.shortName ?? product.name;
+
 export const getProductDisplayName = (product: Subscription) =>
   (product.displayNames ? product.displayNames["Nominative"] : null)
     ?? product.displayName
