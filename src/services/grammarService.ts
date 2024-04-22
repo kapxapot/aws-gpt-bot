@@ -62,7 +62,7 @@ function getCaseByNumberGroupSetting(grammarCase: GrammarCase, group: number): G
 /**
  * Returns noun form that corresponds the provided natural number.
  */
-export function getCaseByNumber(word: KnownWord, num: number, targetCase: GrammarCase = "Nominative"): string {
+export function getCaseForNumber(word: KnownWord, num: number, targetCase: GrammarCase = "Nominative"): string {
   if (num < 0) {
     throw Error("Number must be non-negative.");
   }

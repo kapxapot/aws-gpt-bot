@@ -6,44 +6,37 @@ import { commatize, truncate } from "../lib/common";
 import { isSuccess } from "../lib/error";
 import { clearAndLeave, encodeText, reply } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
-import { addMessageToUser, getLastHistoryMessage, getOrAddUser, getUserActiveProduct, stopWaitingForGptAnswer, updateUserProduct, waitForGptAnswer } from "./userService";
+import { addMessageToUser, getLastHistoryMessage, getOrAddUser, stopWaitingForGptAnswer, updateUserProduct, waitForGptAnswer } from "./userService";
 import { commands } from "../lib/constants";
 import { formatSubscription, getCurrentSubscription } from "./subscriptionService";
 import { getCurrentHistory } from "./contextService";
-import { getCaseByNumber } from "./grammarService";
+import { getCaseForNumber } from "./grammarService";
 import { Completion } from "../entities/message";
 import { putMetric } from "./metricService";
 import { isDebugMode } from "./userSettingsService";
 import { gptTimeout } from "./gptService";
 import { happened, timeLeft } from "./dateService";
 import { AnyContext } from "../telegram/botContext";
-import { TextModelCode, defaultTextModelCode } from "../entities/model";
-import { getLastUsedAt, incUsage, isUsageLimitExceeded } from "./usageStatsService";
-import { getAvailableTextModel, getProductTypeDisplayName } from "./productService";
-import { getTextModelByCode, purifyTextModelCode } from "./modelService";
+import { PureTextModelCode, TextModelCode } from "../entities/model";
+import { incUsage, isUsageLimitExceeded } from "./usageStatsService";
+import { getProductTypeDisplayName } from "./productService";
+import { getTextModelByCode } from "./modelService";
 import { incProductUsage } from "./productUsageService";
 import { getTextModelUsagePoints } from "./modelUsageService";
-import { getUsageReport } from "./usageService";
 import { intervalPhrases, intervals } from "../entities/interval";
+import { getTextModelContext } from "./modelContextService";
+import { PurchasedProduct } from "../entities/product";
+import { Consumption, IntervalConsumptions, isIntervalConsumptions } from "../entities/consumption";
+import { getIntervalString } from "./intervalService";
+import { formatLimit } from "./usageLimitService";
+import { getConsumptionReport } from "./consumptionService";
 
 const config = {
   messageInterval: parseInt(process.env.MESSAGE_INTERVAL ?? "15") * 1000, // milliseconds
 };
 
 export async function sendMessageToGpt(ctx: AnyContext, user: User, question: string, requestedAt?: number) {
-  const activeProduct = getUserActiveProduct(user);
-
-  const productModelCode = activeProduct
-    ? getAvailableTextModel(activeProduct)
-    : null;
-
-  const usingProduct = !!activeProduct && !!productModelCode;
-
-  const modelCode = productModelCode ?? defaultTextModelCode;
-  const pureModelCode = purifyTextModelCode(modelCode);
-  const model = getTextModelByCode(modelCode);
-
-  const lastUsedAt = getLastUsedAt(user.usageStats, pureModelCode);
+  const { product, modelCode, pureModelCode, model, lastUsedAt } = getTextModelContext(user);
 
   if (user.waitingForGptAnswer) {
     if (lastUsedAt && happened(lastUsedAt.timestamp, gptTimeout * 1000)) {
@@ -57,7 +50,7 @@ export async function sendMessageToGpt(ctx: AnyContext, user: User, question: st
 
   // we check the user's usage stats if we don't use a product,
   // but fall back to the defaults
-  if (!usingProduct) {
+  if (!product) {
     for (const interval of intervals) {
       const phrases = intervalPhrases[interval];
 
@@ -81,7 +74,7 @@ export async function sendMessageToGpt(ctx: AnyContext, user: User, question: st
     if (seconds > 0) {
       await reply(
         ctx,
-        `Вы отправляете сообщения слишком часто. Подождите ${seconds} ${getCaseByNumber("секунда", seconds)}... ⏳`
+        `Вы отправляете сообщения слишком часто. Подождите ${seconds} ${getCaseForNumber("секунда", seconds)}... ⏳`
       );
 
       return;
@@ -116,16 +109,16 @@ export async function sendMessageToGpt(ctx: AnyContext, user: User, question: st
         : "Нет ответа от ChatGPT. 😣"
     );
 
-    if (usingProduct) {
+    if (product) {
       const usagePoints = getTextModelUsagePoints(modelCode);
 
-      activeProduct.usage = incProductUsage(
-        activeProduct.usage,
+      product.usage = incProductUsage(
+        product.usage,
         modelCode,
         usagePoints
       );
 
-      user = await updateUserProduct(user, activeProduct);
+      user = await updateUserProduct(user, product);
     }
 
     user = await incUsage(user, pureModelCode, message.requestedAt);
@@ -145,18 +138,13 @@ export async function sendMessageToGpt(ctx: AnyContext, user: User, question: st
     await reply(ctx, `❌ ${errorMessage}`);
   }
 
-  const usageReport = getUsageReport(
-    user,
-    modelCode,
-    pureModelCode,
-    usingProduct ? activeProduct : null
-  );
+  const consumptionReport = buildConsumptionReport(user, product, modelCode, pureModelCode);
 
   const info = buildInfo(
     user,
     modelCode,
     isSuccess(answer) ? answer : null,
-    usageReport
+    consumptionReport
   );
 
   await reply(ctx, info);
@@ -202,6 +190,45 @@ export async function getUserOrLeave(ctx: AnyContext): Promise<User | null> {
   return null;
 }
 
+function buildConsumptionReport(
+  user: User,
+  product: PurchasedProduct | null,
+  modelCode: TextModelCode,
+  pureModelCode: PureTextModelCode
+): string | null {
+  const report = getConsumptionReport(user, product, modelCode, pureModelCode);
+
+  if (!report) {
+    return null;
+  }
+
+  const what = modelCode === "gptokens" ? "гптокенов" : "запросов";
+
+  return isIntervalConsumptions(report)
+    ? formatIntervalConsumptions(report, what)
+    : formatConsumption(report, what);
+}
+
+function formatConsumption(consumption: Consumption, what: string): string {
+  const remainingCount = consumption.limit - consumption.count;
+
+  return `осталось ${what}: ${remainingCount}/${consumption.limit}`;
+}
+
+function formatIntervalConsumptions(consumptions: IntervalConsumptions, what: string): string {
+  const chunks: string[] = [];
+
+  for (const consumption of consumptions) {
+    const remainingCount = consumption.limit - consumption.count;
+
+    chunks.push(
+      `осталось ${what} в ${getIntervalString(consumption.interval, "Accusative")}: ${remainingCount}/${formatLimit(consumption.limit)}`
+    );
+  }
+
+  return commatize(chunks);
+}
+
 async function addMessageMetrics(completion: Completion) {
   await putMetric("MessageSent");
 
@@ -218,7 +245,7 @@ function buildInfo(
   user: User,
   modelCode: TextModelCode,
   answer: Completion | null,
-  usageReport: string | null
+  consumptionReport: string | null
 ) {
   const model = getTextModelByCode(modelCode);
   const chunks: string[] = [];
@@ -256,8 +283,8 @@ function buildInfo(
     }
   }
 
-  if (usageReport) {
-    chunks.push(usageReport);
+  if (consumptionReport) {
+    chunks.push(consumptionReport);
   }
 
   return commatize(chunks);

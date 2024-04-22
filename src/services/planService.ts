@@ -1,5 +1,6 @@
 import { Plan } from "../entities/plan";
 import { toCompactText } from "../lib/common";
+import { gptokenString } from "./gptokenService";
 import { getPlanSettings } from "./planSettingsService";
 
 export function isPlanActive(plan: Plan) {
@@ -51,7 +52,7 @@ export function getPlanDescription(plan: Plan): string {
     case "trial":
       return toCompactText(
         "🧪 <b>Пакет «Пробный»</b>",
-        "🔸 📀 20 гптокенов = 20 запросов к <b>GPT-4</b>",
+        `🔸 ${gptokenString(20)} = 20 запросов к <b>GPT-4</b>`,
         "🔸 или 10 картинок <b>DALL-E 3</b>",
         "🔸 99 рублей на 30 дней"
       );
@@ -59,7 +60,7 @@ export function getPlanDescription(plan: Plan): string {
     case "creative":
       return toCompactText(
         "👩‍🎨 <b>Пакет «Творческий»</b>",
-        "🔸 📀 50 гптокенов = 50 запросов к <b>GPT-4</b>",
+        `🔸 ${gptokenString(50)} = 50 запросов к <b>GPT-4</b>`,
         "🔸 или 25 картинок <b>DALL-E 3</b>",
         "🔸 199 рублей на 30 дней"
       );
@@ -67,7 +68,7 @@ export function getPlanDescription(plan: Plan): string {
     case "pro":
       return toCompactText(
         "😎 <b>Пакет «Профи»</b>",
-        "🔸 📀 150 гптокенов = 150 запросов к <b>GPT-4</b>",
+        `🔸 ${gptokenString(150)} = 150 запросов к <b>GPT-4</b>`,
         "🔸 или 75 картинок <b>DALL-E 3</b>",
         "🔸 449 рублей на 30 дней"
       );
@@ -75,7 +76,7 @@ export function getPlanDescription(plan: Plan): string {
     case "boss":
       return toCompactText(
         "🤴 <b>Пакет «Босс»</b>",
-        "🔸 📀 400 гптокенов = 400 запросов к <b>GPT-4</b>",
+        `🔸 ${gptokenString(400)} = 400 запросов к <b>GPT-4</b>`,
         "🔸 или 200 картинок <b>DALL-E 3</b>",
         "🔸 999 рублей на 30 дней"
       );
@@ -90,7 +91,7 @@ export function getPlanDescription(plan: Plan): string {
     case "test-tinygptokens":
       return toCompactText(
         "🛠 <b>Тестовый Пакет «Мелкий Gptoken»</b>:",
-        "🔸 📀 4 гптокена = 4 запроса к <b>GPT-4</b>",
+        `🔸 ${gptokenString(4)} = 4 запроса к <b>GPT-4</b>`,
         "🔸 или 2 запроса к <b>DALL-E 3</b>",
         "🔸 9999 рублей на 1 день"
       );

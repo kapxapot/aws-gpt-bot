@@ -1,8 +1,8 @@
 import { now } from "../entities/at";
-import { ImageSettings, defaultImageModelCode, defaultImageSize } from "../entities/model";
+import { ImageSettings, defaultImageSize } from "../entities/model";
 import { User } from "../entities/user";
 import { gptImageGeneration } from "../external/gptImageGeneration";
-import { getCaseByNumber } from "./grammarService";
+import { getCaseForNumber } from "./grammarService";
 import { commands } from "../lib/constants";
 import { anotherImageButton, cancelButton } from "../lib/dialog";
 import { isSuccess } from "../lib/error";
@@ -12,16 +12,14 @@ import { AnyContext } from "../telegram/botContext";
 import { happened, timeLeft } from "./dateService";
 import { gptTimeout } from "./gptService";
 import { putMetric } from "./metricService";
-import { getLastUsedAt, incUsage, isUsageLimitExceeded } from "./usageStatsService";
-import { getUserActiveProduct, stopWaitingForGptImageGeneration, updateUserProduct, waitForGptImageGeneration } from "./userService";
+import { incUsage, isUsageLimitExceeded } from "./usageStatsService";
+import { stopWaitingForGptImageGeneration, updateUserProduct, waitForGptImageGeneration } from "./userService";
 import { PassThrough } from "stream";
-import { getAvailableImageModel } from "./productService";
-import { getImageModelByCode, purifyImageModelCode } from "./modelService";
 import { incProductUsage } from "./productUsageService";
-import { getImageModelUsagePoints } from "./modelUsageService";
 import { intervalPhrases, intervals } from "../entities/interval";
 import { toText } from "../lib/common";
 import { Markup } from "telegraf";
+import { getImageModelContext } from "./modelContextService";
 
 const config = {
   imageInterval: parseInt(process.env.IMAGE_INTERVAL ?? "60") * 1000, // milliseconds
@@ -29,19 +27,8 @@ const config = {
 
 export async function generateImageWithGpt(ctx: AnyContext, user: User, prompt: string): Promise<boolean> {
   const requestedAt = now();
-  const activeProduct = getUserActiveProduct(user);
-
-  const productModelCode = activeProduct
-    ? getAvailableImageModel(activeProduct)
-    : null;
-
-  const usingProduct = activeProduct && productModelCode;
-
-  const modelCode = productModelCode ?? defaultImageModelCode;
-  const pureModelCode = purifyImageModelCode(modelCode);
-  const model = getImageModelByCode(modelCode);
-
-  const lastUsedAt = getLastUsedAt(user.usageStats, pureModelCode);
+  const { product, modelCode, pureModelCode, model, lastUsedAt, imageSettings, usagePoints } =
+    getImageModelContext(user);
 
   if (user.waitingForGptImageGeneration) {
     if (lastUsedAt && happened(lastUsedAt.timestamp, gptTimeout * 1000)) {
@@ -55,7 +42,7 @@ export async function generateImageWithGpt(ctx: AnyContext, user: User, prompt: 
 
   // we check the user's usage stats if we don't use a product,
   // but fall back to the defaults
-  if (!usingProduct) {
+  if (!product) {
     for (const interval of intervals) {
       const phrases = intervalPhrases[interval];
 
@@ -79,7 +66,7 @@ export async function generateImageWithGpt(ctx: AnyContext, user: User, prompt: 
     if (seconds > 0) {
       await reply(
         ctx,
-        `Вы отправляете запросы слишком часто. Подождите ${seconds} ${getCaseByNumber("секунда", seconds)}... ⏳`
+        `Вы отправляете запросы слишком часто. Подождите ${seconds} ${getCaseForNumber("секунда", seconds)}... ⏳`
       );
 
       return false;
@@ -87,8 +74,6 @@ export async function generateImageWithGpt(ctx: AnyContext, user: User, prompt: 
   }
 
   const messages = await reply(ctx, "👨‍🎨 Рисую вашу картинку, подождите... ⏳");
-
-  const imageSettings=  getDefaultImageSettings();
 
   let imageRequest = await storeImageRequest({
     userId: user.id,
@@ -147,35 +132,18 @@ export async function generateImageWithGpt(ctx: AnyContext, user: User, prompt: 
       await ctx.replyWithPhoto({ source: stream });
     }
 
-    if (usingProduct) {
-      const usagePoints = getImageModelUsagePoints(modelCode, imageSettings);
-
-      activeProduct.usage = incProductUsage(
-        activeProduct.usage,
+    if (product) {
+      product.usage = incProductUsage(
+        product.usage,
         modelCode,
         usagePoints
       );
 
-      user = await updateUserProduct(user, activeProduct);
+      user = await updateUserProduct(user, product);
     }
 
     user = await incUsage(user, pureModelCode, requestedAt);
 
-    // const usageReport = getUsageReport(
-    //   user,
-    //   modelCode,
-    //   pureModelCode,
-    //   usingProduct ? activeProduct : null
-    // );
-  
-    // const info = buildInfo(
-    //   user,
-    //   modelCode,
-    //   usageReport
-    // );
-  
-    // await reply(ctx, info);
-  
     await putMetric("ImageGenerated");
 
     return true;
@@ -206,24 +174,3 @@ export const getDefaultImageSettings = (): ImageSettings => ({
 
 export const imageSettingsEqual = (settingsA: ImageSettings, settingsB: ImageSettings) =>
   settingsA.size === settingsB.size && settingsA.quality === settingsB.quality;
-
-// function buildInfo(
-//   user: User,
-//   modelCode: ImageModelCode,
-//   usageReport: string | null
-// ) {
-//   const model = getImageModelByCode(modelCode);
-//   const chunks: string[] = [];
-
-//   chunks.push(`📌 Режим: <b>${getModeName(user)}</b>`);
-
-//   if (isDebugMode(user)) {
-//     chunks.push(`модель запроса: ${model}`);
-//   }
-
-//   if (usageReport) {
-//     chunks.push(usageReport);
-//   }
-
-//   return commatize(chunks);
-// }

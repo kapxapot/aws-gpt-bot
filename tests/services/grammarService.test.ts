@@ -1,4 +1,4 @@
-import { getCase, getCaseByNumber } from "../../src/services/grammarService";
+import { getCase, getCaseForNumber } from "../../src/services/grammarService";
 
 describe("getCase", () => {
   test("should get correct case", () => {
@@ -13,18 +13,18 @@ describe("getCase", () => {
 
   test("should get correct case by number", () => {
     expect([
-      getCaseByNumber("секунда", 1),
-      getCaseByNumber("секунда", 4),
-      getCaseByNumber("секунда", 59),
-      getCaseByNumber("картинка", 10),
-      getCaseByNumber("выпуск", 15),
-      getCaseByNumber("пакет", 51),
-      getCaseByNumber("день", 132),
-      getCaseByNumber("пользователь", 5),
-      getCaseByNumber("час", 11),
-      getCaseByNumber("минута", 4),
-      getCaseByNumber("копия", 8),
-      getCaseByNumber("слово", 6),
+      getCaseForNumber("секунда", 1),
+      getCaseForNumber("секунда", 4),
+      getCaseForNumber("секунда", 59),
+      getCaseForNumber("картинка", 10),
+      getCaseForNumber("выпуск", 15),
+      getCaseForNumber("пакет", 51),
+      getCaseForNumber("день", 132),
+      getCaseForNumber("пользователь", 5),
+      getCaseForNumber("час", 11),
+      getCaseForNumber("минута", 4),
+      getCaseForNumber("копия", 8),
+      getCaseForNumber("слово", 6),
     ]).toEqual([
       "секунда",
       "секунды",
@@ -43,24 +43,24 @@ describe("getCase", () => {
 
   test("should get correct case by number with target case", () => {
     expect([
-      getCaseByNumber("секунда", 1, "Nominative"),
-      getCaseByNumber("секунда", 2, "Nominative"),
-      getCaseByNumber("секунда", 5, "Nominative"),
-      getCaseByNumber("секунда", 1, "Genitive"),
-      getCaseByNumber("секунда", 2, "Genitive"),
-      getCaseByNumber("секунда", 5, "Genitive"),
-      getCaseByNumber("секунда", 1, "Dative"),
-      getCaseByNumber("секунда", 2, "Dative"),
-      getCaseByNumber("секунда", 5, "Dative"),
-      getCaseByNumber("секунда", 1, "Accusative"),
-      getCaseByNumber("секунда", 2, "Accusative"),
-      getCaseByNumber("секунда", 5, "Accusative"),
-      getCaseByNumber("секунда", 1, "Instrumental"),
-      getCaseByNumber("секунда", 2, "Instrumental"),
-      getCaseByNumber("секунда", 5, "Instrumental"),
-      getCaseByNumber("секунда", 1, "Prepositional"),
-      getCaseByNumber("секунда", 2, "Prepositional"),
-      getCaseByNumber("секунда", 5, "Prepositional"),
+      getCaseForNumber("секунда", 1, "Nominative"),
+      getCaseForNumber("секунда", 2, "Nominative"),
+      getCaseForNumber("секунда", 5, "Nominative"),
+      getCaseForNumber("секунда", 1, "Genitive"),
+      getCaseForNumber("секунда", 2, "Genitive"),
+      getCaseForNumber("секунда", 5, "Genitive"),
+      getCaseForNumber("секунда", 1, "Dative"),
+      getCaseForNumber("секунда", 2, "Dative"),
+      getCaseForNumber("секунда", 5, "Dative"),
+      getCaseForNumber("секунда", 1, "Accusative"),
+      getCaseForNumber("секунда", 2, "Accusative"),
+      getCaseForNumber("секунда", 5, "Accusative"),
+      getCaseForNumber("секунда", 1, "Instrumental"),
+      getCaseForNumber("секунда", 2, "Instrumental"),
+      getCaseForNumber("секунда", 5, "Instrumental"),
+      getCaseForNumber("секунда", 1, "Prepositional"),
+      getCaseForNumber("секунда", 2, "Prepositional"),
+      getCaseForNumber("секунда", 5, "Prepositional"),
     ]).toEqual([
       "секунда", // кто? что? одна секунда
       "секунды", // кто? что? две секунды

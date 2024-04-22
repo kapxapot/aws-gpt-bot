@@ -3,15 +3,12 @@ import { Interval, intervals } from "../entities/interval";
 import { ModelCode } from "../entities/model";
 import { ProductModelUsage, ProductUsage } from "../entities/modelUsage";
 import { PurchasedProduct } from "../entities/product";
-import { User } from "../entities/user";
-import { commatize, isNumber } from "../lib/common";
+import { isNumber } from "../lib/common";
 import { settings } from "../lib/constants";
 import { startOf } from "./dateService";
-import { getIntervalString } from "./intervalService";
 import { buildIntervalUsages, getIntervalUsage, incIntervalUsage } from "./intervalUsageService";
 import { getPlanSettingsModelLimit } from "./planSettingsService";
 import { getProductPlanSettings } from "./productService";
-import { formatLimit } from "./usageLimitService";
 
 export function isProductUsageExceeded(product: PurchasedProduct, modelCode: ModelCode): boolean {
   const usage = product.usage;
@@ -74,53 +71,12 @@ export function buildProductModelUsage(now: At, usagePoints: number): ProductMod
   };
 }
 
-export function getProductUsageReport(
-  user: User,
-  product: PurchasedProduct,
-  modelCode: ModelCode
-): string | null {
-  const usage = product.usage;
-
-  // get all limits for the product's plan
-  const settings = getProductPlanSettings(product);
-  const limit = getPlanSettingsModelLimit(settings, modelCode);
-
-  // ignore numeric limit for now - it is not used
-  if (!limit) {
-    return null;
-  }
-
-  if (isNumber(limit)) {
-    const what = modelCode === "gptokens" ? "гптокенов" : "запросов";
-    return `осталось ${what}: ${getProductUsageCount(usage, modelCode)}/${limit}`;
-  }
-
-  // for every limit get usage and build string
-  const chunks: string[] = [];
-
-  for (const key in Object.keys(limit)) {
-    const interval = key as Interval;
-    const intervalLimit = limit[interval];
-
-    if (!intervalLimit) {
-      continue;
-    }
-
-    const usageCount = getProductIntervalUsageCount(usage, modelCode, interval);
-    const limitString = formatLimit(intervalLimit);
-
-    chunks.push(`осталось в ${getIntervalString(interval, "Accusative")}: ${usageCount}/${limitString}`);
-  }
-
-  return commatize(chunks);
-}
-
-function getProductUsageCount(usage: ProductUsage, modelCode: ModelCode): number {
+export function getProductUsageCount(usage: ProductUsage, modelCode: ModelCode): number {
   const modelUsage = getProductModelUsage(usage, modelCode);
   return modelUsage?.count ?? 0;
 }
 
-function getProductIntervalUsageCount(
+export function getProductIntervalUsageCount(
   usage: ProductUsage,
   modelCode: ModelCode,
   interval: Interval

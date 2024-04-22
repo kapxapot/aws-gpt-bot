@@ -30,7 +30,8 @@ export const derivedWords = [
   "пакет",
   "секунда",
   "час",
-  "запрос"
+  "запрос",
+  "гптокен"
 ] as const;
 
 export type GrammarCase = typeof cases[number];
@@ -65,7 +66,7 @@ export const caseTemplates: Record<TemplateWord, CaseForms> = {
     "Singular": ["%", "%а", "%у", "%", "%ом", "%е"],
     "Plural": ["%и", "%ов", "%ам", "%и", "%ами", "%ах"]
   },
-  // [тариф], [пакет], [запрос]
+  // [тариф], [пакет], [запрос], [гптокен]
   "тариф": {
     "Singular": ["%", "%а", "%у", "%", "%ом", "%е"],
     "Plural": ["%ы", "%ов", "%ам", "%ы", "%ами", "%ах"]
@@ -124,5 +125,6 @@ export const derivedCaseData: Record<DerivedWord, DerivedCaseData> = {
   "пакет": { base: "пакет", template: "тариф" },
   "секунда": { base: "секунд", template: "минута" },
   "час": { base: "час", template: "тариф" },
-  "запрос": { base: "запрос", template: "тариф" }
+  "запрос": { base: "запрос", template: "тариф" },
+  "гптокен": { base: "гптокен", template: "тариф" }
 };

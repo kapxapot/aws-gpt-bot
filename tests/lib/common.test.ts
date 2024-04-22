@@ -1,4 +1,4 @@
-import { commatize, isNumber, phoneToItu, toCompactText, toSanitizedArray, toText } from "../../src/lib/common";
+import { capitalize, commatize, isNumber, phoneToItu, toCompactText, toSanitizedArray, toText } from "../../src/lib/common";
 
 const uglyArray = [
   "",
@@ -65,5 +65,13 @@ describe("isNumber", () => {
       false,
       false
     ])
+  });
+});
+
+describe("capitalize", () => {
+  test("should capitalize strings", () => {
+    expect(capitalize("")).toBe("");
+    expect(capitalize("a")).toBe("A");
+    expect(capitalize("ab")).toBe("Ab");
   });
 });

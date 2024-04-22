@@ -42,3 +42,5 @@ export const settings = {
   },
   defaultUsagePoints: 1
 } as const;
+
+export const gptokenSymbol = "🍥";

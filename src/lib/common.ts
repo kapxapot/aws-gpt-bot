@@ -54,3 +54,11 @@ export function isNumber(v: unknown): v is number {
 export function isUndefined(v: unknown): v is undefined {
   return typeof v === "undefined";
 }
+
+export function capitalize(str: string): string {
+  if (str.length < 1) {
+    return str;
+  }
+
+  return str.substring(0, 1).toUpperCase() + str.substring(1);
+}
