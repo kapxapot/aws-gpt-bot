@@ -1,3 +1,5 @@
+import { symbols } from "./constants";
+
 export function toArray<T>(value: T | T[] | undefined | null): T[] {
   if (value === null || isUndefined(value)) {
     return [];
@@ -62,3 +64,5 @@ export function capitalize(str: string): string {
 
   return str.substring(0, 1).toUpperCase() + str.substring(1);
 }
+
+export const list = (...lines: string[]) => lines.map(line => `${symbols.bullet} ${line}`);

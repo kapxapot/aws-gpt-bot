@@ -1,6 +1,6 @@
 import { BaseScene } from "telegraf/scenes";
 import { BotContext } from "../botContext";
-import { commands, gptokenSymbol, scenes, settings } from "../../lib/constants";
+import { commands, scenes, settings, symbols } from "../../lib/constants";
 import { addOtherCommandHandlers, backToMainDialogHandler, dunnoHandler, kickHandler } from "../handlers";
 import { canRequestImageGeneration } from "../../services/permissionService";
 import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
@@ -9,7 +9,7 @@ import { generateImageWithGpt } from "../../services/imageService";
 import { ImageStage, SessionData } from "../session";
 import { anotherImageAction, cancelAction, cancelButton } from "../../lib/dialog";
 import { getUserOrLeave } from "../../services/messageService";
-import { capitalize, commatize, toCompactText } from "../../lib/common";
+import { capitalize, commatize, list, toCompactText } from "../../lib/common";
 import { getImageModelContext } from "../../services/modelContextService";
 import { User } from "../../entities/user";
 import { PurchasedProduct } from "../../entities/product";
@@ -86,22 +86,22 @@ async function mainHandler (ctx: BotContext) {
     getImageModelContext(user);
 
   const modelDescription: string[] = [
-    `🔸 модель: ${model}`,
-    `🔸 размер: ${imageSettings.size}`,
+    `модель: ${model}`,
+    `размер: ${imageSettings.size}`,
   ];
 
   if (imageSettings.quality) {
-    modelDescription.push(`🔸 качество: ${imageSettings.quality}`);
+    modelDescription.push(`качество: ${imageSettings.quality}`);
   }
 
   if (modelCode === "gptokens") {
-    modelDescription.push(`🔸 стоимость: ${gptokenString(usagePoints)}`);
+    modelDescription.push(`стоимость: ${gptokenString(usagePoints)}`);
   }
 
   const messages = [
     `🖼 Генерация картинок с помощью <b>DALL-E</b>`,
     toCompactText(
-      ...modelDescription,
+      ...list(...modelDescription),
     ),
   ];
 
@@ -146,7 +146,7 @@ function buildConsumptionReport(
   const capReport = capitalize(formattedConsumption);
 
   return gptokens
-    ? `${gptokenSymbol} ${capReport}`
+    ? `${symbols.gptoken} ${capReport}`
     : capReport;
 }
 

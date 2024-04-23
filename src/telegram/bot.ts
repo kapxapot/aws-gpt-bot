@@ -19,7 +19,7 @@ import { Update } from "telegraf/types";
 import { sessionStore } from "./sessionStore";
 import { imageScene } from "./scenes/imageScene";
 import { remindAction } from "../lib/dialog";
-import { toCompactText } from "../lib/common";
+import { list, toCompactText } from "../lib/common";
 
 const config = {
   botToken: process.env.BOT_TOKEN!,
@@ -67,9 +67,11 @@ export async function processTelegramRequest(tgRequest: TelegramRequest) {
         `Привет, <b>${userName(ctx.from)}</b>! 🤖 Я — <b>GPToid</b>, бот, созданный помогать вам в работе с <b>ChatGPT</b>!`,
         toCompactText(
           "Здесь вы можете работать с такими моделями как <b>GPT-3.5 Turbo</b>, <b>GPT-4 Turbo</b> и <b>DALL-E 3</b>.",
-          `🔸 Советуем начать с обучения /${commands.tutorial}, если вы новичок в <b>ChatGPT</b> и <b>DALL-E</b>.`,
-          `🔸 Также у меня есть разные режимы работы: /${commands.mode}`,
-          `🔸 А еще вы можете приобрести пакеты услуг /${commands.premium} для увеличения числа запросов к <b>GPT-3.5</b> и получения доступа к <b>GPT-4</b> и <b>DALL-E</b>.`
+          ...list(
+            `Советуем начать с обучения /${commands.tutorial}, если вы новичок в <b>ChatGPT</b> и <b>DALL-E</b>.`,
+            `Также у меня есть разные режимы работы: /${commands.mode}`,
+            `А еще вы можете приобрести пакеты услуг /${commands.premium} для увеличения числа запросов к <b>GPT-3.5</b> и получения доступа к <b>GPT-4</b> и <b>DALL-E</b>.`
+          )
         ),
         `Вы всегда можете обратиться к нам с вопросами или предложениями: /${commands.support}`
       );

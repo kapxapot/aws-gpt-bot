@@ -2,7 +2,7 @@ import { Composer } from "telegraf";
 import { WizardScene } from "telegraf/scenes";
 import { BotContext } from "../botContext";
 import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
-import { commands, gptokenSymbol, scenes } from "../../lib/constants";
+import { commands, scenes, symbols } from "../../lib/constants";
 import { addOtherCommandHandlers, backToMainDialogHandler, dunnoHandler, kickHandler } from "../handlers";
 import { getDefaultImageSettings } from "../../services/imageService";
 import { gptokenString } from "../../services/gptokenService";
@@ -139,7 +139,7 @@ ChatGPT не просто копирует данные из интернета,
 
 Модель <b>DALL-E</b> позволяет генерировать картинки по текстовому запросу.
 
-Обе модели доступны при покупке пакетов (/${commands.premium}) с ${gptokenSymbol} <b>гптокенами</b> — нашей специальной «валютой». На один гптокен можно написать запрос к <b>GPT-4</b>, а на два — создать картинку ${defaultImageSettings.size} в <b>DALL-E 3</b>.
+Обе модели доступны при покупке пакетов (/${commands.premium}) с ${symbols.gptoken} <b>гптокенами</b> — нашей специальной «валютой». На один гптокен можно написать запрос к <b>GPT-4</b>, а на два — создать картинку ${defaultImageSettings.size} в <b>DALL-E 3</b>.
 
 То есть, пакета в ${gptokenString(100)} вам хватит на 100 запросов к <b>GPT-4</b> или генерацию 50 картинок.`,
 

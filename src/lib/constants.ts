@@ -43,4 +43,8 @@ export const settings = {
   defaultUsagePoints: 1
 } as const;
 
-export const gptokenSymbol = "🍥";
+export const symbols = {
+  infinity: "♾",
+  gptoken: "🍥",
+  bullet: "🔹"
+} as const;

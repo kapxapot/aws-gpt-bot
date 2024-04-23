@@ -1,4 +1,5 @@
 import { Interval } from "../entities/interval";
+import { symbols } from "../lib/constants";
 import { getCaseForNumber } from "./grammarService";
 import { getIntervalString } from "./intervalService";
 
@@ -10,6 +11,6 @@ export function getUsageLimitText(limit: number, interval: Interval): string {
 
 export function formatLimit(limit: number): string {
   return limit === Number.POSITIVE_INFINITY
-    ? "♾"
+    ? symbols.infinity
     : String(limit);
 }

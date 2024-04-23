@@ -1,8 +1,8 @@
-import { gptokenSymbol } from "../lib/constants";
+import { symbols } from "../lib/constants";
 import { getCaseForNumber } from "./grammarService";
 
 export function gptokenString(amount: number): string {
   const intAmount = Math.floor(amount);
 
-  return `${gptokenSymbol} ${amount} ${getCaseForNumber("гптокен", intAmount)}`;
+  return `${symbols.gptoken} ${amount} ${getCaseForNumber("гптокен", intAmount)}`;
 }
