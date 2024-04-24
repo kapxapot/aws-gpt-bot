@@ -14,7 +14,7 @@ import { canMakePurchases, canPurchaseProduct } from "../../services/permissionS
 import { cancelAction, cancelButton } from "../../lib/dialog";
 import { getUserOrLeave } from "../../services/messageService";
 import { SessionData } from "../session";
-import { list, orJoin, phoneToItu, toText } from "../../lib/common";
+import { list, orJoin, phoneToItu, toCompactText, toText } from "../../lib/common";
 import { message } from "telegraf/filters";
 import { updateUser } from "../../storage/userStorage";
 import { getProductByCode, getProductFullDisplayName, getProductShortName, getProductTypeDisplayName, gpt3Products, gptokenProducts } from "../../services/productService";
@@ -52,9 +52,11 @@ const productGroups: ProductGroup[] = [
     marketingMessage: "вы хотите работать с <b>GPT-4</b> и <b>DALL-E</b>",
     description: toText(
       `Пакеты ${symbols.gptoken} гптокенов для работы с <b>GPT-4</b> и <b>DALL-E</b>`,
-      ...list(
-        `1 запрос к GPT-4 = ${gptokenString(1)}`,
-        `1 картинка DALL-E 3 = от ${gptokenString(2, "Genitive")}`
+      toCompactText(
+        ...list(
+          `1 запрос к GPT-4 = ${gptokenString(1)}`,
+          `1 картинка DALL-E 3 = от ${gptokenString(2, "Genitive")}`
+        )
       )
     )
   }
@@ -75,23 +77,8 @@ scene.enter(async ctx => {
   const subscription = getCurrentSubscription(user);
   const plan = getSubscriptionPlan(subscription);
 
-  const productGroups: ProductGroup[] = [
-    {
-      code: "gpt3",
-      name: "GPT-3.5",
-      products: filterPurchasable(user, gpt3Products),
-      marketingMessage: "вам нужно больше запросов к <b>GPT-3.5</b>"
-    },
-    {
-      code: "gptoken",
-      name: "GPT-4 / DALL-E",
-      products: filterPurchasable(user, gptokenProducts),
-      marketingMessage: "вы хотите работать с <b>GPT-4</b> и <b>DALL-E</b>"
-    }
-  ];
-
   const validProductGroups = filteredProductGroups(user);
-  const productCount = productGroups.reduce((sum, group) => sum + group.products.length, 0);
+  const productCount = validProductGroups.reduce((sum, group) => sum + group.products.length, 0);
 
   const messages = [
     `Ваш текущий ${getProductTypeDisplayName(subscription)}:`,
