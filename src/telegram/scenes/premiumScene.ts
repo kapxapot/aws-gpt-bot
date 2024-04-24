@@ -1,6 +1,6 @@
 import { BaseScene } from "telegraf/scenes";
 import { AnyContext, BotContext } from "../botContext";
-import { commands, scenes } from "../../lib/constants";
+import { commands, scenes, symbols } from "../../lib/constants";
 import { addOtherCommandHandlers, backToMainDialogHandler, dunnoHandler, kickHandler } from "../handlers";
 import { ButtonLike, clearInlineKeyboard, contactKeyboard, contactRequestLabel, emptyKeyboard, inlineKeyboard, reply, replyBackToMainDialog, replyWithKeyboard } from "../../lib/telegram";
 import { PaymentEvent } from "../../entities/payment";
@@ -14,12 +14,13 @@ import { canMakePurchases, canPurchaseProduct } from "../../services/permissionS
 import { cancelAction, cancelButton } from "../../lib/dialog";
 import { getUserOrLeave } from "../../services/messageService";
 import { SessionData } from "../session";
-import { orJoin, phoneToItu, toText } from "../../lib/common";
+import { list, orJoin, phoneToItu, toText } from "../../lib/common";
 import { message } from "telegraf/filters";
 import { updateUser } from "../../storage/userStorage";
 import { getProductByCode, getProductFullDisplayName, getProductShortName, getProductTypeDisplayName, gpt3Products, gptokenProducts } from "../../services/productService";
 import { User } from "../../entities/user";
 import { getPlanDescription } from "../../services/planService";
+import { gptokenString } from "../../services/gptokenService";
 
 type Message = string;
 
@@ -33,6 +34,7 @@ type ProductGroup = {
   name: string;
   products: Product[];
   marketingMessage: string;
+  description: string;
 };
 
 const productGroups: ProductGroup[] = [
@@ -40,13 +42,21 @@ const productGroups: ProductGroup[] = [
     code: "gpt3",
     name: "GPT-3.5",
     products: gpt3Products,
-    marketingMessage: "вам нужно больше запросов к <b>GPT-3.5</b>"
+    marketingMessage: "вам нужно больше запросов к <b>GPT-3.5</b>",
+    description: "Пакеты запросов к модели <b>GPT-3.5</b>"
   },
   {
     code: "gptoken",
     name: "GPT-4 / DALL-E",
     products: gptokenProducts,
-    marketingMessage: "вы хотите работать с <b>GPT-4</b> и <b>DALL-E</b>"
+    marketingMessage: "вы хотите работать с <b>GPT-4</b> и <b>DALL-E</b>",
+    description: toText(
+      `Пакеты ${symbols.gptoken} гптокенов для работы с <b>GPT-4</b> и <b>DALL-E</b>`,
+      ...list(
+        `1 запрос к GPT-4 = ${gptokenString(1)}`,
+        `1 картинка DALL-E 3 = от ${gptokenString(2, "Genitive")}`
+      )
+    )
   }
 ];
 
@@ -111,9 +121,7 @@ scene.enter(async ctx => {
   await replyWithKeyboard(
     ctx,
     inlineKeyboard(
-      ...validProductGroups.map(
-        group => [getGroupAction(group), `Пакеты ${group.name}`] as ButtonLike
-      ),
+      ...validProductGroups.map(group => productGroupButton(group)),
       cancelButton
     ),
     ...messages
@@ -137,6 +145,7 @@ for (const group of productGroups) {
 }
 
 async function groupAction(ctx: AnyContext, group: ProductGroup) {
+  await clearInlineKeyboard(ctx);
   const user = await getUserOrLeave(ctx);
 
   if (!user) {
@@ -150,13 +159,13 @@ async function groupAction(ctx: AnyContext, group: ProductGroup) {
   await replyWithKeyboard(
     ctx,
     inlineKeyboard(...buttons, cancelButton),
+    group.description,
     ...messages
   );
 }
 
 async function buyAction(ctx: AnyContext, productCode: ProductCode) {
   await clearInlineKeyboard(ctx);
-
   const user = await getUserOrLeave(ctx);
 
   if (!user) {
@@ -321,15 +330,22 @@ function listProducts(products: Product[]): MessagesAndButtons {
   for (const product of products) {
     const productPlan = getSubscriptionPlan(product);
 
-    messages.push(getPlanDescription(productPlan));
-    buttons.push([
-      `Купить ${getProductShortName(product)}`,
-      getProductBuyAction(product.code)
-    ]);
+    messages.push(getPlanDescription(productPlan, "short"));
+    buttons.push(productButton(product));
   }
 
   return { messages, buttons };
 }
+
+const productButton = (product: Product): ButtonLike => [
+  `Купить ${getProductShortName(product)}`,
+  getProductBuyAction(product.code)
+];
+
+const productGroupButton = (group: ProductGroup): ButtonLike => [
+  `Пакеты ${group.name}`,
+  getGroupAction(group)
+];
 
 function filteredProductGroups(user: User): ProductGroup[] {
   return productGroups

@@ -1,7 +1,7 @@
 import { BaseScene } from "telegraf/scenes";
 import { BotContext } from "../botContext";
 import { commands, commonMessages, scenes, settings } from "../../lib/constants";
-import { clearAndLeave, clearInlineKeyboard, inlineKeyboard, reply, replyBackToMainDialog, replyWithKeyboard } from "../../lib/telegram";
+import { ButtonLike, clearAndLeave, clearInlineKeyboard, inlineKeyboard, reply, replyBackToMainDialog, replyWithKeyboard } from "../../lib/telegram";
 import { backToCustomPrompt, getOrAddUser, newCustomPrompt, setFreeMode, setPrompt } from "../../services/userService";
 import { getModeName, getModes, getPrompts } from "../../entities/prompt";
 import { addOtherCommandHandlers, backToMainDialogHandler, dunnoHandler, kickHandler } from "../handlers";
@@ -69,7 +69,7 @@ getModes().forEach(mode => {
         mode.description
       ];
 
-      const buttons = [];
+      const buttons: ButtonLike[] = [];
 
       switch (mode.code) {
         case "free":

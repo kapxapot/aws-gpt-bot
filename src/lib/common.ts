@@ -61,6 +61,9 @@ export function capitalize(str: string): string {
   return str.substring(0, 1).toUpperCase() + str.substring(1);
 }
 
+/**
+ * Sanitizes the array and adds the bullet symbol to every line.
+ */
 export const list = (...lines: string[]) => toSanitizedArray(lines)
   .map(line => `${symbols.bullet} ${line}`);
 
