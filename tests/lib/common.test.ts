@@ -1,4 +1,4 @@
-import { capitalize, commatize, isNumber, phoneToItu, toCompactText, toSanitizedArray, toText } from "../../src/lib/common";
+import { andJoin, capitalize, commatize, isNumber, orJoin, phoneToItu, toCompactText, toSanitizedArray, toText } from "../../src/lib/common";
 
 const uglyArray = [
   "",
@@ -73,5 +73,23 @@ describe("capitalize", () => {
     expect(capitalize("")).toBe("");
     expect(capitalize("a")).toBe("A");
     expect(capitalize("ab")).toBe("Ab");
+  });
+});
+
+describe("andJoin", () => {
+  test("should join string with `и`", () => {
+    expect(andJoin()).toBe("");
+    expect(andJoin("a")).toBe("a");
+    expect(andJoin("a", "b")).toBe("a и b");
+    expect(andJoin("a", "b", "c")).toBe("a, b и c");
+  });
+});
+
+describe("orJoin", () => {
+  test("should join string with `или`", () => {
+    expect(orJoin()).toBe("");
+    expect(orJoin("a")).toBe("a");
+    expect(orJoin("a", "b")).toBe("a или b");
+    expect(orJoin("a", "b", "c")).toBe("a, b или c");
   });
 });

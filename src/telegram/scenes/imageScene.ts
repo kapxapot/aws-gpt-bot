@@ -72,7 +72,7 @@ async function mainHandler (ctx: BotContext) {
     return;
   }
 
-  const imageGenerationAllowed = canRequestImageGeneration(user);
+  const imageGenerationAllowed = canRequestImageGeneration();
 
   if (!imageGenerationAllowed) {
     await reply(ctx, "⛔ Генерация картинок недоступна.");

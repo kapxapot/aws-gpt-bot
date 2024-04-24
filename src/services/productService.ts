@@ -36,38 +36,35 @@ export const getProductDisplayName = (product: Subscription) =>
     ?? product.name;
 
 export function getProductByCode(code: ProductCode): Product {
-  switch (code) {
-    case "subscription-premium-30-days":
-      return premiumSubscription();
+  const products = [
+    ...gpt3Products,
+    ...gptokenProducts
+  ];
 
-    case "subscription-unlimited-30-days":
-      return unlimitedSubscription();
+  const product = products.find(p => p.code === code);
 
-    case "bundle-novice-30-days":
-      return noviceBundle();
-
-    case "bundle-student-30-days":
-      return studentBundle();
-
-    case "bundle-trial-30-days":
-      return trialBundle();
-
-    case "bundle-creative-30-days":
-      return creativeBundle();
-
-    case "bundle-pro-30-days":
-      return proBundle();
-
-    case "bundle-boss-30-days":
-      return bossBundle();
-
-    case "test-bundle-tiny-gpt3-1-day":
-      return testTinyGpt3Bundle();
-
-    case "test-bundle-tiny-gptokens-1-day":
-      return testTinyGptokenBundle();
+  if (product) {
+    return product;
   }
+
+  throw new Error(`Product not found: ${code}`);
 }
+
+export const gpt3Products = [
+  premiumSubscription,
+  unlimitedSubscription,
+  noviceBundle,
+  studentBundle,
+  testTinyGpt3Bundle
+];
+
+export const gptokenProducts = [
+  trialBundle,
+  creativeBundle,
+  proBundle,
+  bossBundle,
+  testTinyGptokenBundle
+];
 
 export const isActiveProduct = (product: PurchasedProduct) =>
   !isProductExpired(product) && !isProductExhausted(product);

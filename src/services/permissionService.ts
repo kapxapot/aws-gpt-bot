@@ -11,8 +11,8 @@ export const canMakePurchases = (user: User) => isProd() || isTester(user);
 /**
  * For now it's simple, but later the quotas will be taken into account too.
  */
-export const canRequestImageGeneration = (user: User) => {
-  return !!user; // just to use the user var
+export const canRequestImageGeneration = () => {
+  return true;
 }
 
 export function canPurchaseProduct(user: User, productCode: ProductCode) {
@@ -22,11 +22,6 @@ export function canPurchaseProduct(user: User, productCode: ProductCode) {
 
   const product = getProductByCode(productCode);
   const plan = getSubscriptionPlan(product);
-  // const userPlan = getUserPlan(user);
-
-  // if (userPlan === plan) {
-  //   return false;
-  // }
 
   return isPlanActive(plan);
 }

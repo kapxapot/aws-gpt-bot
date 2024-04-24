@@ -1,8 +1,10 @@
+import { ButtonLike } from "./telegram";
+
 export const cancelAction = "cancel";
-export const cancelButton = ["Отмена", cancelAction];
+export const cancelButton: ButtonLike = ["Отмена", cancelAction];
 
 export const remindAction = "remindLastMessage";
-export const remindButton = ["На чем мы остановились?", remindAction];
+export const remindButton: ButtonLike = ["На чем мы остановились?", remindAction];
 
 export const anotherImageAction = "anotherImage";
-export const anotherImageButton = ["Создать еще одну", anotherImageAction];
+export const anotherImageButton: ButtonLike = ["Создать еще одну", anotherImageAction];

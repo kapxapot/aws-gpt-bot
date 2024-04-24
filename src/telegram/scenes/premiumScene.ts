@@ -2,25 +2,56 @@ import { BaseScene } from "telegraf/scenes";
 import { AnyContext, BotContext } from "../botContext";
 import { commands, scenes } from "../../lib/constants";
 import { addOtherCommandHandlers, backToMainDialogHandler, dunnoHandler, kickHandler } from "../handlers";
-import { clearInlineKeyboard, contactKeyboard, contactRequestLabel, emptyKeyboard, inlineKeyboard, reply, replyBackToMainDialog, replyWithKeyboard } from "../../lib/telegram";
+import { ButtonLike, clearInlineKeyboard, contactKeyboard, contactRequestLabel, emptyKeyboard, inlineKeyboard, reply, replyBackToMainDialog, replyWithKeyboard } from "../../lib/telegram";
 import { PaymentEvent } from "../../entities/payment";
 import { storePayment } from "../../storage/paymentStorage";
 import { yooMoneyPayment } from "../../external/yooMoneyPayment";
 import { now } from "../../entities/at";
 import { Product, ProductCode, productCodes } from "../../entities/product";
 import { isError } from "../../lib/error";
-import { getSubscriptionPlan } from "../../services/subscriptionService";
+import { getCurrentSubscription, getSubscriptionPlan } from "../../services/subscriptionService";
 import { canMakePurchases, canPurchaseProduct } from "../../services/permissionService";
 import { cancelAction, cancelButton } from "../../lib/dialog";
 import { getUserOrLeave } from "../../services/messageService";
-import { getUserPlan } from "../../services/userService";
 import { SessionData } from "../session";
-import { phoneToItu, toText } from "../../lib/common";
+import { orJoin, phoneToItu, toText } from "../../lib/common";
 import { message } from "telegraf/filters";
 import { updateUser } from "../../storage/userStorage";
-import { getProductByCode, getProductFullDisplayName, getProductShortName } from "../../services/productService";
+import { getProductByCode, getProductFullDisplayName, getProductShortName, getProductTypeDisplayName, gpt3Products, gptokenProducts } from "../../services/productService";
 import { User } from "../../entities/user";
 import { getPlanDescription } from "../../services/planService";
+
+type Message = string;
+
+type MessagesAndButtons = {
+  messages: Message[];
+  buttons: ButtonLike[];
+};
+
+type ProductGroup = {
+  code: "gpt3" | "gptoken";
+  name: string;
+  products: Product[];
+  marketingMessage: string;
+};
+
+const productGroups: ProductGroup[] = [
+  {
+    code: "gpt3",
+    name: "GPT-3.5",
+    products: gpt3Products,
+    marketingMessage: "вам нужно больше запросов к <b>GPT-3.5</b>"
+  },
+  {
+    code: "gptoken",
+    name: "GPT-4 / DALL-E",
+    products: gptokenProducts,
+    marketingMessage: "вы хотите работать с <b>GPT-4</b> и <b>DALL-E</b>"
+  }
+];
+
+const getProductBuyAction = (code: ProductCode) => `buy-${code}`;
+const getGroupAction = (group: ProductGroup) => `group-${group.code}`; 
 
 const scene = new BaseScene<BotContext>(scenes.premium);
 
@@ -31,47 +62,60 @@ scene.enter(async ctx => {
     return;
   }
 
-  const plan = getUserPlan(user);
-  const purchasableProducts = getPurchasableProducts(user);
+  const subscription = getCurrentSubscription(user);
+  const plan = getSubscriptionPlan(subscription);
 
-  const messages = [
-    `Текущий тариф:`,
-    getPlanDescription(plan)
+  const productGroups: ProductGroup[] = [
+    {
+      code: "gpt3",
+      name: "GPT-3.5",
+      products: filterPurchasable(user, gpt3Products),
+      marketingMessage: "вам нужно больше запросов к <b>GPT-3.5</b>"
+    },
+    {
+      code: "gptoken",
+      name: "GPT-4 / DALL-E",
+      products: filterPurchasable(user, gptokenProducts),
+      marketingMessage: "вы хотите работать с <b>GPT-4</b> и <b>DALL-E</b>"
+    }
   ];
 
-  const buttons: string[][] = [];
+  const validProductGroups = filteredProductGroups(user);
+  const productCount = productGroups.reduce((sum, group) => sum + group.products.length, 0);
 
-  if (!purchasableProducts.length) {
-    messages.push("На данный момент других тарифов нет.");
-  } else {
-    messages.push(
-      `Если вам нужно больше запросов к <b>GPT-3.5</b> или вы хотите работать с <b>GPT-4</b> и <b>DALL-E</b>, приобретите один из платных пакетов:`
-    );
-
-    for (const product of purchasableProducts) {
-      const productPlan = getSubscriptionPlan(product);
-
-      messages.push(getPlanDescription(productPlan));
-      buttons.push([
-        `Купить ${getProductShortName(product)}`,
-        getProductBuyAction(product.code)
-      ]);
+  const messages = [
+    `Ваш текущий ${getProductTypeDisplayName(subscription)}:`,
+    getPlanDescription(plan)
+  ];
+  
+  if (!productCount) {
+    messages.push("На данный момент доступных пакетов нет.");
+    
+    if (!canMakePurchases(user)) {
+      await replyBackToMainDialog(
+        ctx,
+        ...messages,
+        "⛔ Покупки недоступны."
+      );
     }
-  }
-
-  if (!canMakePurchases(user)) {
-    await replyBackToMainDialog(
-      ctx,
-      ...messages,
-      "⛔ Покупка тарифов недоступна."
-    );
-
+    
     return;
   }
 
+  const marketingMessages = validProductGroups.map(group => group.marketingMessage);
+  
+  messages.push(
+    `Если ${orJoin(...marketingMessages)}, приобретите один из пакетов услуг.`
+  );
+
   await replyWithKeyboard(
     ctx,
-    inlineKeyboard(...buttons, cancelButton),
+    inlineKeyboard(
+      ...validProductGroups.map(
+        group => [getGroupAction(group), `Пакеты ${group.name}`] as ButtonLike
+      ),
+      cancelButton
+    ),
     ...messages
   );
 });
@@ -82,6 +126,31 @@ for (const productCode of productCodes) {
   scene.action(
     getProductBuyAction(productCode),
     async ctx => await buyAction(ctx, productCode)
+  );
+}
+
+for (const group of productGroups) {
+  scene.action(
+    getGroupAction(group),
+    async ctx => await groupAction(ctx, group)
+  );
+}
+
+async function groupAction(ctx: AnyContext, group: ProductGroup) {
+  const user = await getUserOrLeave(ctx);
+
+  if (!user) {
+    return;
+  }
+
+  const filteredGroup = filterProductGroup(user, group);
+
+  const { messages, buttons } = listProducts(filteredGroup.products);
+
+  await replyWithKeyboard(
+    ctx,
+    inlineKeyboard(...buttons, cancelButton),
+    ...messages
   );
 }
 
@@ -240,12 +309,37 @@ function getTargetProductCode(session: SessionData): ProductCode | null {
   return session.premiumData?.targetProductCode ?? null;
 }
 
-function getPurchasableProducts(user: User): Product[] {
-  return productCodes
-    .filter(code => canPurchaseProduct(user, code))
-    .map(code => getProductByCode(code));
+function filterPurchasable(user: User, products: Product[]): Product[] {
+  return products
+    .filter(product => canPurchaseProduct(user, product.code));
 }
 
-function getProductBuyAction(code: ProductCode): string {
-  return `buy-${code}`;
+function listProducts(products: Product[]): MessagesAndButtons {
+  const messages: Message[] = [];
+  const buttons: ButtonLike[] = [];
+
+  for (const product of products) {
+    const productPlan = getSubscriptionPlan(product);
+
+    messages.push(getPlanDescription(productPlan));
+    buttons.push([
+      `Купить ${getProductShortName(product)}`,
+      getProductBuyAction(product.code)
+    ]);
+  }
+
+  return { messages, buttons };
+}
+
+function filteredProductGroups(user: User): ProductGroup[] {
+  return productGroups
+    .map(group => filterProductGroup(user, group))
+    .filter(group => group.products.length > 0);
+}
+
+function filterProductGroup(user: User, group: ProductGroup): ProductGroup {
+  return {
+    ...group,
+    products: filterPurchasable(user, group.products)
+  };
 }

@@ -7,7 +7,7 @@ import { backToMainDialogHandler } from "../telegram/handlers";
 
 export const contactRequestLabel = "📱 Отправить номер";
 
-type ButtonLike = string[] | InlineKeyboardButton;
+export type ButtonLike = [string, string] | InlineKeyboardButton;
 
 type CommandWithArgs = {
   command: string;

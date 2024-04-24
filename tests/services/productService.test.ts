@@ -4,7 +4,7 @@ import { getProductByCode, getProductFullDisplayName } from "../../src/services/
 describe("getProductFullDisplayName", () => {
   test("should correctly build name", () => {
     expect([
-      getProductFullDisplayName(freeSubscription(), "Genitive"),
+      getProductFullDisplayName(freeSubscription, "Genitive"),
       getProductFullDisplayName(getProductByCode("subscription-premium-30-days"), "Dative"),
       getProductFullDisplayName(getProductByCode("bundle-pro-30-days"), "Instrumental"),
     ]).toEqual([

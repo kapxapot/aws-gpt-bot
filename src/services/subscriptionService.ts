@@ -37,7 +37,7 @@ export function getCurrentSubscription(user: User): Subscription {
   const activeSubscriptions = getActiveSubscriptions(user)
     .sort((a, b) => b.purchasedAt.timestamp - a.purchasedAt.timestamp);
 
-  return first(activeSubscriptions) ?? freeSubscription();
+  return first(activeSubscriptions) ?? freeSubscription;
 }
 
 const getActiveSubscriptions = (user: User): PurchasedProduct[] =>
