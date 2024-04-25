@@ -54,8 +54,8 @@ const productGroups: ProductGroup[] = [
       `Пакеты ${symbols.gptoken} гптокенов для работы с <b>GPT-4</b> и <b>DALL-E</b>`,
       toCompactText(
         ...list(
-          `1 запрос к GPT-4 = ${gptokenString(1)}`,
-          `1 картинка DALL-E 3 = от ${gptokenString(2, "Genitive")}`
+          `1 запрос к <b>GPT-4</b> = ${gptokenString(1)}`,
+          `1 картинка <b>DALL-E 3</b> = от ${gptokenString(2, "Genitive")}`
         )
       )
     )
