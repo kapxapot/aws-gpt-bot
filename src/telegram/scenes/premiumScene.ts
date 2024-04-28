@@ -280,8 +280,7 @@ async function buyProduct(ctx: BotContext, productCode: ProductCode) {
 
   await replyBackToMainDialog(
     ctx,
-    `💳 Для оплаты ${getProductFullDisplayName(product, "Genitive")} пройдите по ссылке:`,
-    paymentUrl,
+    `💳 Для оплаты ${getProductFullDisplayName(product, "Genitive")} <a href="${paymentUrl}">пройдите по ссылке</a>.`,
     `⚠ Время действия ссылки ограничено. Если вы не успеете оплатить счет, вы можете получить новую ссылку с помощью команды /${commands.premium}`,
     "Мы сообщим вам, когда получим оплату."
   );

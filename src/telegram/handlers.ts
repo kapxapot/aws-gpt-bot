@@ -2,15 +2,12 @@ import { inspect } from "util";
 import { Composer } from "telegraf";
 import { AnyContext, BotContext } from "./botContext";
 import { commands, commonMessages, scenes } from "../lib/constants";
-import { clearAndLeave, clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
+import { clearAndLeave, clearInlineKeyboard, inlineKeyboard, remindKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
 import { historySizeHandler } from "./handlers/historySizeHandler";
 import { temperatureHandler } from "./handlers/temperatureHandler";
-import { getLastHistoryMessage, getOrAddUser } from "../services/userService";
-import { getUserOrLeave, showLastHistoryMessage, showStatus } from "../services/messageService";
+import { getOrAddUser } from "../services/userService";
+import { getStatusMessage, getUserOrLeave, showLastHistoryMessage, showStatus } from "../services/messageService";
 import { isDebugMode } from "../services/userSettingsService";
-import { remindButton } from "../lib/dialog";
-import { getModeName } from "../entities/prompt";
-import { User } from "../entities/user";
 
 type Handler = (ctx: AnyContext) => Promise<void>;
 type HandlerTuple = [command: string, handler: Handler];
@@ -112,21 +109,12 @@ export async function backToMainDialogHandler(ctx: AnyContext) {
     return;
   }
 
-  const hasMessage = await userHasMessage(user);
-  const buttons = hasMessage ? [remindButton] : []
-
   await replyWithKeyboard(
     ctx,
-    inlineKeyboard(...buttons),
+    remindKeyboard(user),
     commonMessages.backToMainDialog,
-    `Режим: <b>${getModeName(user)}</b>`
+    getStatusMessage(user)
   );
-}
-
-async function userHasMessage(user: User): Promise<boolean> {
-  const message = getLastHistoryMessage(user);
-
-  return !!message;
 }
 
 export async function remindHandler(ctx: AnyContext) {

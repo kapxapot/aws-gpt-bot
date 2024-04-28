@@ -1,35 +1,47 @@
-import { InlineKeyboardButton, InlineKeyboardMarkup, Message, ReplyKeyboardMarkup, ReplyKeyboardRemove, User } from "telegraf/types";
+import { InlineKeyboardButton, InlineKeyboardMarkup, Message, ReplyKeyboardMarkup, ReplyKeyboardRemove, User as TelegrafUser } from "telegraf/types";
 import { toText } from "./common";
 import { Markup } from "telegraf";
 import { settings } from "./constants";
 import { AnyContext } from "../telegram/botContext";
 import { backToMainDialogHandler } from "../telegram/handlers";
+import { userHasHistoryMessage } from "../services/userService";
+import { remindButton } from "./dialog";
+import { User } from "../entities/user";
 
 export const contactRequestLabel = "📱 Отправить номер";
 
 export type ButtonLike = [string, string] | InlineKeyboardButton;
+
+type InlineKeyboard = Markup.Markup<InlineKeyboardMarkup>;
 
 type CommandWithArgs = {
   command: string;
   args: string[];
 };
 
-export function userName(user: User): string {
+export function userName(user: TelegrafUser): string {
   return user.first_name ?? user.last_name ?? user.username ?? "anonymous";
 }
 
-export function inlineKeyboard(...buttonLikes: ButtonLike[]): Markup.Markup<InlineKeyboardMarkup> {
+export function inlineKeyboard(...buttonLikes: ButtonLike[]): InlineKeyboard {
   const buttons = buttonLikes.map(buttonLike => {
     if (!Array.isArray(buttonLike)) {
       return buttonLike;
     }
 
-    return Markup.button.callback(buttonLike[0], buttonLike[1]);
+    return Markup.button.callback(...buttonLike);
   });
 
   return Markup.inlineKeyboard(
     sliceButtons(buttons)
   );
+}
+
+export function remindKeyboard(user: User): InlineKeyboard {
+  const hasMessage = userHasHistoryMessage(user);
+  const buttons = hasMessage ? [remindButton] : []
+
+  return inlineKeyboard(...buttons);
 }
 
 export async function clearInlineKeyboard(ctx: AnyContext) {
@@ -118,7 +130,7 @@ export async function reply(ctx: AnyContext, ...lines: string[]): Promise<Messag
 
 export async function replyWithKeyboard(
   ctx: AnyContext,
-  keyboard: Markup.Markup<InlineKeyboardMarkup>,
+  keyboard: InlineKeyboard,
   ...lines: string[]
 ) {
   const slices = sliceText(toText(...lines));

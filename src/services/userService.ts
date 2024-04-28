@@ -156,6 +156,11 @@ export function getLastHistoryMessage(user: User): string | null {
     : null;
 }
 
+export function userHasHistoryMessage(user: User): boolean {
+  const message = getLastHistoryMessage(user);
+  return !!message;
+}
+
 export async function addUserEvent(user: User, event: UserEvent): Promise<User> {
   const events = user.events ?? [];
   events.push(event);

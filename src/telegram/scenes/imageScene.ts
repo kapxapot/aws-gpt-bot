@@ -33,18 +33,23 @@ scene.on(message("text"), async ctx => {
   if (isStage(ctx.session, "imagePromptInput")) {
     await clearInlineKeyboard(ctx);
 
-    const imagePrompt = ctx.message.text;
-
     const user = await getUserOrLeave(ctx);
 
     if (!user) {
       return;
     }
 
+    const imagePrompt = ctx.message.text;
+
     await generateImageWithGpt(ctx, user, imagePrompt);
 
-    setStage(ctx.session, "oneMore");
+    setStage(ctx.session, "anotherImage");
 
+    return;
+  }
+
+  if (isStage(ctx.session, "anotherImage")) {
+    await backToMainDialogHandler(ctx);
     return;
   }
 

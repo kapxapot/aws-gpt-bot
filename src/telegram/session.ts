@@ -16,4 +16,4 @@ export type SessionData = {
 };
 
 export type ModeStage = "modeSelection" | "roleSelection" | "customPromptInput" | "promptSelection";
-export type ImageStage = "imagePromptInput" | "oneMore";
+export type ImageStage = "imagePromptInput" | "anotherImage";

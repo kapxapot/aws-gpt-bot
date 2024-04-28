@@ -2,9 +2,9 @@ import { ts } from "../entities/at";
 import { getModeName } from "../entities/prompt";
 import { User } from "../entities/user";
 import { gptChatCompletion } from "../external/gptChatCompletion";
-import { commatize, truncate } from "../lib/common";
+import { capitalize, commatize, toText, truncate } from "../lib/common";
 import { isSuccess } from "../lib/error";
-import { clearAndLeave, encodeText, reply } from "../lib/telegram";
+import { clearAndLeave, encodeText, inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
 import { addMessageToUser, getLastHistoryMessage, getOrAddUser, stopWaitingForGptAnswer, updateUserProduct, waitForGptAnswer } from "./userService";
 import { commands } from "../lib/constants";
@@ -30,6 +30,7 @@ import { Consumption, IntervalConsumptions, isIntervalConsumptions } from "../en
 import { getIntervalString } from "./intervalService";
 import { formatLimit } from "./usageLimitService";
 import { getConsumptionReport } from "./consumptionService";
+import { remindButton } from "../lib/dialog";
 
 const config = {
   messageInterval: parseInt(process.env.MESSAGE_INTERVAL ?? "15") * 1000, // milliseconds
@@ -155,11 +156,20 @@ export async function sendMessageToGpt(ctx: AnyContext, user: User, question: st
 }
 
 export async function showStatus(ctx: AnyContext, user: User) {
+  await replyWithKeyboard(
+    ctx,
+    inlineKeyboard(remindButton),
+    getStatusMessage(user)
+  );
+}
+
+export function getStatusMessage(user: User): string {
   const subscription = getCurrentSubscription(user);
 
-  await reply(ctx, `Текущий ${getProductTypeDisplayName(subscription)}: ${formatSubscription(subscription)}`);
-  await reply(ctx, `Текущий режим: <b>${getModeName(user)}</b>`);
-  await showLastHistoryMessage(ctx, user);
+  return toText(
+    `${capitalize(getProductTypeDisplayName(subscription))}: ${formatSubscription(subscription)}`,
+    `Режим: <b>${getModeName(user)}</b>`
+  );
 }
 
 export async function showLastHistoryMessage(ctx: AnyContext, user: User, fallbackMessage?: string) {
