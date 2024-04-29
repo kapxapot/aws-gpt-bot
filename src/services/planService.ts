@@ -1,5 +1,6 @@
 import { Plan } from "../entities/plan";
-import { list, toCompactText } from "../lib/common";
+import { toCompactText } from "../lib/common";
+import { bulletize } from "../lib/text";
 import { gptokenString } from "./gptokenService";
 import { getPlanSettings } from "./planSettingsService";
 
@@ -19,7 +20,7 @@ export function getPlanDescription(plan: Plan, mode: DescriptionMode = "full"): 
     case "free":
       return toCompactText(
         "🤑 <b>Тариф «Бесплатный»</b>:",
-        ...list(
+        ...bulletize(
           iff("модель <b>GPT-3.5</b>"),
           "5 запросов в день",
           "100 запросов в месяц",
@@ -30,7 +31,7 @@ export function getPlanDescription(plan: Plan, mode: DescriptionMode = "full"): 
     case "premium":
       return toCompactText(
         "💔 <b>Тариф «Премиум»</b>:",
-        ...list(
+        ...bulletize(
           iff("модель <b>GPT-3.5</b>"),
           "до 100 запросов в день",
           "290 рублей на 30 дней"
@@ -40,7 +41,7 @@ export function getPlanDescription(plan: Plan, mode: DescriptionMode = "full"): 
     case "unlimited":
       return toCompactText(
         "💔 <b>Тариф «Безлимит»</b>:",
-        ...list(
+        ...bulletize(
           iff("модель <b>GPT-3.5</b>"),
           "неограниченное количество запросов",
           "390 рублей на 30 дней"
@@ -50,7 +51,7 @@ export function getPlanDescription(plan: Plan, mode: DescriptionMode = "full"): 
     case "novice":
       return toCompactText(
         "👧 <b>Пакет «Новичок»</b>:",
-        ...list(
+        ...bulletize(
           suffix("200 запросов", " к модели <b>GPT-3.5</b>"),
           "49 рублей на 30 дней"
         )
@@ -59,7 +60,7 @@ export function getPlanDescription(plan: Plan, mode: DescriptionMode = "full"): 
     case "student":
       return toCompactText(
         "👨‍🎓 <b>Пакет «Студент»</b>:",
-        ...list(
+        ...bulletize(
           suffix("500 запросов", " к модели <b>GPT-3.5</b>"),
           "99 рублей на 30 дней"
         )
@@ -68,7 +69,7 @@ export function getPlanDescription(plan: Plan, mode: DescriptionMode = "full"): 
     case "trial":
       return toCompactText(
         "🧪 <b>Пакет «Пробный»</b>",
-        ...list(
+        ...bulletize(
           suffix(gptokenString(20), " = 20 запросов к <b>GPT-4</b>"),
           iff("или 10 картинок <b>DALL-E 3</b>"),
           "99 рублей на 30 дней"
@@ -78,7 +79,7 @@ export function getPlanDescription(plan: Plan, mode: DescriptionMode = "full"): 
     case "creative":
       return toCompactText(
         "👩‍🎨 <b>Пакет «Творческий»</b>",
-        ...list(
+        ...bulletize(
           suffix(gptokenString(50), " = 50 запросов к <b>GPT-4</b>"),
           iff("или 25 картинок <b>DALL-E 3</b>"),
           "199 рублей на 30 дней"
@@ -88,7 +89,7 @@ export function getPlanDescription(plan: Plan, mode: DescriptionMode = "full"): 
     case "pro":
       return toCompactText(
         "😎 <b>Пакет «Профи»</b>",
-        ...list(
+        ...bulletize(
           suffix(gptokenString(150), " = 150 запросов к <b>GPT-4</b>"),
           iff("или 75 картинок <b>DALL-E 3</b>"),
           "449 рублей на 30 дней"
@@ -98,7 +99,7 @@ export function getPlanDescription(plan: Plan, mode: DescriptionMode = "full"): 
     case "boss":
       return toCompactText(
         "🤴 <b>Пакет «Босс»</b>",
-        ...list(
+        ...bulletize(
           suffix(gptokenString(400), " = 400 запросов к <b>GPT-4</b>"),
           iff("или 200 картинок <b>DALL-E 3</b>"),
           "999 рублей на 30 дней"
@@ -108,7 +109,7 @@ export function getPlanDescription(plan: Plan, mode: DescriptionMode = "full"): 
     case "test-tinygpt3":
       return toCompactText(
         "🛠 <b>Тестовый Пакет «Мелкий GPT-3»</b>:",
-        ...list(
+        ...bulletize(
           suffix("2 запроса", " к модели <b>GPT-3.5</b>"),
           "9999 рублей на 1 день"
         )
@@ -117,7 +118,7 @@ export function getPlanDescription(plan: Plan, mode: DescriptionMode = "full"): 
     case "test-tinygptokens":
       return toCompactText(
         "🛠 <b>Тестовый Пакет «Мелкий Gptoken»</b>:",
-        ...list(
+        ...bulletize(
           suffix(gptokenString(4), " = 4 запроса к <b>GPT-4</b>"),
           iff("или 2 запроса к <b>DALL-E 3</b>"),
           "9999 рублей на 1 день"

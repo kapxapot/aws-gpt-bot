@@ -26,11 +26,11 @@ import { getTextModelUsagePoints } from "./modelUsageService";
 import { intervalPhrases, intervals } from "../entities/interval";
 import { getTextModelContext } from "./modelContextService";
 import { PurchasedProduct } from "../entities/product";
-import { Consumption, IntervalConsumptions, isIntervalConsumptions } from "../entities/consumption";
 import { getIntervalString } from "./intervalService";
 import { formatLimit } from "./usageLimitService";
-import { getConsumptionReport } from "./consumptionService";
 import { remindButton } from "../lib/dialog";
+import { getConsumptionLimits, isConsumptionLimit } from "./consumptionService";
+import { ConsumptionLimit, IntervalConsumptionLimits } from "../entities/consumption";
 
 const config = {
   messageInterval: parseInt(process.env.MESSAGE_INTERVAL ?? "15") * 1000, // milliseconds
@@ -139,13 +139,13 @@ export async function sendMessageToGpt(ctx: AnyContext, user: User, question: st
     await reply(ctx, `❌ ${errorMessage}`);
   }
 
-  const consumptionReport = buildConsumptionReport(user, product, modelCode, pureModelCode);
+  const formattedLimits = formatConsumptionLimits(user, product, modelCode, pureModelCode);
 
   const info = buildInfo(
     user,
     modelCode,
     isSuccess(answer) ? answer : null,
-    consumptionReport
+    formattedLimits
   );
 
   await reply(ctx, info);
@@ -200,39 +200,35 @@ export async function getUserOrLeave(ctx: AnyContext): Promise<User | null> {
   return null;
 }
 
-function buildConsumptionReport(
+function formatConsumptionLimits(
   user: User,
   product: PurchasedProduct | null,
   modelCode: TextModelCode,
   pureModelCode: PureTextModelCode
 ): string | null {
-  const report = getConsumptionReport(user, product, modelCode, pureModelCode);
+  const limits = getConsumptionLimits(user, product, modelCode, pureModelCode);
 
-  if (!report) {
+  if (!limits) {
     return null;
   }
 
   const what = modelCode === "gptokens" ? "гптокенов" : "запросов";
 
-  return isIntervalConsumptions(report)
-    ? formatIntervalConsumptions(report, what)
-    : formatConsumption(report, what);
+  return isConsumptionLimit(limits)
+    ? formatConsumptionLimit(limits, what)
+    : formatIntervalConsumptionLimits(limits, what);
 }
 
-function formatConsumption(consumption: Consumption, what: string): string {
-  const remainingCount = consumption.limit - consumption.count;
-
-  return `осталось ${what}: ${remainingCount}/${consumption.limit}`;
+function formatConsumptionLimit({ limit, remaining }: ConsumptionLimit, what: string): string {
+  return `осталось ${what}: ${remaining}/${formatLimit(limit)}`;
 }
 
-function formatIntervalConsumptions(consumptions: IntervalConsumptions, what: string): string {
+function formatIntervalConsumptionLimits(limits: IntervalConsumptionLimits, what: string): string {
   const chunks: string[] = [];
 
-  for (const consumption of consumptions) {
-    const remainingCount = consumption.limit - consumption.count;
-
+  for (const { interval, limit, remaining } of limits) {
     chunks.push(
-      `осталось ${what} в ${getIntervalString(consumption.interval, "Accusative")}: ${remainingCount}/${formatLimit(consumption.limit)}`
+      `осталось ${what} в ${getIntervalString(interval, "Accusative")}: ${remaining}/${formatLimit(limit)}`
     );
   }
 
@@ -255,7 +251,7 @@ function buildInfo(
   user: User,
   modelCode: TextModelCode,
   answer: Completion | null,
-  consumptionReport: string | null
+  formattedLimits: string | null
 ) {
   const model = getTextModelByCode(modelCode);
   const chunks: string[] = [];
@@ -293,8 +289,8 @@ function buildInfo(
     }
   }
 
-  if (consumptionReport) {
-    chunks.push(consumptionReport);
+  if (formattedLimits) {
+    chunks.push(formattedLimits);
   }
 
   return commatize(chunks);

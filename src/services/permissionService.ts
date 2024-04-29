@@ -8,13 +8,6 @@ import { isTester } from "./userService";
 
 export const canMakePurchases = (user: User) => isProd() || isTester(user);
 
-/**
- * For now it's simple, but later the quotas will be taken into account too.
- */
-export const canRequestImageGeneration = () => {
-  return true;
-}
-
 export function canPurchaseProduct(user: User, productCode: ProductCode) {
   if (!canMakePurchases(user)) {
     return false;

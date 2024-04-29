@@ -4,7 +4,7 @@ import { Interval } from "./interval";
 import { ModelCode } from "./model";
 import { Plan } from "./plan";
 
-type IntervalLimits = PartialRecord<Interval, number>;
+export type IntervalLimits = PartialRecord<Interval, number>;
 export type ModelLimit = IntervalLimits | number;
 type ModelLimits = PartialRecord<ModelCode, ModelLimit>;
 

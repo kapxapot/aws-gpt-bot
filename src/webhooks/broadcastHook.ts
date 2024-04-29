@@ -1,4 +1,4 @@
-import { toSanitizedArray } from "../lib/common";
+import { toCleanArray } from "../lib/common";
 import { storeBroadcastRequest } from "../storage/broadcastRequestStorage";
 
 type BroadcastPayload = {
@@ -23,7 +23,7 @@ export async function broadcastHook(payload: BroadcastPayload) {
     throw new Error("Invalid API key.");
   }
 
-  const messages = toSanitizedArray(payload.message);
+  const messages = toCleanArray(payload.message);
 
   if (!messages.length) {
     throw new Error("Empty message (message). A not empty string or an array of strings is expected.");

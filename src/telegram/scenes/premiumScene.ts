@@ -14,13 +14,14 @@ import { canMakePurchases, canPurchaseProduct } from "../../services/permissionS
 import { cancelAction, cancelButton } from "../../lib/dialog";
 import { getUserOrLeave } from "../../services/messageService";
 import { SessionData } from "../session";
-import { list, orJoin, phoneToItu, toCompactText, toText } from "../../lib/common";
+import { orJoin, phoneToItu, toCompactText, toText } from "../../lib/common";
 import { message } from "telegraf/filters";
 import { updateUser } from "../../storage/userStorage";
 import { getProductByCode, getProductFullDisplayName, getProductShortName, getProductTypeDisplayName, gpt3Products, gptokenProducts } from "../../services/productService";
 import { User } from "../../entities/user";
 import { getPlanDescription } from "../../services/planService";
 import { gptokenString } from "../../services/gptokenService";
+import { bulletize } from "../../lib/text";
 
 type Message = string;
 
@@ -53,7 +54,7 @@ const productGroups: ProductGroup[] = [
     description: toText(
       `Пакеты ${symbols.gptoken} гптокенов для работы с <b>GPT-4</b> и <b>DALL-E</b>`,
       toCompactText(
-        ...list(
+        ...bulletize(
           `1 запрос к <b>GPT-4</b> = ${gptokenString(1)}`,
           `1 картинка <b>DALL-E 3</b> = от ${gptokenString(2, "Genitive")}`
         )

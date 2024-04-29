@@ -1,6 +1,7 @@
 import { defaultImageModelCode, defaultTextModelCode } from "../entities/model";
 import { ImageModelContext, TextModelContext } from "../entities/modelContext";
 import { User } from "../entities/user";
+import { getActiveConsumptionLimit, getConsumptionLimits } from "./consumptionService";
 import { getDefaultImageSettings } from "./imageService";
 import { getImageModelByCode, getTextModelByCode, purifyImageModelCode, purifyTextModelCode } from "./modelService";
 import { getImageModelUsagePoints } from "./modelUsageService";
@@ -15,7 +16,7 @@ export function getTextModelContext(user: User): TextModelContext {
     ? getAvailableTextModel(product)
     : null;
 
-  const usingProduct = !!product && !!productModelCode;
+  const validProduct = (product && productModelCode) ? product : null;
 
   const modelCode = productModelCode ?? defaultTextModelCode;
   const pureModelCode = purifyTextModelCode(modelCode);
@@ -23,12 +24,20 @@ export function getTextModelContext(user: User): TextModelContext {
 
   const lastUsedAt = getLastUsedAt(user.usageStats, pureModelCode);
 
+  const consumptionLimits = getConsumptionLimits(user, product, modelCode, pureModelCode);
+
+  const activeConsumptionLimit = consumptionLimits
+    ? getActiveConsumptionLimit(consumptionLimits)
+    : null;
+
   return {
-    product: usingProduct ? product : null,
+    product: validProduct,
     modelCode,
     pureModelCode,
     model,
-    lastUsedAt
+    lastUsedAt,
+    consumptionLimits,
+    activeConsumptionLimit
   };
 }
 
@@ -39,7 +48,7 @@ export function getImageModelContext(user: User): ImageModelContext {
     ? getAvailableImageModel(product)
     : null;
 
-  const usingProduct = !!product && !!productModelCode;
+  const validProduct = (product && productModelCode) ? product : null;
 
   const modelCode = productModelCode ?? defaultImageModelCode;
   const pureModelCode = purifyImageModelCode(modelCode);
@@ -50,13 +59,21 @@ export function getImageModelContext(user: User): ImageModelContext {
   const imageSettings = getDefaultImageSettings();
   const usagePoints = getImageModelUsagePoints(modelCode, imageSettings);
 
+  const consumptionLimits = getConsumptionLimits(user, product, modelCode, pureModelCode);
+
+  const activeConsumptionLimit = consumptionLimits
+    ? getActiveConsumptionLimit(consumptionLimits)
+    : null;
+
   return {
-    product: usingProduct ? product : null,
+    product: validProduct,
     modelCode,
     pureModelCode,
     model,
     lastUsedAt,
     imageSettings,
-    usagePoints
+    usagePoints,
+    consumptionLimits,
+    activeConsumptionLimit
   };
 }

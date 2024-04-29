@@ -1,5 +1,5 @@
 import { InlineKeyboardButton, InlineKeyboardMarkup, Message, ReplyKeyboardMarkup, ReplyKeyboardRemove, User as TelegrafUser } from "telegraf/types";
-import { toText } from "./common";
+import { clean, toText } from "./common";
 import { Markup } from "telegraf";
 import { settings } from "./constants";
 import { AnyContext } from "../telegram/botContext";
@@ -133,7 +133,7 @@ export async function replyWithKeyboard(
   keyboard: InlineKeyboard,
   ...lines: string[]
 ) {
-  const slices = sliceText(toText(...lines));
+  const slices = sliceText(toText(...clean(lines)));
 
   for (let i = 0; i < slices.length; i++) {
     if (i !== slices.length - 1) {

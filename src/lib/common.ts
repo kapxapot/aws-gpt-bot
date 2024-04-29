@@ -1,22 +1,22 @@
-import { symbols } from "./constants";
+export const clean = (lines: string[]) =>
+  lines
+    .map(l => l.trim())
+    .filter(l => !!l);
 
 export function toArray<T>(value: T | T[] | undefined | null): T[] {
   if (value === null || isUndefined(value)) {
     return [];
   }
-
+  
   return Array.isArray(value) ? value : [value];
 }
+
+export const toCleanArray = (lines: string | string[]) =>
+  clean(toArray(lines));
 
 export const toText = (...lines: string[]) => lines.join("\n\n");
 
 export const toCompactText = (...lines: string[]) => lines.join("\n");
-
-export function toSanitizedArray(lines: string | string[]): string[] {
-  return toArray(lines)
-    .map(m => m.trim())
-    .filter(m => !!m);
-}
 
 export function truncate(str: string, limit: number): string {
   return str.length > limit
@@ -26,10 +26,6 @@ export function truncate(str: string, limit: number): string {
 
 export function first<T>(array: T[]): T | null {
   return !isEmpty(array) ? array[0] : null;
-}
-
-function isEmpty<T>(array: T[]): boolean {
-  return array.length === 0;
 }
 
 export function phoneToItu(phone: string | undefined): string | null {
@@ -51,7 +47,8 @@ export function isUndefined(v: unknown): v is undefined {
 /**
  * Sanitizes array and joins it using comma and space.
  */
-export const commatize = (strings: string | string[]) => toSanitizedArray(strings).join(", ");
+export const commatize = (lines: string[]) =>
+  clean(lines).join(", ");
 
 export function capitalize(str: string): string {
   if (str.length < 1) {
@@ -60,12 +57,6 @@ export function capitalize(str: string): string {
 
   return str.substring(0, 1).toUpperCase() + str.substring(1);
 }
-
-/**
- * Sanitizes the array and adds the bullet symbol to every line.
- */
-export const list = (...lines: string[]) => toSanitizedArray(lines)
-  .map(line => `${symbols.bullet} ${line}`);
 
 export function homogeneousJoin(
     chunks: string[],
@@ -105,3 +96,5 @@ export function homogeneousJoin(
 export const andJoin = (...lines: string[]) => homogeneousJoin(lines);
 
 export const orJoin = (...lines: string[]) => homogeneousJoin(lines, " или ");
+
+const isEmpty = <T>(array: T[]) => array.length === 0;

@@ -1,4 +1,4 @@
-import { andJoin, capitalize, commatize, isNumber, orJoin, phoneToItu, toCompactText, toSanitizedArray, toText } from "../../src/lib/common";
+import { andJoin, capitalize, commatize, isNumber, orJoin, phoneToItu, toCleanArray, toCompactText, toText } from "../../src/lib/common";
 
 const uglyArray = [
   "",
@@ -19,9 +19,9 @@ describe("toCompactText", () => {
   });
 });
 
-describe("toSanitizedArray", () => {
-  test("should sanitize strings", () => {
-    const array = toSanitizedArray(uglyArray);
+describe("toCleanArray", () => {
+  test("should clean strings", () => {
+    const array = toCleanArray(uglyArray);
 
     expect(array).toHaveLength(2);
     expect(array[0]).toBe("one");

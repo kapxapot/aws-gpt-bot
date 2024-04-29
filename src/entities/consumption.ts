@@ -1,18 +1,15 @@
 import { Interval } from "./interval";
 
-export type Consumption = {
-  count: number;
-  limit: number;
-};
+export type ConsumptionLimit = Readonly<{
+  limit: Readonly<number>;
+  consumed: number;
+  remaining: Readonly<number>; // limit - consumed
+}>;
 
-export type IntervalConsumption = Consumption & {
+export type IntervalConsumptionLimit = ConsumptionLimit & {
   interval: Interval;
 };
 
-export type IntervalConsumptions = IntervalConsumption[];
+export type IntervalConsumptionLimits = IntervalConsumptionLimit[];
 
-export type ConsumptionReport = Consumption | IntervalConsumptions;
-
-export function isIntervalConsumptions(consumptionReport: ConsumptionReport): consumptionReport is IntervalConsumptions {
-  return Array.isArray(consumptionReport);
-}
+export type ConsumptionLimits = ConsumptionLimit | IntervalConsumptionLimits;
