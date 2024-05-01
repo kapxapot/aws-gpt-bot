@@ -1,19 +1,17 @@
 import { Interval } from "../entities/interval";
 import { ModelCode } from "../entities/model";
 import { Plan } from "../entities/plan";
-import { ModelLimit, PlanSettings, planSettings } from "../entities/planSettings";
+import { PlanSettings, planSettings } from "../entities/planSettings";
 import { isNumber } from "../lib/common";
 
 export function getPlanSettings(plan: Plan): PlanSettings {
   return planSettings[plan];
 }
 
-export function getPlanSettingsModelLimit(
+export const getPlanSettingsModelLimit = (
   settings: PlanSettings,
   modelCode: ModelCode
-): ModelLimit | null {
-  return settings.limits[modelCode] ?? null;
-}
+) => settings.limits[modelCode] ?? null;
 
 export function getPlanSettingsLimit(settings: PlanSettings, modelCode: ModelCode, interval?: Interval): number {
   const modelLimit = getPlanSettingsModelLimit(settings, modelCode);

@@ -1,26 +1,26 @@
 import { ts } from "../entities/at";
 import { GrammarCase } from "../entities/grammar";
-import { TextModelCode, ImageModelCode, ModelCode } from "../entities/model";
+import { ModelCode } from "../entities/model";
 import { PlanSettings } from "../entities/planSettings";
 import { Product, ProductCode, PurchasedProduct, Subscription, bossBundle, creativeBundle, noviceBundle, premiumSubscription, proBundle, productTypeDisplayNames, studentBundle, testTinyGpt3Bundle, testTinyGptokenBundle, trialBundle, unlimitedSubscription } from "../entities/product";
+import { User } from "../entities/user";
 import { addDays, isInRange } from "./dateService";
 import { getCase } from "./grammarService";
-import { isTextModelCode, isImageModelCode } from "./modelService";
 import { getPlanSettings } from "./planSettingsService";
 import { isProductUsageExceeded } from "./productUsageService";
 import { getSubscriptionPlan } from "./subscriptionService";
+import { getUserPurchasedProducts } from "./userService";
 
 type TimestampRange = {
   start: number;
   end: number;
 };
 
-export function getProductFullDisplayName(product: Subscription, targetCase?: GrammarCase) {
-  const productTypeName = getProductTypeDisplayName(product, targetCase);
-  const productName = getProductDisplayName(product);
+export const getProductFullDisplayName = (product: Subscription, targetCase?: GrammarCase) =>
+  formatProductName(product, getProductDisplayName(product), targetCase);
 
-  return `${productTypeName} <b>${productName}</b>`;
-}
+export const getProductShortDisplayName = (product: Subscription, targetCase?: GrammarCase) =>
+  formatProductName(product, getProductShortName(product), targetCase);
 
 export function getProductTypeDisplayName(product: Subscription, targetCase: GrammarCase = "Nominative") {
   const displayName = productTypeDisplayNames[product.details.type];
@@ -28,7 +28,7 @@ export function getProductTypeDisplayName(product: Subscription, targetCase: Gra
 }
 
 export const getProductShortName = (product: Subscription) =>
-  product.shortName ?? product.name;
+  product.shortName ?? getProductDisplayName(product);
 
 export const getProductDisplayName = (product: Subscription) =>
   (product.displayNames ? product.displayNames["Nominative"] : null)
@@ -69,14 +69,9 @@ export const gptokenProducts = [
 export const isActiveProduct = (product: PurchasedProduct) =>
   !isProductExpired(product) && !isProductExhausted(product);
 
-function isProductExpired(product: PurchasedProduct): boolean {
-  const { start, end } = getProductTimestampRange(product);
-  return !isInRange(ts(), start, end);
-}
-
-const isProductExhausted = (product: PurchasedProduct) =>
-  getProductModels(product)
-    .every(modelCode => isProductUsageExceeded(product, modelCode));
+export const getActiveProducts = (user: User): PurchasedProduct[] =>
+  getUserPurchasedProducts(user)
+    .filter(product => isActiveProduct(product));
 
 export function getProductTimestampRange(product: PurchasedProduct): TimestampRange {
   const start = product.purchasedAt.timestamp;
@@ -90,25 +85,25 @@ export function getProductPlanSettings(product: PurchasedProduct): PlanSettings 
   return getPlanSettings(plan);
 }
 
-export const getAvailableTextModel = (product: PurchasedProduct) =>
-  getProductTextModels(product)
-    .find(modelCode => !isProductUsageExceeded(product, modelCode))
-      ?? null;
-
-export const getAvailableImageModel = (product: PurchasedProduct) =>
-  getProductImageModels(product)
-    .find(modelCode => !isProductUsageExceeded(product, modelCode))
-      ?? null;
-
-const getProductTextModels = (product: PurchasedProduct) =>
+export const getProductAvailableModels = (product: PurchasedProduct) =>
   getProductModels(product)
-    .filter(modelCode => isTextModelCode(modelCode)) as TextModelCode[];
+    .filter(modelCode => !isProductUsageExceeded(product, modelCode));
 
-const getProductImageModels = (product: PurchasedProduct) =>
+function isProductExpired(product: PurchasedProduct): boolean {
+  const { start, end } = getProductTimestampRange(product);
+  return !isInRange(ts(), start, end);
+}
+
+const isProductExhausted = (product: PurchasedProduct) =>
   getProductModels(product)
-    .filter(modelCode => isImageModelCode(modelCode)) as ImageModelCode[];
+    .every(modelCode => isProductUsageExceeded(product, modelCode));
 
 function getProductModels(product: PurchasedProduct): ModelCode[] {
   const planSettings = getProductPlanSettings(product);
   return Object.keys(planSettings.limits) as ModelCode[];
+}
+
+function formatProductName(product: Subscription, productName: string, targetCase?: GrammarCase) {
+  const productTypeName = getProductTypeDisplayName(product, targetCase);
+  return `${productTypeName} <b>${productName}</b>`;
 }

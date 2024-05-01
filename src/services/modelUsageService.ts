@@ -1,4 +1,3 @@
-/* eslint-disable no-case-declarations */
 import { TextModelCode, ImageModelCode, ImageSettings } from "../entities/model";
 import { getTextModelByCode, getImageModelByCode } from "./modelService";
 import { getTextModelPrices, getImageModelPrice } from "./priceService";
@@ -21,8 +20,9 @@ export function getImageModelUsagePoints(modelCode: ImageModelCode, imageSetting
 
   switch (modelCode) {
     case "dalle3":
+      return 1;
+
     case "gptokens":
-      const imagePrice = getImageModelPrice(model, imageSettings);
-      return imagePrice.price;
+      return getImageModelPrice(model, imageSettings).price;
   }
 }

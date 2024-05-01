@@ -6,8 +6,10 @@ import { PurchasedProduct } from "./product";
 type ModelContext = {
   product: PurchasedProduct | null;
   lastUsedAt: At | null;
-  consumptionLimits: ConsumptionLimits | null;
-  activeConsumptionLimit: ConsumptionLimit | null;
+  limits: ConsumptionLimits | null;
+  activeLimit: ConsumptionLimit | null;
+  usagePoints: number;
+  usable: boolean;
 };
 
 export type TextModelContext = ModelContext & {
@@ -21,5 +23,4 @@ export type ImageModelContext = ModelContext & {
   pureModelCode: PureImageModelCode;
   model: ImageModel;
   imageSettings: ImageSettings;
-  usagePoints: number;
 };

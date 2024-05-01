@@ -1,9 +1,8 @@
-import { PurchasedProduct, Subscription, freeSubscription, isPurchasedProduct } from "../entities/product";
+import { Subscription, freeSubscription, isPurchasedProduct } from "../entities/product";
 import { User } from "../entities/user";
 import { first } from "../lib/common";
 import { formatDate } from "./dateService";
-import { getProductDisplayName, getProductTimestampRange, isActiveProduct } from "./productService";
-import { getUserPurchasedProducts } from "./userService";
+import { getActiveProducts, getProductDisplayName, getProductTimestampRange } from "./productService";
 
 type SubscriptionDisplayInfo = {
   name: string;
@@ -34,14 +33,10 @@ function getSubscriptionDisplayInfo(subscription: Subscription): SubscriptionDis
 }
 
 export function getCurrentSubscription(user: User): Subscription {
-  const activeSubscriptions = getActiveSubscriptions(user)
+  const activeProducts = getActiveProducts(user)
     .sort((a, b) => b.purchasedAt.timestamp - a.purchasedAt.timestamp);
 
-  return first(activeSubscriptions) ?? freeSubscription;
+  return first(activeProducts) ?? freeSubscription;
 }
-
-const getActiveSubscriptions = (user: User): PurchasedProduct[] =>
-  getUserPurchasedProducts(user)
-    .filter(product => isActiveProduct(product));
 
 export const getSubscriptionPlan = (subscription: Subscription) => subscription.details.plan;

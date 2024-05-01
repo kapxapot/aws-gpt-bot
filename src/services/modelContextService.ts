@@ -1,79 +1,120 @@
-import { defaultImageModelCode, defaultTextModelCode } from "../entities/model";
+import { ImageModelCode, ModelCode, TextModelCode, defaultImageModelCode, defaultTextModelCode } from "../entities/model";
 import { ImageModelContext, TextModelContext } from "../entities/modelContext";
+import { PurchasedProduct } from "../entities/product";
 import { User } from "../entities/user";
 import { getActiveConsumptionLimit, getConsumptionLimits } from "./consumptionService";
 import { getDefaultImageSettings } from "./imageService";
-import { getImageModelByCode, getTextModelByCode, purifyImageModelCode, purifyTextModelCode } from "./modelService";
-import { getImageModelUsagePoints } from "./modelUsageService";
-import { getAvailableImageModel, getAvailableTextModel } from "./productService";
+import { getImageModelByCode, getTextModelByCode, isImageModelCode, isTextModelCode, purifyImageModelCode, purifyTextModelCode } from "./modelService";
+import { getImageModelUsagePoints, getTextModelUsagePoints } from "./modelUsageService";
+import { getActiveProducts, getProductAvailableModels } from "./productService";
 import { getLastUsedAt } from "./usageStatsService";
-import { getUserActiveProduct } from "./userService";
 
-export function getTextModelContext(user: User): TextModelContext {
-  const product = getUserActiveProduct(user);
+type ProductModel = {
+  product: PurchasedProduct | null;
+  modelCode: ModelCode;
+}
 
-  const productModelCode = product
-    ? getAvailableTextModel(product)
-    : null;
+export function getTextModelContexts(user: User): TextModelContext[] {
+  const productModels = getProductModels(user)
+    .filter(pm => isTextModelCode(pm.modelCode));
 
-  const validProduct = (product && productModelCode) ? product : null;
+  productModels.push({ product: null, modelCode: defaultTextModelCode });
 
-  const modelCode = productModelCode ?? defaultTextModelCode;
+  return productModels.map(
+    pm => buildTextModelContext(user, pm.product, pm.modelCode as TextModelCode)
+  );
+}
+
+export function getImageModelContexts(user: User): ImageModelContext[] {
+  const productModels = getProductModels(user)
+    .filter(pm => isImageModelCode(pm.modelCode));
+
+  productModels.push({ product: null, modelCode: defaultImageModelCode });
+
+  return productModels.map(
+    pm => buildImageModelContext(user, pm.product, pm.modelCode as ImageModelCode)
+  );
+}
+
+function buildTextModelContext(
+  user: User,
+  product: PurchasedProduct | null,
+  modelCode: TextModelCode
+): TextModelContext {
   const pureModelCode = purifyTextModelCode(modelCode);
   const model = getTextModelByCode(modelCode);
 
   const lastUsedAt = getLastUsedAt(user.usageStats, pureModelCode);
 
-  const consumptionLimits = getConsumptionLimits(user, product, modelCode, pureModelCode);
+  const limits = getConsumptionLimits(user, product, modelCode, pureModelCode);
 
-  const activeConsumptionLimit = consumptionLimits
-    ? getActiveConsumptionLimit(consumptionLimits)
+  const activeLimit = limits
+    ? getActiveConsumptionLimit(limits)
     : null;
 
+  const usagePoints = getTextModelUsagePoints(modelCode);
+
+  const usable = activeLimit !== null
+    && activeLimit.remaining >= usagePoints;
+
   return {
-    product: validProduct,
+    product,
     modelCode,
     pureModelCode,
     model,
     lastUsedAt,
-    consumptionLimits,
-    activeConsumptionLimit
+    limits,
+    activeLimit,
+    usagePoints,
+    usable
   };
 }
 
-export function getImageModelContext(user: User): ImageModelContext {
-  const product = getUserActiveProduct(user);
-
-  const productModelCode = product
-    ? getAvailableImageModel(product)
-    : null;
-
-  const validProduct = (product && productModelCode) ? product : null;
-
-  const modelCode = productModelCode ?? defaultImageModelCode;
+function buildImageModelContext(
+  user: User,
+  product: PurchasedProduct | null,
+  modelCode: ImageModelCode
+): ImageModelContext {
   const pureModelCode = purifyImageModelCode(modelCode);
   const model = getImageModelByCode(modelCode);
 
   const lastUsedAt = getLastUsedAt(user.usageStats, pureModelCode);
 
   const imageSettings = getDefaultImageSettings();
-  const usagePoints = getImageModelUsagePoints(modelCode, imageSettings);
 
-  const consumptionLimits = getConsumptionLimits(user, product, modelCode, pureModelCode);
+  const limits = getConsumptionLimits(user, product, modelCode, pureModelCode);
 
-  const activeConsumptionLimit = consumptionLimits
-    ? getActiveConsumptionLimit(consumptionLimits)
+  const activeLimit = limits
+    ? getActiveConsumptionLimit(limits)
     : null;
 
+  const usagePoints = getImageModelUsagePoints(modelCode, imageSettings);
+
+  const usable = activeLimit !== null
+    && activeLimit.remaining >= usagePoints;
+
   return {
-    product: validProduct,
+    product,
     modelCode,
     pureModelCode,
     model,
     lastUsedAt,
     imageSettings,
+    limits,
+    activeLimit,
     usagePoints,
-    consumptionLimits,
-    activeConsumptionLimit
+    usable
   };
+}
+
+function getProductModels(user: User): ProductModel[] {
+  const productModels: ProductModel[] = [];
+  const products = getActiveProducts(user);
+
+  for (const product of products) {
+    const modelCodes = getProductAvailableModels(product);
+    productModels.push(...modelCodes.map(modelCode => ({ product, modelCode })));
+  }
+
+  return productModels;
 }

@@ -101,7 +101,7 @@ function getUserConsumptionLimits(
   }
 
   if (isNumber(limit)) {
-    throw new Error(`A numeric limit shouldn't be used for plan ${plan}`);
+    throw new Error(`A numeric limit shouldn't be used for plan ${plan}.`);
   }
 
   // interval limits
@@ -117,7 +117,7 @@ function getIntervalConsumptionLimits(
 ): IntervalConsumptionLimits {
   const limits: IntervalConsumptionLimits = [];
 
-  for (const key in Object.keys(limit)) {
+  for (const key of Object.keys(limit)) {
     const interval = key as Interval;
     const intervalLimit = limit[interval];
 

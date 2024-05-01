@@ -69,6 +69,8 @@ export async function incUsage(user: User, modelCode: PureModelCode, usedAt: At)
     for (const interval of intervals) {
       modelUsage = incIntervalUsage(modelUsage, interval, then);
     }
+
+    modelUsage.lastUsedAt = then;
   } else {
     // build fresh model usage
     modelUsage = buildModelUsage(usedAt, then);

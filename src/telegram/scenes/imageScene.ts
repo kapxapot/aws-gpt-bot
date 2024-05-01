@@ -8,8 +8,7 @@ import { generateImageWithGpt } from "../../services/imageService";
 import { ImageStage, SessionData } from "../session";
 import { anotherImageAction, cancelAction, cancelButton } from "../../lib/dialog";
 import { getUserOrLeave } from "../../services/messageService";
-import { capitalize, commatize, toCompactText } from "../../lib/common";
-import { getImageModelContext } from "../../services/modelContextService";
+import { capitalize, commatize, toCompactText, toText } from "../../lib/common";
 import { ImageModelCode } from "../../entities/model";
 import { ConsumptionLimit, ConsumptionLimits, IntervalConsumptionLimits } from "../../entities/consumption";
 import { getIntervalString } from "../../services/intervalService";
@@ -17,7 +16,12 @@ import { formatLimit } from "../../services/usageLimitService";
 import { isConsumptionLimit } from "../../services/consumptionService";
 import { getCaseForNumber } from "../../services/grammarService";
 import { gptokenString } from "../../services/gptokenService";
-import { bulletize } from "../../lib/text";
+import { bullet, bulletize } from "../../lib/text";
+import { getImageModelContexts } from "../../services/modelContextService";
+import { getProductShortDisplayName } from "../../services/productService";
+import { freeSubscription } from "../../entities/product";
+import { ImageModelContext } from "../../entities/modelContext";
+import { User } from "../../entities/user";
 
 const scene = new BaseScene<BotContext>(scenes.image);
 
@@ -37,9 +41,15 @@ scene.on(message("text"), async ctx => {
       return;
     }
 
+    const imageModelContext = await getImageModelContextOrLeave(ctx, user);
+
+    if (!imageModelContext) {
+      return;
+    }
+
     const imagePrompt = ctx.message.text;
 
-    await generateImageWithGpt(ctx, user, imagePrompt);
+    await generateImageWithGpt(ctx, imageModelContext, user, imagePrompt);
 
     setStage(ctx.session, "anotherImage");
 
@@ -75,33 +85,19 @@ async function mainHandler (ctx: BotContext) {
     return;
   }
 
+  const imageModelContext = await getImageModelContextOrLeave(ctx, user);
+
+  if (!imageModelContext) {
+    return;
+  }
+
   const {
     modelCode,
     model,
     imageSettings,
     usagePoints,
-    consumptionLimits,
-    activeConsumptionLimit
-  } = getImageModelContext(user);
-
-  const imageGenerationAllowed = activeConsumptionLimit
-    && activeConsumptionLimit.remaining >= usagePoints;
-
-  const formattedLimits = consumptionLimits
-    ? formatConsumptionLimits(consumptionLimits, modelCode, usagePoints)
-    : "";
-
-  if (!imageGenerationAllowed) {
-    await reply(
-      ctx,
-      formattedLimits,
-      "⛔ Генерация картинок недоступна."
-    );
-
-    await ctx.scene.leave();
-
-    return;
-  }
+    limits
+  } = imageModelContext;
 
   setStage(ctx.session, "imagePromptInput");
 
@@ -118,6 +114,10 @@ async function mainHandler (ctx: BotContext) {
     modelDescription.push(`стоимость: ${gptokenString(usagePoints)}`);
   }
 
+  const formattedLimits = limits
+    ? formatConsumptionLimits(limits, modelCode, usagePoints)
+    : "";
+
   await replyWithKeyboard(
     ctx,
     inlineKeyboard(cancelButton),
@@ -128,6 +128,45 @@ async function mainHandler (ctx: BotContext) {
     formattedLimits,
     `Опишите картинку, которую хотите сгенерировать (до ${settings.maxImagePromptLength} символов):`
   );
+}
+
+async function getImageModelContextOrLeave(ctx: BotContext, user: User): Promise<ImageModelContext | null> {
+  const contexts = getImageModelContexts(user);
+  const usableContext = contexts.find(context => context.usable);
+
+  if (usableContext) {
+    return usableContext;
+  }
+
+  const messages: string[] = [];
+
+  for (const context of contexts) {
+    console.log(context);
+    const { product, modelCode, limits, usagePoints } = context;
+
+    const formattedLimits = limits
+      ? formatConsumptionLimits(limits, modelCode, usagePoints)
+      : "неопределенный лимит";
+
+    const productName = getProductShortDisplayName(product ?? freeSubscription)
+
+    messages.push(
+      toCompactText(
+        capitalize(`${productName}:`),
+        bullet(formattedLimits)
+      )
+    );
+  }
+
+  await reply(
+    ctx,
+    toText(...messages),
+    "⛔ Генерация картинок недоступна."
+  );
+
+  await ctx.scene.leave();
+
+  return null;
 }
 
 function formatConsumptionLimits(

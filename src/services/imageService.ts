@@ -19,16 +19,29 @@ import { incProductUsage } from "./productUsageService";
 import { intervalPhrases, intervals } from "../entities/interval";
 import { toText } from "../lib/common";
 import { Markup } from "telegraf";
-import { getImageModelContext } from "./modelContextService";
+import { ImageModelContext } from "../entities/modelContext";
 
 const config = {
   imageInterval: parseInt(process.env.IMAGE_INTERVAL ?? "60") * 1000, // milliseconds
 };
 
-export async function generateImageWithGpt(ctx: AnyContext, user: User, prompt: string): Promise<boolean> {
+export async function generateImageWithGpt(
+  ctx: AnyContext,
+  imageModelContext: ImageModelContext,
+  user: User,
+  prompt: string
+): Promise<boolean> {
   const requestedAt = now();
-  const { product, modelCode, pureModelCode, model, lastUsedAt, imageSettings, usagePoints } =
-    getImageModelContext(user);
+
+  const {
+    product,
+    modelCode,
+    pureModelCode,
+    model,
+    lastUsedAt,
+    imageSettings,
+    usagePoints
+  } = imageModelContext;
 
   if (user.waitingForGptImageGeneration) {
     if (lastUsedAt && happened(lastUsedAt.timestamp, gptTimeout * 1000)) {

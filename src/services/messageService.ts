@@ -2,7 +2,7 @@ import { ts } from "../entities/at";
 import { getModeName } from "../entities/prompt";
 import { User } from "../entities/user";
 import { gptChatCompletion } from "../external/gptChatCompletion";
-import { capitalize, commatize, toText, truncate } from "../lib/common";
+import { capitalize, commatize, first, toText, truncate } from "../lib/common";
 import { isSuccess } from "../lib/error";
 import { clearAndLeave, encodeText, inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
@@ -22,22 +22,34 @@ import { incUsage, isUsageLimitExceeded } from "./usageStatsService";
 import { getProductTypeDisplayName } from "./productService";
 import { getTextModelByCode } from "./modelService";
 import { incProductUsage } from "./productUsageService";
-import { getTextModelUsagePoints } from "./modelUsageService";
 import { intervalPhrases, intervals } from "../entities/interval";
-import { getTextModelContext } from "./modelContextService";
 import { PurchasedProduct } from "../entities/product";
 import { getIntervalString } from "./intervalService";
 import { formatLimit } from "./usageLimitService";
 import { remindButton } from "../lib/dialog";
 import { getConsumptionLimits, isConsumptionLimit } from "./consumptionService";
 import { ConsumptionLimit, IntervalConsumptionLimits } from "../entities/consumption";
+import { getTextModelContexts } from "./modelContextService";
 
 const config = {
   messageInterval: parseInt(process.env.MESSAGE_INTERVAL ?? "15") * 1000, // milliseconds
 };
 
 export async function sendMessageToGpt(ctx: AnyContext, user: User, question: string, requestedAt?: number) {
-  const { product, modelCode, pureModelCode, model, lastUsedAt } = getTextModelContext(user);
+  const context = first(getTextModelContexts(user));
+
+  if (!context) {
+    throw new Error("Text model context is undefined.");
+  }
+
+  const {
+    product,
+    modelCode,
+    pureModelCode,
+    model,
+    lastUsedAt,
+    usagePoints
+  } = context;
 
   if (user.waitingForGptAnswer) {
     if (lastUsedAt && happened(lastUsedAt.timestamp, gptTimeout * 1000)) {
@@ -111,8 +123,6 @@ export async function sendMessageToGpt(ctx: AnyContext, user: User, question: st
     );
 
     if (product) {
-      const usagePoints = getTextModelUsagePoints(modelCode);
-
       product.usage = incProductUsage(
         product.usage,
         modelCode,
