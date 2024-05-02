@@ -3,7 +3,6 @@ import { ImageSettings, defaultImageSize } from "../entities/model";
 import { User } from "../entities/user";
 import { gptImageGeneration } from "../external/gptImageGeneration";
 import { getCaseForNumber } from "./grammarService";
-import { commands } from "../lib/constants";
 import { anotherImageButton, cancelButton } from "../lib/dialog";
 import { isSuccess } from "../lib/error";
 import { inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
@@ -12,11 +11,10 @@ import { AnyContext } from "../telegram/botContext";
 import { happened, timeLeft } from "./dateService";
 import { gptTimeout } from "./gptService";
 import { putMetric } from "./metricService";
-import { incUsage, isUsageLimitExceeded } from "./usageStatsService";
+import { incUsage } from "./usageStatsService";
 import { stopWaitingForGptImageGeneration, updateUserProduct, waitForGptImageGeneration } from "./userService";
 import { PassThrough } from "stream";
 import { incProductUsage } from "./productUsageService";
-import { intervalPhrases, intervals } from "../entities/interval";
 import { toText } from "../lib/common";
 import { Markup } from "telegraf";
 import { ImageModelContext } from "../entities/modelContext";
@@ -50,24 +48,6 @@ export async function generateImageWithGpt(
     } else {
       await reply(ctx, "Ваша предыдущая картинка еще не готова, подождите... ⏳");
       return false;
-    }
-  }
-
-  // we check the user's usage stats if we don't use a product,
-  // but fall back to the defaults
-  if (!product) {
-    for (const interval of intervals) {
-      const phrases = intervalPhrases[interval];
-
-      if (isUsageLimitExceeded(user, pureModelCode, interval)) {
-        await reply(
-          ctx,
-          `Вы превысили лимит генерации картинок на ${phrases.current}. ${phrases.smilies}`,
-          `Подождите ${phrases.next} или перейдите на тариф с более высоким лимитом: /${commands.premium}`
-        );
-    
-        return false;
-      }
     }
   }
 

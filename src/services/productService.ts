@@ -105,5 +105,5 @@ function getProductModels(product: PurchasedProduct): ModelCode[] {
 
 function formatProductName(product: Subscription, productName: string, targetCase?: GrammarCase) {
   const productTypeName = getProductTypeDisplayName(product, targetCase);
-  return `${productTypeName} <b>${productName}</b>`;
+  return `${productTypeName} «${productName}»`;
 }

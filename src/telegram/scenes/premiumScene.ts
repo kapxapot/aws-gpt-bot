@@ -63,12 +63,15 @@ const productGroups: ProductGroup[] = [
   }
 ];
 
+const backToStartAction = "backToStart";
 const getProductBuyAction = (code: ProductCode) => `buy-${code}`;
-const getGroupAction = (group: ProductGroup) => `group-${group.code}`; 
+const getGroupAction = (group: ProductGroup) => `group-${group.code}`;
 
 const scene = new BaseScene<BotContext>(scenes.premium);
 
-scene.enter(async ctx => {
+scene.enter(mainHandler);
+
+async function mainHandler(ctx: BotContext) {
   const user = await getUserOrLeave(ctx);
 
   if (!user) {
@@ -83,12 +86,12 @@ scene.enter(async ctx => {
 
   const messages = [
     `Ваш текущий ${getProductTypeDisplayName(subscription)}:`,
-    getPlanDescription(plan)
+    getPlanDescription(plan, "shortest")
   ];
-  
+
   if (!productCount) {
     messages.push("На данный момент доступных пакетов нет.");
-    
+
     if (!canMakePurchases(user)) {
       await replyBackToMainDialog(
         ctx,
@@ -96,12 +99,12 @@ scene.enter(async ctx => {
         "⛔ Покупки недоступны."
       );
     }
-    
+
     return;
   }
 
   const marketingMessages = validProductGroups.map(group => group.marketingMessage);
-  
+
   messages.push(
     `Если ${orJoin(...marketingMessages)}, приобретите один из пакетов услуг.`
   );
@@ -114,7 +117,7 @@ scene.enter(async ctx => {
     ),
     ...messages
   );
-});
+}
 
 addOtherCommandHandlers(scene, commands.premium);
 
@@ -146,7 +149,11 @@ async function groupAction(ctx: AnyContext, group: ProductGroup) {
 
   await replyWithKeyboard(
     ctx,
-    inlineKeyboard(...buttons, cancelButton),
+    inlineKeyboard(
+      ...buttons,
+      ["Назад", backToStartAction],
+      cancelButton
+    ),
     group.description,
     ...messages
   );
@@ -286,6 +293,11 @@ async function buyProduct(ctx: BotContext, productCode: ProductCode) {
     "Мы сообщим вам, когда получим оплату."
   );
 }
+
+scene.action(backToStartAction, async ctx => {
+  await clearInlineKeyboard(ctx);
+  await mainHandler(ctx);
+});
 
 scene.action(cancelAction, backToMainDialogHandler);
 

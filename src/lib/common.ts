@@ -1,6 +1,8 @@
-export const clean = (lines: string[]) =>
+export type StringLike = string | null | undefined;
+
+export const clean = (lines: StringLike[]) =>
   lines
-    .map(l => l.trim())
+    .map(l => l ? l.trim() : "")
     .filter(l => !!l);
 
 export function toArray<T>(value: T | T[] | undefined | null): T[] {
@@ -94,7 +96,6 @@ export function homogeneousJoin(
 }
 
 export const andJoin = (...lines: string[]) => homogeneousJoin(lines);
-
 export const orJoin = (...lines: string[]) => homogeneousJoin(lines, " или ");
 
 const isEmpty = <T>(array: T[]) => array.length === 0;

@@ -2,13 +2,13 @@ import { BaseScene } from "telegraf/scenes";
 import { BotContext } from "../botContext";
 import { commands, scenes, settings, symbols } from "../../lib/constants";
 import { addOtherCommandHandlers, backToMainDialogHandler, dunnoHandler, kickHandler } from "../handlers";
-import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
+import { clearAndLeave, clearInlineKeyboard, inlineKeyboard, replyWithKeyboard } from "../../lib/telegram";
 import { message } from "telegraf/filters";
 import { generateImageWithGpt } from "../../services/imageService";
 import { ImageStage, SessionData } from "../session";
 import { anotherImageAction, cancelAction, cancelButton } from "../../lib/dialog";
 import { getUserOrLeave } from "../../services/messageService";
-import { capitalize, commatize, toCompactText, toText } from "../../lib/common";
+import { capitalize, clean, commatize, toCompactText, toText } from "../../lib/common";
 import { ImageModelCode } from "../../entities/model";
 import { ConsumptionLimit, ConsumptionLimits, IntervalConsumptionLimits } from "../../entities/consumption";
 import { getIntervalString } from "../../services/intervalService";
@@ -23,6 +23,7 @@ import { freeSubscription } from "../../entities/product";
 import { ImageModelContext } from "../../entities/modelContext";
 import { User } from "../../entities/user";
 
+const gotoPremiumAction = "gotoPremium";
 const scene = new BaseScene<BotContext>(scenes.image);
 
 scene.enter(mainHandler);
@@ -41,7 +42,7 @@ scene.on(message("text"), async ctx => {
       return;
     }
 
-    const imageModelContext = await getImageModelContextOrLeave(ctx, user);
+    const imageModelContext = await getImageModelContext(ctx, user);
 
     if (!imageModelContext) {
       return;
@@ -69,6 +70,11 @@ scene.action(anotherImageAction, async ctx => {
   await mainHandler(ctx);
 });
 
+scene.action(gotoPremiumAction, async ctx => {
+  await clearAndLeave(ctx);
+  await ctx.scene.enter(scenes.premium);
+});
+
 scene.leave(async ctx => {
   delete ctx.session.modeData;
 });
@@ -85,7 +91,7 @@ async function mainHandler (ctx: BotContext) {
     return;
   }
 
-  const imageModelContext = await getImageModelContextOrLeave(ctx, user);
+  const imageModelContext = await getImageModelContext(ctx, user);
 
   if (!imageModelContext) {
     return;
@@ -130,7 +136,7 @@ async function mainHandler (ctx: BotContext) {
   );
 }
 
-async function getImageModelContextOrLeave(ctx: BotContext, user: User): Promise<ImageModelContext | null> {
+async function getImageModelContext(ctx: BotContext, user: User): Promise<ImageModelContext | null> {
   const contexts = getImageModelContexts(user);
   const usableContext = contexts.find(context => context.usable);
 
@@ -141,30 +147,37 @@ async function getImageModelContextOrLeave(ctx: BotContext, user: User): Promise
   const messages: string[] = [];
 
   for (const context of contexts) {
-    console.log(context);
     const { product, modelCode, limits, usagePoints } = context;
 
     const formattedLimits = limits
       ? formatConsumptionLimits(limits, modelCode, usagePoints)
       : "неопределенный лимит";
 
-    const productName = getProductShortDisplayName(product ?? freeSubscription)
+    const subscription = product ?? freeSubscription;
+
+    const productNameParts = clean([
+      subscription.icon,
+      capitalize(getProductShortDisplayName(subscription))
+    ]);
 
     messages.push(
       toCompactText(
-        capitalize(`${productName}:`),
+        `<b>${productNameParts.join(" ")}</b>`,
         bullet(formattedLimits)
       )
     );
   }
 
-  await reply(
+  await replyWithKeyboard(
     ctx,
+    inlineKeyboard(
+      ["Пакеты услуг", gotoPremiumAction],
+      cancelButton
+    ),
     toText(...messages),
-    "⛔ Генерация картинок недоступна."
+    "⛔ Генерация картинок недоступна.",
+    `Подождите или приобретите пакет услуг: /${commands.premium}`
   );
-
-  await ctx.scene.leave();
 
   return null;
 }

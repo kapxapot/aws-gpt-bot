@@ -14,9 +14,11 @@ type HandlerTuple = [command: string, handler: Handler];
 
 export function addOtherCommandHandlers(scene: Composer<BotContext>, exceptCommand: string) {
   getOtherCommandHandlers(exceptCommand).forEach(tuple => {
-    scene.command(tuple[0], async (ctx) => {
+    const [command, handler] = tuple;
+
+    scene.command(command, async (ctx) => {
       await clearAndLeave(ctx);
-      await tuple[1](ctx);
+      await handler(ctx);
     });
   });
 

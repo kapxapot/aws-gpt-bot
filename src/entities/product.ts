@@ -16,6 +16,7 @@ export type Subscription = {
   name: string;
   shortName?: string;
   displayName?: string;
+  icon?: string;
   /** @deprecated Remove in >1 month after 0.2 release */
   displayNames?: PartialRecord<GrammarCase, string>;
   details: {
@@ -75,6 +76,7 @@ export function isPurchasedProduct(product: Subscription): product is PurchasedP
 export const freeSubscription: Subscription = {
   name: "Free Subscription",
   displayName: "Бесплатный",
+  icon: "🤑",
   details: {
     type: "subscription",
     plan: defaultPlan
@@ -86,6 +88,7 @@ export const premiumSubscription: Product = {
   name: "Premium Subscription - 30 Days",
   shortName: "Премиум",
   displayName: "Премиум на 30 дней",
+  icon: "💔",
   price: {
     currency: "RUB",
     amount: 290
@@ -102,6 +105,7 @@ export const unlimitedSubscription: Product = {
   name: "Unlimited Subscription - 30 Days",
   shortName: "Безлимит",
   displayName: "Безлимит на 30 дней",
+  icon: "💔",
   price: {
     currency: "RUB",
     amount: 390
@@ -118,6 +122,7 @@ export const noviceBundle: Product = {
   name: "Novice Bundle - 30 Days",
   shortName: "Новичок",
   displayName: "Новичок на 30 дней",
+  icon: "👧",
   price: {
     currency: "RUB",
     amount: 49
@@ -134,6 +139,7 @@ export const studentBundle: Product = {
   name: "Student Bundle - 30 Days",
   shortName: "Студент",
   displayName: "Студент на 30 дней",
+  icon: "👨‍🎓",
   price: {
     currency: "RUB",
     amount: 99
@@ -150,6 +156,7 @@ export const trialBundle: Product = {
   name: "Trial Bundle - 30 Days",
   shortName: "Пробный",
   displayName: "Пробный на 30 дней",
+  icon: "🧪",
   price: {
     currency: "RUB",
     amount: 99
@@ -166,6 +173,7 @@ export const creativeBundle: Product = {
   name: "Creative Bundle - 30 Days",
   shortName: "Творческий",
   displayName: "Творческий на 30 дней",
+  icon: "👩‍🎨",
   price: {
     currency: "RUB",
     amount: 199
@@ -182,6 +190,7 @@ export const proBundle: Product = {
   name: "Pro Bundle - 30 Days",
   shortName: "Профи",
   displayName: "Профи на 30 дней",
+  icon: "😎",
   price: {
     currency: "RUB",
     amount: 449
@@ -198,6 +207,7 @@ export const bossBundle: Product = {
   name: "Boss Bundle - 30 Days",
   shortName: "Босс",
   displayName: "Босс на 30 дней",
+  icon: "🤴",
   price: {
     currency: "RUB",
     amount: 999
@@ -217,6 +227,7 @@ export const testTinyGpt3Bundle: Product = {
   name: "Test Tiny Bundle GPT-3 - 1 Day",
   shortName: "Мелкий GPT-3",
   displayName: "Мелкий GPT-3 на 1 день",
+  icon: "🛠",
   price: {
     currency: "RUB",
     amount: 9999
@@ -236,6 +247,7 @@ export const testTinyGptokenBundle: Product = {
   name: "Test Tiny Bundle Gptoken - 1 Day",
   shortName: "Мелкий Гптокен",
   displayName: "Мелкий Гптокен на 1 день",
+  icon: "🛠",
   price: {
     currency: "RUB",
     amount: 9999

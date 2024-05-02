@@ -10,7 +10,7 @@ import { User } from "../entities/user";
 
 export const contactRequestLabel = "📱 Отправить номер";
 
-export type ButtonLike = [string, string] | InlineKeyboardButton;
+export type ButtonLike = [label: string, action: string] | InlineKeyboardButton;
 
 type InlineKeyboard = Markup.Markup<InlineKeyboardMarkup>;
 
