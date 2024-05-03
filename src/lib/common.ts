@@ -13,12 +13,15 @@ export function toArray<T>(value: T | T[] | undefined | null): T[] {
   return Array.isArray(value) ? value : [value];
 }
 
+export const cleanJoin = (lines: StringLike[], delimiter: string = " ") =>
+  clean(lines).join(delimiter);
+
 export const toCleanArray = (lines: string | string[]) =>
   clean(toArray(lines));
 
-export const toText = (...lines: string[]) => lines.join("\n\n");
+export const toText = (...lines: StringLike[]) => cleanJoin(lines, "\n\n");
 
-export const toCompactText = (...lines: string[]) => lines.join("\n");
+export const toCompactText = (...lines: StringLike[]) => cleanJoin(lines, "\n");
 
 export function truncate(str: string, limit: number): string {
   return str.length > limit
@@ -49,8 +52,8 @@ export function isUndefined(v: unknown): v is undefined {
 /**
  * Sanitizes array and joins it using comma and space.
  */
-export const commatize = (lines: string[]) =>
-  clean(lines).join(", ");
+export const commatize = (lines: StringLike[]) =>
+  cleanJoin(lines, ", ");
 
 export function capitalize(str: string): string {
   if (str.length < 1) {
@@ -60,10 +63,13 @@ export function capitalize(str: string): string {
   return str.substring(0, 1).toUpperCase() + str.substring(1);
 }
 
-export function homogeneousJoin(
-    chunks: string[],
-    finalDelimiter?: string,
-    commaDelimiter?: string
+export const andJoin = (...lines: StringLike[]) => homogeneousJoin(clean(lines));
+export const orJoin = (...lines: StringLike[]) => homogeneousJoin(clean(lines), " или ");
+
+function homogeneousJoin(
+  chunks: string[],
+  finalDelimiter?: string,
+  commaDelimiter?: string
 ): string {
   finalDelimiter ??= " и ";
   commaDelimiter ??= ", ";
@@ -94,8 +100,5 @@ export function homogeneousJoin(
 
   return result;
 }
-
-export const andJoin = (...lines: string[]) => homogeneousJoin(lines);
-export const orJoin = (...lines: string[]) => homogeneousJoin(lines, " или ");
 
 const isEmpty = <T>(array: T[]) => array.length === 0;

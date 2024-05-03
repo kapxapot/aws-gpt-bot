@@ -1,14 +1,13 @@
 import { ts } from "../entities/at";
-import { GrammarCase } from "../entities/grammar";
 import { ModelCode } from "../entities/model";
 import { PlanSettings } from "../entities/planSettings";
-import { Product, ProductCode, PurchasedProduct, Subscription, bossBundle, creativeBundle, noviceBundle, premiumSubscription, proBundle, productTypeDisplayNames, studentBundle, testTinyGpt3Bundle, testTinyGptokenBundle, trialBundle, unlimitedSubscription } from "../entities/product";
+import { Product, ProductCode, PurchasedProduct, bossBundle, creativeBundle, noviceBundle, premiumSubscription, proBundle, studentBundle, testTinyGpt3Bundle, testTinyGptokenBundle, trialBundle, unlimitedSubscription } from "../entities/product";
 import { User } from "../entities/user";
-import { addDays, isInRange } from "./dateService";
-import { getCase } from "./grammarService";
+import { capitalize, cleanJoin } from "../lib/common";
+import { addDays, formatDate, isInRange } from "./dateService";
 import { getPlanSettings } from "./planSettingsService";
 import { isProductUsageExceeded } from "./productUsageService";
-import { getSubscriptionPlan } from "./subscriptionService";
+import { getSubscriptionFullDisplayName, getSubscriptionPlan } from "./subscriptionService";
 import { getUserPurchasedProducts } from "./userService";
 
 type TimestampRange = {
@@ -16,24 +15,15 @@ type TimestampRange = {
   end: number;
 };
 
-export const getProductFullDisplayName = (product: Subscription, targetCase?: GrammarCase) =>
-  formatProductName(product, getProductDisplayName(product), targetCase);
+export function formatProductName(product: PurchasedProduct): string {
+  const productName = getSubscriptionFullDisplayName(product);
 
-export const getProductShortDisplayName = (product: Subscription, targetCase?: GrammarCase) =>
-  formatProductName(product, getProductShortName(product), targetCase);
-
-export function getProductTypeDisplayName(product: Subscription, targetCase: GrammarCase = "Nominative") {
-  const displayName = productTypeDisplayNames[product.details.type];
-  return getCase(displayName, targetCase);
+  return cleanJoin([
+    product.icon,
+    `<b>${capitalize(productName)}</b>`,
+    formatProductExpiration(product)
+  ]);
 }
-
-export const getProductShortName = (product: Subscription) =>
-  product.shortName ?? getProductDisplayName(product);
-
-export const getProductDisplayName = (product: Subscription) =>
-  (product.displayNames ? product.displayNames["Nominative"] : null)
-    ?? product.displayName
-    ?? product.name;
 
 export function getProductByCode(code: ProductCode): Product {
   const products = [
@@ -69,9 +59,13 @@ export const gptokenProducts = [
 export const isActiveProduct = (product: PurchasedProduct) =>
   !isProductExpired(product) && !isProductExhausted(product);
 
+/**
+ * Returns user's active products sorted by their purchase date descending.
+ */
 export const getActiveProducts = (user: User): PurchasedProduct[] =>
   getUserPurchasedProducts(user)
-    .filter(product => isActiveProduct(product));
+    .filter(product => isActiveProduct(product))
+    .sort((a, b) => b.purchasedAt.timestamp - a.purchasedAt.timestamp);
 
 export function getProductTimestampRange(product: PurchasedProduct): TimestampRange {
   const start = product.purchasedAt.timestamp;
@@ -89,6 +83,13 @@ export const getProductAvailableModels = (product: PurchasedProduct) =>
   getProductModels(product)
     .filter(modelCode => !isProductUsageExceeded(product, modelCode));
 
+function formatProductExpiration(product: PurchasedProduct): string {
+  const { end } = getProductTimestampRange(product);
+  const expiresAt = new Date(end);
+
+  return `(действует по ${formatDate(expiresAt, "dd.MM.yyyy")})`;
+}
+
 function isProductExpired(product: PurchasedProduct): boolean {
   const { start, end } = getProductTimestampRange(product);
   return !isInRange(ts(), start, end);
@@ -101,9 +102,4 @@ const isProductExhausted = (product: PurchasedProduct) =>
 function getProductModels(product: PurchasedProduct): ModelCode[] {
   const planSettings = getProductPlanSettings(product);
   return Object.keys(planSettings.limits) as ModelCode[];
-}
-
-function formatProductName(product: Subscription, productName: string, targetCase?: GrammarCase) {
-  const productTypeName = getProductTypeDisplayName(product, targetCase);
-  return `${productTypeName} «${productName}»`;
 }

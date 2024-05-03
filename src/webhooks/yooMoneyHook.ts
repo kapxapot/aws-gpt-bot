@@ -1,7 +1,7 @@
 import { at, ts } from "../entities/at";
 import { toText } from "../lib/common";
 import { putMetric } from "../services/metricService";
-import { getProductFullDisplayName } from "../services/productService";
+import { getSubscriptionFullDisplayName } from "../services/subscriptionService";
 import { addUserEvent } from "../services/userService";
 import { getPayment, updatePayment } from "../storage/paymentStorage";
 import { getUser } from "../storage/userStorage";
@@ -77,7 +77,7 @@ export async function youMoneyHook(requestData: YouMoneyRequestData) {
       }
     );
 
-    const productName = getProductFullDisplayName(product, "Accusative");
+    const productName = getSubscriptionFullDisplayName(product, "Accusative");
 
     await sendTelegramMessage(
       user,

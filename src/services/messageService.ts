@@ -2,13 +2,12 @@ import { ts } from "../entities/at";
 import { getModeName } from "../entities/prompt";
 import { User } from "../entities/user";
 import { gptChatCompletion } from "../external/gptChatCompletion";
-import { capitalize, commatize, first, toText, truncate } from "../lib/common";
+import { commatize, first, toText, truncate } from "../lib/common";
 import { isSuccess } from "../lib/error";
 import { clearAndLeave, encodeText, inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
 import { addMessageToUser, getLastHistoryMessage, getOrAddUser, stopWaitingForGptAnswer, updateUserProduct, waitForGptAnswer } from "./userService";
 import { commands } from "../lib/constants";
-import { formatSubscription, getCurrentSubscription } from "./subscriptionService";
 import { getCurrentHistory } from "./contextService";
 import { getCaseForNumber } from "./grammarService";
 import { Completion } from "../entities/message";
@@ -19,7 +18,7 @@ import { happened, timeLeft } from "./dateService";
 import { AnyContext } from "../telegram/botContext";
 import { PureTextModelCode, TextModelCode } from "../entities/model";
 import { incUsage, isUsageLimitExceeded } from "./usageStatsService";
-import { getProductTypeDisplayName } from "./productService";
+import { formatProductName, getActiveProducts } from "./productService";
 import { getTextModelByCode } from "./modelService";
 import { incProductUsage } from "./productUsageService";
 import { intervalPhrases, intervals } from "../entities/interval";
@@ -174,10 +173,10 @@ export async function showStatus(ctx: AnyContext, user: User) {
 }
 
 export function getStatusMessage(user: User): string {
-  const subscription = getCurrentSubscription(user);
+  const products = getActiveProducts(user);
 
   return toText(
-    `${capitalize(getProductTypeDisplayName(subscription))}: ${formatSubscription(subscription)}`,
+    ...products.map(product => formatProductName(product)),
     `Режим: <b>${getModeName(user)}</b>`
   );
 }

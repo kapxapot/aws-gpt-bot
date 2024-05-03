@@ -1,42 +1,48 @@
-import { Subscription, freeSubscription, isPurchasedProduct } from "../entities/product";
+import { GrammarCase } from "../entities/grammar";
+import { Subscription, freeSubscription, productTypeDisplayNames } from "../entities/product";
 import { User } from "../entities/user";
 import { first } from "../lib/common";
-import { formatDate } from "./dateService";
-import { getActiveProducts, getProductDisplayName, getProductTimestampRange } from "./productService";
+import { getCase } from "./grammarService";
+import { getActiveProducts } from "./productService";
 
-type SubscriptionDisplayInfo = {
-  name: string;
-  expiresAt: Date | null;
-};
-
-export function formatSubscription(subscription: Subscription): string {
-  const { name, expiresAt } = getSubscriptionDisplayInfo(subscription);
-
-  if (!expiresAt) {
-    return name;
-  }
-
-  return `${name} (действует по ${formatDate(expiresAt, "dd.MM.yyyy")})`;
-}
-
-function getSubscriptionDisplayInfo(subscription: Subscription): SubscriptionDisplayInfo {
-  const name = `<b>${getProductDisplayName(subscription)}</b>`;
-
-  let expiresAt = null;
-
-  if (isPurchasedProduct(subscription)) {
-    const { end } = getProductTimestampRange(subscription);
-    expiresAt = new Date(end);
-  }
-
-  return { name, expiresAt };
-}
-
-export function getCurrentSubscription(user: User): Subscription {
-  const activeProducts = getActiveProducts(user)
-    .sort((a, b) => b.purchasedAt.timestamp - a.purchasedAt.timestamp);
-
-  return first(activeProducts) ?? freeSubscription;
-}
+export const getCurrentSubscription = (user: User) =>
+  first(getActiveProducts(user)) ?? freeSubscription;
 
 export const getSubscriptionPlan = (subscription: Subscription) => subscription.details.plan;
+
+export const getSubscriptionFullDisplayName = (
+  subscription: Subscription,
+  targetCase?: GrammarCase
+) => formatSubscriptionName(
+  subscription,
+  getSubscriptionDisplayName(subscription),
+  targetCase
+);
+
+export const getSubscriptionShortDisplayName = (
+  subscription: Subscription,
+  targetCase?: GrammarCase
+) => formatSubscriptionName(
+  subscription,
+  getSubscriptionShortName(subscription),
+  targetCase
+);
+
+export const getSubscriptionShortName = (subscription: Subscription) =>
+  subscription.shortName ?? getSubscriptionDisplayName(subscription);
+
+const getSubscriptionDisplayName = (subscription: Subscription) =>
+  (subscription.displayNames ? subscription.displayNames["Nominative"] : null)
+    ?? subscription.displayName
+    ?? subscription.name;
+
+function formatSubscriptionName(
+  subscription: Subscription,
+  name: string,
+  targetCase: GrammarCase = "Nominative"
+) {
+  const typeDisplayName = productTypeDisplayNames[subscription.details.type];
+  const typeCase = getCase(typeDisplayName, targetCase);
+
+  return `${typeCase} <b>«${name}»</b>`;
+}

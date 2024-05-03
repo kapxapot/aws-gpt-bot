@@ -8,7 +8,7 @@ import { generateImageWithGpt } from "../../services/imageService";
 import { ImageStage, SessionData } from "../session";
 import { anotherImageAction, cancelAction, cancelButton } from "../../lib/dialog";
 import { getUserOrLeave } from "../../services/messageService";
-import { capitalize, clean, commatize, toCompactText, toText } from "../../lib/common";
+import { capitalize, cleanJoin, commatize, toCompactText, toText } from "../../lib/common";
 import { ImageModelCode } from "../../entities/model";
 import { ConsumptionLimit, ConsumptionLimits, IntervalConsumptionLimits } from "../../entities/consumption";
 import { getIntervalString } from "../../services/intervalService";
@@ -18,10 +18,10 @@ import { getCaseForNumber } from "../../services/grammarService";
 import { gptokenString } from "../../services/gptokenService";
 import { bullet, bulletize } from "../../lib/text";
 import { getImageModelContexts } from "../../services/modelContextService";
-import { getProductShortDisplayName } from "../../services/productService";
 import { freeSubscription } from "../../entities/product";
 import { ImageModelContext } from "../../entities/modelContext";
 import { User } from "../../entities/user";
+import { getSubscriptionShortDisplayName } from "../../services/subscriptionService";
 
 const gotoPremiumAction = "gotoPremium";
 const scene = new BaseScene<BotContext>(scenes.image);
@@ -155,14 +155,14 @@ async function getImageModelContext(ctx: BotContext, user: User): Promise<ImageM
 
     const subscription = product ?? freeSubscription;
 
-    const productNameParts = clean([
+    const productNameParts = [
       subscription.icon,
-      capitalize(getProductShortDisplayName(subscription))
-    ]);
+      capitalize(getSubscriptionShortDisplayName(subscription))
+    ];
 
     messages.push(
       toCompactText(
-        `<b>${productNameParts.join(" ")}</b>`,
+        `<b>${cleanJoin(productNameParts)}</b>`,
         bullet(formattedLimits)
       )
     );

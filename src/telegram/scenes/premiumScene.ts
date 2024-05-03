@@ -7,9 +7,9 @@ import { PaymentEvent } from "../../entities/payment";
 import { storePayment } from "../../storage/paymentStorage";
 import { yooMoneyPayment } from "../../external/yooMoneyPayment";
 import { now } from "../../entities/at";
-import { Product, ProductCode, productCodes } from "../../entities/product";
+import { Product, ProductCode, freeSubscription, productCodes } from "../../entities/product";
 import { isError } from "../../lib/error";
-import { getCurrentSubscription, getSubscriptionPlan } from "../../services/subscriptionService";
+import { getSubscriptionFullDisplayName, getSubscriptionPlan, getSubscriptionShortName } from "../../services/subscriptionService";
 import { canMakePurchases, canPurchaseProduct } from "../../services/permissionService";
 import { cancelAction, cancelButton } from "../../lib/dialog";
 import { getUserOrLeave } from "../../services/messageService";
@@ -17,7 +17,7 @@ import { SessionData } from "../session";
 import { orJoin, phoneToItu, toCompactText, toText } from "../../lib/common";
 import { message } from "telegraf/filters";
 import { updateUser } from "../../storage/userStorage";
-import { getProductByCode, getProductFullDisplayName, getProductShortName, getProductTypeDisplayName, gpt3Products, gptokenProducts } from "../../services/productService";
+import { getActiveProducts, getProductByCode, gpt3Products, gptokenProducts } from "../../services/productService";
 import { User } from "../../entities/user";
 import { getPlanDescription } from "../../services/planService";
 import { gptokenString } from "../../services/gptokenService";
@@ -78,15 +78,19 @@ async function mainHandler(ctx: BotContext) {
     return;
   }
 
-  const subscription = getCurrentSubscription(user);
-  const plan = getSubscriptionPlan(subscription);
-
   const validProductGroups = filteredProductGroups(user);
   const productCount = validProductGroups.reduce((sum, group) => sum + group.products.length, 0);
 
+  const subscriptions = [
+    ...getActiveProducts(user),
+    freeSubscription
+  ];
+
   const messages = [
-    `Ваш текущий ${getProductTypeDisplayName(subscription)}:`,
-    getPlanDescription(plan, "shortest")
+    "Ваши продукты:",
+    ...subscriptions
+      .map(subscription => getSubscriptionPlan(subscription))
+      .map(plan => getPlanDescription(plan, "shortest"))
   ];
 
   if (!productCount) {
@@ -288,7 +292,7 @@ async function buyProduct(ctx: BotContext, productCode: ProductCode) {
 
   await replyBackToMainDialog(
     ctx,
-    `💳 Для оплаты ${getProductFullDisplayName(product, "Genitive")} <a href="${paymentUrl}">пройдите по ссылке</a>.`,
+    `💳 Для оплаты ${getSubscriptionFullDisplayName(product, "Genitive")} <a href="${paymentUrl}">пройдите по ссылке</a>.`,
     `⚠ Время действия ссылки ограничено. Если вы не успеете оплатить счет, вы можете получить новую ссылку с помощью команды /${commands.premium}`,
     "Мы сообщим вам, когда получим оплату."
   );
@@ -337,7 +341,7 @@ function listProducts(products: Product[]): MessagesAndButtons {
 }
 
 const productButton = (product: Product): ButtonLike => [
-  `Купить ${getProductShortName(product)}`,
+  `Купить ${getSubscriptionShortName(product)}`,
   getProductBuyAction(product.code)
 ];
 
