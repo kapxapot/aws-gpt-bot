@@ -50,9 +50,11 @@ scene.on(message("text"), async ctx => {
 
     const imagePrompt = ctx.message.text;
 
-    await generateImageWithGpt(ctx, imageModelContext, user, imagePrompt);
+    const result = await generateImageWithGpt(ctx, imageModelContext, user, imagePrompt);
 
-    setStage(ctx.session, "anotherImage");
+    if (result) {
+      setStage(ctx.session, "anotherImage");
+    }
 
     return;
   }

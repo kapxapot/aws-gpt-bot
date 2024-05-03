@@ -3,10 +3,6 @@ import { AnyContext, BotContext } from "../botContext";
 import { commands, scenes, symbols } from "../../lib/constants";
 import { addOtherCommandHandlers, backToMainDialogHandler, dunnoHandler, kickHandler } from "../handlers";
 import { ButtonLike, clearInlineKeyboard, contactKeyboard, contactRequestLabel, emptyKeyboard, inlineKeyboard, reply, replyBackToMainDialog, replyWithKeyboard } from "../../lib/telegram";
-import { PaymentEvent } from "../../entities/payment";
-import { storePayment } from "../../storage/paymentStorage";
-import { yooMoneyPayment } from "../../external/yooMoneyPayment";
-import { now } from "../../entities/at";
 import { Product, ProductCode, freeSubscription, productCodes } from "../../entities/product";
 import { isError } from "../../lib/error";
 import { getSubscriptionFullDisplayName, getSubscriptionPlan, getSubscriptionShortName } from "../../services/subscriptionService";
@@ -22,6 +18,8 @@ import { User } from "../../entities/user";
 import { getPlanDescription } from "../../services/planService";
 import { gptokenString } from "../../services/gptokenService";
 import { bulletize } from "../../lib/text";
+import { createPayment } from "../../services/paymentService";
+import { Markup } from "telegraf";
 
 type Message = string;
 
@@ -240,6 +238,8 @@ scene.on(message("contact"), async ctx => {
 });
 
 async function buyProduct(ctx: BotContext, productCode: ProductCode) {
+  await clearInlineKeyboard(ctx);
+
   const user = await getUserOrLeave(ctx);
 
   if (!user) {
@@ -247,16 +247,9 @@ async function buyProduct(ctx: BotContext, productCode: ProductCode) {
   }
 
   const product = getProductByCode(productCode);
+  const payment = await createPayment(user, product);
 
-  const requestData = {
-    user,
-    total: product.price,
-    description: product.name
-  };
-
-  const response = await yooMoneyPayment(requestData);
-
-  if (isError(response)) {
+  if (isError(payment)) {
     await replyBackToMainDialog(
       ctx,
       "Произошла ошибка, оплата временно недоступна. Приносим извинения."
@@ -265,34 +258,14 @@ async function buyProduct(ctx: BotContext, productCode: ProductCode) {
     return;
   }
 
-  const data = response.data;
-
-  const event: PaymentEvent = {
-    type: "created",
-    details: data,
-    at: now()
-  };
-
-  const paymentId = data.id;
-  const paymentUrl = data.confirmation.confirmation_url;
-
-  await storePayment({
-    id: paymentId,
-    userId: user.id,
-    type: "YooMoney",
-    cart: [product],
-    status: data.status,
-    total: requestData.total,
-    description: requestData.description,
-    url: paymentUrl,
-    requestData: requestData,
-    responseData: data,
-    events: [event]
-  });
-
-  await replyBackToMainDialog(
+  await replyWithKeyboard(
     ctx,
-    `💳 Для оплаты ${getSubscriptionFullDisplayName(product, "Genitive")} <a href="${paymentUrl}">пройдите по ссылке</a>.`,
+    inlineKeyboard(
+      Markup.button.url("Оплатить", payment.url),
+      ["Купить еще", backToStartAction],
+      cancelButton
+    ),
+    `💳 Для оплаты ${getSubscriptionFullDisplayName(product, "Genitive")} <a href="${payment.url}">пройдите по ссылке</a>.`,
     `⚠ Время действия ссылки ограничено. Если вы не успеете оплатить счет, вы можете получить новую ссылку с помощью команды /${commands.premium}`,
     "Мы сообщим вам, когда получим оплату."
   );
