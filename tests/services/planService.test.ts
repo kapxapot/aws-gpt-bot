@@ -1,9 +1,16 @@
-import { isPurchasedProduct } from "../../src/entities/product";
+import { at, now } from "../../src/entities/at";
+import { freeSubscription, isPurchasedProduct } from "../../src/entities/product";
 import { User } from "../../src/entities/user";
+import { addDays } from "../../src/services/dateService";
 import { getCurrentSubscription } from "../../src/services/subscriptionService";
 
+const then = now();
+const before = at(addDays(then, -1));
+
+const old = at(addDays(then, -50));
+
 describe("getCurrentSubscription", () => {
-  test("should return newer sub in case of several ones", () => {
+  test("should return newer product in case of active products", () => {
     const user: User = {
       id: "",
       telegramId: 1,
@@ -29,10 +36,7 @@ describe("getCurrentSubscription", () => {
             amount: 290,
             currency: "RUB"
           },
-          purchasedAt: {
-            date: "2024-03-06T08:42:57.490Z",
-            timestamp: 1709714577490
-          },
+          purchasedAt: before,
           usage: {}
         },
         {
@@ -52,10 +56,7 @@ describe("getCurrentSubscription", () => {
             amount: 299,
             currency: "RUB"
           },
-          purchasedAt: {
-            date: "2024-04-02T09:58:16.938Z",
-            timestamp: 1712051896938
-          },
+          purchasedAt: then,
           usage: {}
         }
       ]
@@ -70,5 +71,57 @@ describe("getCurrentSubscription", () => {
     if (isPurchasedProduct(currentSubscription)) {
       expect(currentSubscription.code).toBe("bundle-creative-30-days");
     }
+  });
+
+  test("should return free sub in case of an expired product", () => {
+    const user: User = {
+      id: "",
+      telegramId: 1,
+      createdAt: 1,
+      createdAtIso: "",
+      updatedAt: 1,
+      updatedAtIso: "",
+      products: [
+        {
+          id: "",
+          code: "bundle-creative-30-days",
+          details: {
+            plan: "creative",
+            term: {
+              range: 30,
+              unit: "day"
+            },
+            type: "bundle"
+          },
+          displayName: "Творческий на 30 дней",
+          name: "Creative Bundle - 30 Days",
+          price: {
+            amount: 299,
+            currency: "RUB"
+          },
+          purchasedAt: old,
+          usage: {}
+        }
+      ]
+    };
+
+    const currentSubscription = getCurrentSubscription(user);
+
+    expect(currentSubscription).toBe(freeSubscription);
+  });
+
+  test("should return free sub in case of no products", () => {
+    const user: User = {
+      id: "",
+      telegramId: 1,
+      createdAt: 1,
+      createdAtIso: "",
+      updatedAt: 1,
+      updatedAtIso: ""
+    };
+
+    const currentSubscription = getCurrentSubscription(user);
+
+    expect(currentSubscription).toBe(freeSubscription);
   });
 });
