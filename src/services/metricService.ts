@@ -8,6 +8,9 @@ export type MetricName =
   "BroadcastMessageSent" |
   "BroadcastMessageFailed" |
   "ImageGenerated" |
+  "PaymentReceived" |
+  "RUBAmountReceived" |
+  "USDAmountReceived" |
   "Error" |
   "PaymentUserNotFoundError" |
   "PaymentNotFoundError" |

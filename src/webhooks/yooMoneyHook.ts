@@ -77,6 +77,20 @@ export async function youMoneyHook(requestData: YouMoneyRequestData) {
       }
     );
 
+    await putMetric("PaymentReceived");
+
+    const { currency, amount } = product.price;
+
+    switch (currency) {
+      case "RUB":
+        await putMetric("RUBAmountReceived", amount);
+        break;
+
+      case "USD":
+        await putMetric("USDAmountReceived", amount);
+        break;
+    }
+
     const productName = getSubscriptionFullDisplayName(product, "Accusative");
 
     await sendTelegramMessage(
