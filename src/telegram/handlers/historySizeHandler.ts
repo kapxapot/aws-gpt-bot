@@ -1,19 +1,24 @@
 import { settings } from "../../lib/constants";
-import { parseCommandWithArgs, reply } from "../../lib/telegram";
-import { getOrAddUser } from "../../services/userService";
+import { extractArgs, reply } from "../../lib/telegram";
+import { getUserOrLeave } from "../../services/messageService";
 import { getUserHistorySize, updateUserSettings } from "../../services/userSettingsService";
-import { AnyContext } from "../botContext";
+import { BotContext } from "../botContext";
 
-export async function historySizeHandler(ctx: AnyContext) {
+export async function historySizeHandler(ctx: BotContext) {
   const minHistorySize = settings.historySize.min;
   const maxHistorySize = settings.historySize.max;
 
   const badInput = `Укажите желаемый размер истории через пробел в виде целого числа от ${minHistorySize} до ${maxHistorySize}.`;
 
-  const user = await getOrAddUser(ctx.from);
-  const { args } = parseCommandWithArgs(ctx.update.message.text);
+  const user = await getUserOrLeave(ctx);
 
-  if (!args.length) {
+  if (!user) {
+    return;
+  }
+
+  const args = extractArgs(ctx);
+
+  if (!args?.length) {
     await reply(ctx, `Текущий размер истории: ${getUserHistorySize(user)}`);
     return;
   }

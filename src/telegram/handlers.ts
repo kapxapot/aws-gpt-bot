@@ -1,15 +1,14 @@
 import { inspect } from "util";
 import { Composer } from "telegraf";
-import { AnyContext, BotContext } from "./botContext";
+import { BotContext } from "./botContext";
 import { commands, commonMessages, scenes } from "../lib/constants";
 import { clearAndLeave, clearInlineKeyboard, inlineKeyboard, remindKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
 import { historySizeHandler } from "./handlers/historySizeHandler";
 import { temperatureHandler } from "./handlers/temperatureHandler";
-import { getOrAddUser } from "../services/userService";
 import { getStatusMessage, getUserOrLeave, showLastHistoryMessage, showStatus } from "../services/messageService";
 import { isDebugMode } from "../services/userSettingsService";
 
-type Handler = (ctx: AnyContext) => Promise<void>;
+type Handler = (ctx: BotContext) => Promise<void | unknown>;
 type HandlerTuple = [command: string, handler: Handler];
 
 export function addOtherCommandHandlers(scene: Composer<BotContext>, exceptCommand: string) {
@@ -52,18 +51,18 @@ export function getCommandHandlers(): HandlerTuple[] {
 }
 
 function sceneHandler(scene: string): Handler {
-  return async (ctx: AnyContext) => await ctx.scene.enter(scene);
+  return async (ctx: BotContext) => await ctx.scene.enter(scene);
 }
 
-async function supportHandler(ctx: AnyContext) {
+async function supportHandler(ctx: BotContext) {
   await reply(
     ctx,
-    "Напишите в техподдержку, чтобы получить ответ на ваш вопрос или обсудить идеи по развитию чат-бота под ваши задачи:",
+    "Напишите разработчикам бота, если у вас есть вопросы или идеи:",
     process.env.SUPPORT_URL!
   );
 }
 
-async function statusHandler(ctx: AnyContext) {
+async function statusHandler(ctx: BotContext) {
   const user = await getUserOrLeave(ctx);
 
   if (!user) {
@@ -73,7 +72,7 @@ async function statusHandler(ctx: AnyContext) {
   await showStatus(ctx, user);
 }
 
-export async function kickHandler(ctx: AnyContext, next: () => Promise<void>) {
+export async function kickHandler(ctx: BotContext, next: () => Promise<void>) {
   const myChatMember = ctx.myChatMember;
 
   if (myChatMember) {
@@ -86,13 +85,11 @@ export async function kickHandler(ctx: AnyContext, next: () => Promise<void>) {
   await next();
 }
 
-export async function dunnoHandler(ctx: AnyContext) {
-  if (ctx.from) {
-    const user = await getOrAddUser(ctx.from);
+export async function dunnoHandler(ctx: BotContext) {
+  const user = await getUserOrLeave(ctx);
 
-    if (isDebugMode(user)) {
-      console.log(inspect(ctx));
-    }
+  if (isDebugMode(user)) {
+    console.log(inspect(ctx));
   }
 
   await reply(ctx, `Я не понял ваш запрос. ${commonMessages.useTheKeyboard}`);
@@ -103,7 +100,7 @@ export async function dunnoHandler(ctx: AnyContext) {
  * 2. Leaves the scene.
  * 3. Shows `backToChat` message with a button to replay last message (if there is one).
  */
-export async function backToChatHandler(ctx: AnyContext) {
+export async function backToChatHandler(ctx: BotContext) {
   await clearAndLeave(ctx);
 
   const user = await getUserOrLeave(ctx);
@@ -120,7 +117,7 @@ export async function backToChatHandler(ctx: AnyContext) {
   );
 }
 
-export async function remindHandler(ctx: AnyContext) {
+export async function remindHandler(ctx: BotContext) {
   await clearInlineKeyboard(ctx);
 
   const user = await getUserOrLeave(ctx);

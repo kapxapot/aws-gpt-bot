@@ -2,7 +2,7 @@ import { InlineKeyboardButton, InlineKeyboardMarkup, Message, ReplyKeyboardMarku
 import { StringLike, toText } from "./common";
 import { Markup } from "telegraf";
 import { settings } from "./constants";
-import { AnyContext } from "../telegram/botContext";
+import { BotContext } from "../telegram/botContext";
 import { backToChatHandler } from "../telegram/handlers";
 import { userHasHistoryMessage } from "../services/userService";
 import { remindButton } from "./dialog";
@@ -44,20 +44,20 @@ export function remindKeyboard(user: User): InlineKeyboard {
   return inlineKeyboard(...buttons);
 }
 
-export async function clearInlineKeyboard(ctx: AnyContext) {
+export async function clearInlineKeyboard(ctx: BotContext) {
   try {
     await ctx.answerCbQuery();
   } catch { /* empty */ }
 
   try {
-    await ctx.editMessageReplyMarkup();
+    await ctx.editMessageReplyMarkup(undefined);
   } catch { /* empty */ }
 }
 
 /**
  * Clear the inline keyboard and leave the current scene.
  */
-export async function clearAndLeave(ctx: AnyContext) {
+export async function clearAndLeave(ctx: BotContext) {
   await clearInlineKeyboard(ctx);
   await ctx.scene.leave();
 }
@@ -109,12 +109,12 @@ export function sliceButtons(
   return result;
 }
 
-export async function replyBackToMainDialog(ctx: AnyContext, ...lines: string[]) {
+export async function replyBackToMainDialog(ctx: BotContext, ...lines: string[]) {
   await reply(ctx, ...lines);
   await backToChatHandler(ctx);
 }
 
-export async function reply(ctx: AnyContext, ...lines: string[]): Promise<Message.TextMessage[]> {
+export async function reply(ctx: BotContext, ...lines: string[]): Promise<Message.TextMessage[]> {
   const slices = sliceText(toText(...lines));
 
   const messages = [];
@@ -129,7 +129,7 @@ export async function reply(ctx: AnyContext, ...lines: string[]): Promise<Messag
 }
 
 export async function replyWithKeyboard(
-  ctx: AnyContext,
+  ctx: BotContext,
   keyboard: InlineKeyboard,
   ...lines: StringLike[]
 ) {
@@ -181,4 +181,14 @@ export function parseCommandWithArgs(text: string): CommandWithArgs {
     command: parts[0].replace("/", ""),
     args: parts.slice(1)
   };
+}
+
+export function extractArgs(ctx: BotContext): string[] | null {
+  if (!ctx.message || !("text" in ctx.message)) {
+    return null;
+  }
+
+  const { args } = parseCommandWithArgs(ctx.message.text);
+
+  return args;
 }

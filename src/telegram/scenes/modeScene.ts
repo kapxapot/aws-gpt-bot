@@ -138,9 +138,14 @@ scene.action(selectFreeModeAction, async ctx => {
 
 getPrompts().forEach(prompt => {
   scene.action(prompt.code, async ctx => {
-    if (isStage(ctx.session, "roleSelection") && ctx.from) {
+    if (isStage(ctx.session, "roleSelection")) {
       // set prompt
-      const user = await getOrAddUser(ctx.from);
+      const user = await getUserOrLeave(ctx);
+
+      if (!user) {
+        return;
+      }
+
       await setPrompt(user, prompt);
 
       await replyBackToMainDialog(

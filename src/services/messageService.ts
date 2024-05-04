@@ -2,7 +2,7 @@ import { ts } from "../entities/at";
 import { getModeName } from "../entities/prompt";
 import { User } from "../entities/user";
 import { gptChatCompletion } from "../external/gptChatCompletion";
-import { commatize, first, toCompactText, toText, truncate } from "../lib/common";
+import { capitalize, cleanJoin, commatize, first, toCompactText, toText, truncate } from "../lib/common";
 import { isSuccess } from "../lib/error";
 import { clearAndLeave, encodeText, inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
@@ -15,27 +15,29 @@ import { putMetric } from "./metricService";
 import { isDebugMode } from "./userSettingsService";
 import { gptTimeout } from "./gptService";
 import { happened, timeLeft } from "./dateService";
-import { AnyContext } from "../telegram/botContext";
+import { BotContext } from "../telegram/botContext";
 import { PureTextModelCode, TextModelCode } from "../entities/model";
 import { incUsage, isUsageLimitExceeded } from "./usageStatsService";
 import { formatProductName, getActiveProducts } from "./productService";
 import { getTextModelByCode } from "./modelService";
 import { incProductUsage } from "./productUsageService";
 import { intervalPhrases, intervals } from "../entities/interval";
-import { PurchasedProduct } from "../entities/product";
+import { PurchasedProduct, freeSubscription } from "../entities/product";
 import { getIntervalString } from "./intervalService";
 import { formatLimit } from "./usageLimitService";
-import { remindButton } from "../lib/dialog";
+import { cancelButton, gotoPremiumButton, remindButton } from "../lib/dialog";
 import { getConsumptionLimits, isConsumptionLimit } from "./consumptionService";
 import { ConsumptionLimit, IntervalConsumptionLimits } from "../entities/consumption";
 import { getTextModelContexts } from "./modelContextService";
-import { bulletize } from "../lib/text";
+import { bullet, bulletize } from "../lib/text";
+import { TextModelContext } from "../entities/modelContext";
+import { getSubscriptionShortDisplayName } from "./subscriptionService";
 
 const config = {
   messageInterval: parseInt(process.env.MESSAGE_INTERVAL ?? "15") * 1000, // milliseconds
 };
 
-export async function sendMessageToGpt(ctx: AnyContext, user: User, question: string, requestedAt?: number) {
+export async function sendMessageToGpt(ctx: BotContext, user: User, question: string, requestedAt?: number) {
   const context = first(getTextModelContexts(user));
 
   if (!context) {
@@ -169,7 +171,7 @@ export async function sendMessageToGpt(ctx: AnyContext, user: User, question: st
   }
 }
 
-export async function showStatus(ctx: AnyContext, user: User) {
+export async function showStatus(ctx: BotContext, user: User) {
   await replyWithKeyboard(
     ctx,
     inlineKeyboard(remindButton),
@@ -186,7 +188,7 @@ export function getStatusMessage(user: User): string {
   );
 }
 
-export async function showLastHistoryMessage(ctx: AnyContext, user: User, fallbackMessage?: string) {
+export async function showLastHistoryMessage(ctx: BotContext, user: User, fallbackMessage?: string) {
   const historyMessage = getLastHistoryMessage(user);
 
   const message = historyMessage
@@ -198,7 +200,7 @@ export async function showLastHistoryMessage(ctx: AnyContext, user: User, fallba
   }
 }
 
-export async function getUserOrLeave(ctx: AnyContext): Promise<User | null> {
+export async function getUserOrLeave(ctx: BotContext): Promise<User | null> {
   if (ctx.from) {
     return await getOrAddUser(ctx.from);
   }
@@ -210,6 +212,49 @@ export async function getUserOrLeave(ctx: AnyContext): Promise<User | null> {
   console.error(new Error("User not found (empty ctx.from)."));
   await putMetric("Error");
   await putMetric("UserNotFoundError");
+
+  return null;
+}
+
+async function getTextModelContext(ctx: BotContext, user: User): Promise<TextModelContext | null> {
+  const contexts = getTextModelContexts(user);
+  const usableContext = contexts.find(context => context.usable);
+
+  if (usableContext) {
+    return usableContext;
+  }
+
+  const messages: string[] = [];
+
+  for (const context of contexts) {
+    const { product, modelCode, limits, usagePoints } = context;
+
+    const formattedLimits = limits
+      ? formatConsumptionLimits(limits, modelCode, usagePoints)
+      : "неопределенный лимит";
+
+    const subscription = product ?? freeSubscription;
+
+    const productNameParts = [
+      subscription.icon,
+      capitalize(getSubscriptionShortDisplayName(subscription))
+    ];
+
+    messages.push(
+      toCompactText(
+        `<b>${cleanJoin(productNameParts)}</b>`,
+        bullet(formattedLimits)
+      )
+    );
+  }
+
+  await replyWithKeyboard(
+    ctx,
+    inlineKeyboard(gotoPremiumButton, cancelButton),
+    toText(...messages),
+    "⛔ Запросы к ChatGPT недоступны.",
+    `Подождите или приобретите пакет услуг: /${commands.premium}`
+  );
 
   return null;
 }

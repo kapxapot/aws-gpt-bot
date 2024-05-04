@@ -1,19 +1,24 @@
 import { settings } from "../../lib/constants";
-import { parseCommandWithArgs, reply } from "../../lib/telegram";
-import { getOrAddUser } from "../../services/userService";
+import { extractArgs, reply } from "../../lib/telegram";
+import { getUserOrLeave } from "../../services/messageService";
 import { getUserTemperature, updateUserSettings } from "../../services/userSettingsService";
-import { AnyContext } from "../botContext";
+import { BotContext } from "../botContext";
 
-export async function temperatureHandler(ctx: AnyContext) {
+export async function temperatureHandler(ctx: BotContext) {
   const minTemperature = settings.temperature.min;
   const maxTemperature = settings.temperature.max;
 
   const badInput = `Укажите желаемую температуру через пробел в виде дробного числа от ${minTemperature} до ${maxTemperature}.`;
 
-  const user = await getOrAddUser(ctx.from);
-  const { args } = parseCommandWithArgs(ctx.update.message.text);
+  const user = await getUserOrLeave(ctx);
 
-  if (!args.length) {
+  if (!user) {
+    return;
+  }
+
+  const args = extractArgs(ctx);
+
+  if (!args?.length) {
     await reply(ctx, `Текущая температура: ${getUserTemperature(user)}`);
     return;
   }

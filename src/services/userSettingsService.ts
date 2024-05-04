@@ -24,7 +24,7 @@ export function getUserTemperature(user: User): number {
   return user.settings?.temperature ?? settings.temperature.default;
 }
 
-export function isDebugMode(user?: User): boolean {
+export function isDebugMode(user?: User | null): boolean {
   if (user?.settings?.isDebugMode !== undefined) {
     return user.settings.isDebugMode;
   }

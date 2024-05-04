@@ -1,5 +1,5 @@
 import { BaseScene } from "telegraf/scenes";
-import { AnyContext, BotContext } from "../botContext";
+import { BotContext } from "../botContext";
 import { commands, scenes, symbols } from "../../lib/constants";
 import { addOtherCommandHandlers, backToChatHandler, dunnoHandler, kickHandler } from "../handlers";
 import { ButtonLike, clearInlineKeyboard, contactKeyboard, contactRequestLabel, emptyKeyboard, inlineKeyboard, reply, replyBackToMainDialog, replyWithKeyboard } from "../../lib/telegram";
@@ -7,7 +7,7 @@ import { Product, ProductCode, freeSubscription, productCodes } from "../../enti
 import { isError } from "../../lib/error";
 import { getSubscriptionFullDisplayName, getSubscriptionPlan, getSubscriptionShortName } from "../../services/subscriptionService";
 import { canMakePurchases, canPurchaseProduct } from "../../services/permissionService";
-import { cancelAction, cancelButton } from "../../lib/dialog";
+import { backToStartAction, backToStartButton, cancelAction, cancelButton } from "../../lib/dialog";
 import { getUserOrLeave } from "../../services/messageService";
 import { SessionData } from "../session";
 import { orJoin, phoneToItu, toCompactText, toText } from "../../lib/common";
@@ -61,7 +61,6 @@ const productGroups: ProductGroup[] = [
   }
 ];
 
-const backToStartAction = "backToStart";
 const getProductBuyAction = (code: ProductCode) => `buy-${code}`;
 const getGroupAction = (group: ProductGroup) => `group-${group.code}`;
 
@@ -137,7 +136,7 @@ for (const group of productGroups) {
   );
 }
 
-async function groupAction(ctx: AnyContext, group: ProductGroup) {
+async function groupAction(ctx: BotContext, group: ProductGroup) {
   await clearInlineKeyboard(ctx);
   const user = await getUserOrLeave(ctx);
 
@@ -153,7 +152,7 @@ async function groupAction(ctx: AnyContext, group: ProductGroup) {
     ctx,
     inlineKeyboard(
       ...buttons,
-      ["Назад", backToStartAction],
+      backToStartButton,
       cancelButton
     ),
     group.description,
@@ -161,7 +160,7 @@ async function groupAction(ctx: AnyContext, group: ProductGroup) {
   );
 }
 
-async function buyAction(ctx: AnyContext, productCode: ProductCode) {
+async function buyAction(ctx: BotContext, productCode: ProductCode) {
   await clearInlineKeyboard(ctx);
   const user = await getUserOrLeave(ctx);
 
@@ -179,7 +178,7 @@ async function buyAction(ctx: AnyContext, productCode: ProductCode) {
   await askForPhone(ctx);
 }
 
-async function askForPhone(ctx: AnyContext) {
+async function askForPhone(ctx: BotContext) {
   await ctx.reply(
     toText(
       "📱 Пожалуйста, предоставьте номер вашего телефона.",

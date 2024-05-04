@@ -7,7 +7,7 @@ import { anotherImageButton, cancelButton } from "../lib/dialog";
 import { isSuccess } from "../lib/error";
 import { inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
 import { storeImageRequest, updateImageRequest } from "../storage/imageRequestStorage";
-import { AnyContext } from "../telegram/botContext";
+import { BotContext } from "../telegram/botContext";
 import { happened, timeLeft } from "./dateService";
 import { gptTimeout } from "./gptService";
 import { putMetric } from "./metricService";
@@ -24,7 +24,7 @@ const config = {
 };
 
 export async function generateImageWithGpt(
-  ctx: AnyContext,
+  ctx: BotContext,
   imageModelContext: ImageModelContext,
   user: User,
   prompt: string

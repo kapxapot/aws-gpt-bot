@@ -10,7 +10,7 @@ import { getCommandHandlers, kickHandler, remindHandler } from "./handlers";
 import { premiumScene } from "./scenes/premiumScene";
 import { User } from "../entities/user";
 import { inspect } from "util";
-import { sendMessageToGpt, showStatus } from "../services/messageService";
+import { getUserOrLeave, sendMessageToGpt, showStatus } from "../services/messageService";
 import { modeScene } from "./scenes/modeScene";
 import { getUsersCount, updateUser } from "../storage/userStorage";
 import { putMetric } from "../services/metricService";
@@ -104,17 +104,15 @@ export async function processTelegramRequest(tgRequest: TelegramRequest) {
   bot.catch(async (err, ctx) => {
     console.log(`Bot error (${ctx.updateType}).`, err);
 
-    if (ctx.from) {
-      const user = await getOrAddUser(ctx.from);
+    const user = await getUserOrLeave(ctx);
 
-      if (isDebugMode(user)) {
-        await reply(
-          ctx,
-          "Ошибка:",
-          inspect(err)
-        )
-      }
-     }
+    if (isDebugMode(user)) {
+      await reply(
+        ctx,
+        "Ошибка:",
+        inspect(err)
+      );
+    }
   });
 
   await bot.handleUpdate(tgRequest.request as Update);

@@ -6,7 +6,7 @@ import { clearAndLeave, clearInlineKeyboard, inlineKeyboard, replyWithKeyboard }
 import { message } from "telegraf/filters";
 import { generateImageWithGpt } from "../../services/imageService";
 import { ImageStage, SessionData } from "../session";
-import { anotherImageAction, cancelAction, cancelButton } from "../../lib/dialog";
+import { anotherImageAction, cancelAction, cancelButton, gotoPremiumAction, gotoPremiumButton } from "../../lib/dialog";
 import { getUserOrLeave } from "../../services/messageService";
 import { capitalize, cleanJoin, commatize, toCompactText, toText } from "../../lib/common";
 import { ImageModelCode } from "../../entities/model";
@@ -23,7 +23,6 @@ import { ImageModelContext } from "../../entities/modelContext";
 import { User } from "../../entities/user";
 import { getSubscriptionShortDisplayName } from "../../services/subscriptionService";
 
-const gotoPremiumAction = "gotoPremium";
 const scene = new BaseScene<BotContext>(scenes.image);
 
 scene.enter(mainHandler);
@@ -172,10 +171,7 @@ async function getImageModelContext(ctx: BotContext, user: User): Promise<ImageM
 
   await replyWithKeyboard(
     ctx,
-    inlineKeyboard(
-      ["Пакеты услуг", gotoPremiumAction],
-      cancelButton
-    ),
+    inlineKeyboard(gotoPremiumButton, cancelButton),
     toText(...messages),
     "⛔ Генерация картинок недоступна.",
     `Подождите или приобретите пакет услуг: /${commands.premium}`
