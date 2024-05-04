@@ -141,7 +141,7 @@ fdescribe("getImageModelContexts", () => {
       interval: "week",
       limit: 1,
       consumed: 6,
-      remaining: -5
+      remaining: 0
     };
 
     expect(freeContext.limits).toEqual<IntervalConsumptionLimits>([freeLimit]);

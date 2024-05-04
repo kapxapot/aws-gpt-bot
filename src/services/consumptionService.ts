@@ -75,7 +75,7 @@ function getProductConsumptionLimits(
     return {
       limit,
       consumed: usageCount,
-      remaining: limit - usageCount
+      remaining: Math.max(limit - usageCount, 0)
     };
   }
 
@@ -132,7 +132,7 @@ function getIntervalConsumptionLimits(
       interval,
       limit: intervalLimit,
       consumed: usageCount,
-      remaining: intervalLimit - usageCount
+      remaining: Math.max(intervalLimit - usageCount, 0)
     });
   }
 
