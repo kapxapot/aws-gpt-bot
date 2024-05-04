@@ -2,7 +2,7 @@ import { ts } from "../entities/at";
 import { getModeName } from "../entities/prompt";
 import { User } from "../entities/user";
 import { gptChatCompletion } from "../external/gptChatCompletion";
-import { commatize, first, toText, truncate } from "../lib/common";
+import { commatize, first, toCompactText, toText, truncate } from "../lib/common";
 import { isSuccess } from "../lib/error";
 import { clearAndLeave, encodeText, inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
@@ -29,6 +29,7 @@ import { remindButton } from "../lib/dialog";
 import { getConsumptionLimits, isConsumptionLimit } from "./consumptionService";
 import { ConsumptionLimit, IntervalConsumptionLimits } from "../entities/consumption";
 import { getTextModelContexts } from "./modelContextService";
+import { bulletize } from "../lib/text";
 
 const config = {
   messageInterval: parseInt(process.env.MESSAGE_INTERVAL ?? "15") * 1000, // milliseconds
@@ -149,15 +150,19 @@ export async function sendMessageToGpt(ctx: AnyContext, user: User, question: st
   }
 
   const formattedLimits = formatConsumptionLimits(user, product, modelCode, pureModelCode);
-
-  const info = buildInfo(
-    user,
-    modelCode,
-    isSuccess(answer) ? answer : null,
-    formattedLimits
-  );
+  const info = buildInfo(user, formattedLimits);
 
   await reply(ctx, info);
+
+  if (isDebugMode(user)) {
+    const debugInfo = buildDebugInfo(
+      user,
+      isSuccess(answer) ? answer : null,
+      modelCode
+    );
+
+    await reply(ctx, debugInfo);
+  }
 
   if (isSuccess(answer)) {
     await addMessageMetrics(answer);
@@ -256,51 +261,58 @@ function formatGptMessage(message: string): string {
     return `🤖 ${encodeText(message)}`;
 }
 
-function buildInfo(
-  user: User,
-  modelCode: TextModelCode,
-  answer: Completion | null,
-  formattedLimits: string | null
-) {
-  const model = getTextModelByCode(modelCode);
+function buildInfo(user: User, formattedLimits: string | null): string {
   const chunks: string[] = [];
 
   chunks.push(`📌 Режим: <b>${getModeName(user)}</b>`);
-
-  if (isDebugMode(user)) {
-    if (answer?.usage) {
-      const usage = answer.usage;
-      chunks.push(`токены: ${usage.totalTokens} (${usage.promptTokens} + ${usage.completionTokens})`);
-    }
-
-    const context = user.context;
-
-    if (context) {
-      const messages = getCurrentHistory(context).messages;
-
-      if (messages.length) {
-        const truncatedRequests = messages.map(m => `[${truncate(m.request, 20)}]`);
-
-        chunks.push(
-          encodeText(
-            `история: ${commatize(truncatedRequests)}`
-          )
-        );
-      } else {
-        chunks.push("история пуста");
-      }
-    }
-
-    chunks.push(`модель запроса: ${model}`);
-
-    if (answer?.model) {
-      chunks.push(`модель ответа: ${answer.model}`);
-    }
-  }
 
   if (formattedLimits) {
     chunks.push(formattedLimits);
   }
 
   return commatize(chunks);
+}
+
+function buildDebugInfo(
+  user: User,
+  answer: Completion | null,
+  modelCode: TextModelCode
+): string {
+  const model = getTextModelByCode(modelCode);
+
+  const chunks: string[] = [];
+
+  if (answer?.usage) {
+    const usage = answer.usage;
+    chunks.push(`токены: ${usage.totalTokens} (${usage.promptTokens} + ${usage.completionTokens})`);
+  }
+
+  const context = user.context;
+
+  if (context) {
+    const messages = getCurrentHistory(context).messages;
+
+    if (messages.length) {
+      const truncatedRequests = messages.map(m => `[${truncate(m.request, 20)}]`);
+
+      chunks.push(
+        encodeText(
+          `история: ${commatize(truncatedRequests)}`
+        )
+      );
+    } else {
+      chunks.push("история пуста");
+    }
+  }
+
+  chunks.push(`модель запроса: ${model}`);
+
+  if (answer?.model) {
+    chunks.push(`модель ответа: ${answer.model}`);
+  }
+
+  return toCompactText(
+    "🛠 Отладка:",
+    ...bulletize(...chunks)
+  );
 }
