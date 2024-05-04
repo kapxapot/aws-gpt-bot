@@ -1,10 +1,10 @@
 import { at, ts } from "../entities/at";
+import { Product } from "../entities/product";
 import { toText } from "../lib/common";
 import { putMetric } from "../services/metricService";
-import { getSubscriptionFullDisplayName } from "../services/subscriptionService";
-import { addUserEvent } from "../services/userService";
+import { formatProductName, productToPurchasedProduct } from "../services/productService";
+import { addUserProduct, getUserById } from "../services/userService";
 import { getPayment, updatePayment } from "../storage/paymentStorage";
-import { getUser } from "../storage/userStorage";
 import { sendTelegramMessage } from "../telegram/bot";
 
 type YouMoneyRequestData = {
@@ -57,7 +57,7 @@ export async function youMoneyHook(requestData: YouMoneyRequestData) {
   );
 
   // add an event(s) to the user
-  const user = await getUser(payment.userId);
+  let user = await getUserById(payment.userId);
 
   if (!user) {
     console.error(`Payment user ${payment.userId} not found.`);
@@ -68,37 +68,34 @@ export async function youMoneyHook(requestData: YouMoneyRequestData) {
   }
 
   for (const product of payment.cart) {
-    await addUserEvent(
-      user,
-      {
-        type: "purchase",
-        details: product,
-        at: paidAt
-      }
-    );
+    const purchasedProduct = productToPurchasedProduct(product, paidAt);
+    user = await addUserProduct(user, purchasedProduct);
 
-    await putMetric("PaymentReceived");
-
-    const { currency, amount } = product.price;
-
-    switch (currency) {
-      case "RUB":
-        await putMetric("RUBAmountReceived", amount);
-        break;
-
-      case "USD":
-        await putMetric("USDAmountReceived", amount);
-        break;
-    }
-
-    const productName = getSubscriptionFullDisplayName(product, "Accusative");
+    await putMetrics(product);
 
     await sendTelegramMessage(
       user,
       toText(
-        `Мы успешно получили ваш платеж. Вы приобрели ${productName}.`,
-        "Благодарим за покупку! ♥"
+        "✔ Мы успешно получили ваш платеж.",
+        `Вы приобрели ${formatProductName(purchasedProduct, "Accusative")}.`,
+        "♥ Благодарим за покупку!"
       )
     );
+  }
+}
+
+async function putMetrics(product: Product): Promise<void> {
+  await putMetric("PaymentReceived");
+
+  const { currency, amount } = product.price;
+
+  switch (currency) {
+    case "RUB":
+      await putMetric("RUBAmountReceived", amount);
+      break;
+
+    case "USD":
+      await putMetric("USDAmountReceived", amount);
+      break;
   }
 }

@@ -1,4 +1,6 @@
-import { ts } from "../entities/at";
+import { v4 as uuid } from "uuid";
+import { At, ts } from "../entities/at";
+import { GrammarCase } from "../entities/grammar";
 import { ModelCode } from "../entities/model";
 import { PlanSettings } from "../entities/planSettings";
 import { Product, ProductCode, PurchasedProduct, bossBundle, creativeBundle, noviceBundle, premiumSubscription, proBundle, studentBundle, testTinyGpt3Bundle, testTinyGptokenBundle, trialBundle, unlimitedSubscription } from "../entities/product";
@@ -15,8 +17,11 @@ type TimestampRange = {
   end: number;
 };
 
-export function formatProductName(product: PurchasedProduct): string {
-  const productName = getSubscriptionFullDisplayName(product);
+export function formatProductName(
+  product: PurchasedProduct,
+  targetCase?: GrammarCase
+): string {
+  const productName = getSubscriptionFullDisplayName(product, targetCase);
 
   return cleanJoin([
     product.icon,
@@ -82,6 +87,15 @@ export function getProductPlanSettings(product: PurchasedProduct): PlanSettings 
 export const getProductAvailableModels = (product: PurchasedProduct) =>
   getProductModels(product)
     .filter(modelCode => !isProductUsageExceeded(product, modelCode));
+
+export function productToPurchasedProduct(product: Product, purchasedAt: At): PurchasedProduct {
+  return {
+    ...product,
+    purchasedAt,
+    id: uuid(),
+    usage: {}
+  };
+}
 
 function formatProductExpiration(product: PurchasedProduct): string {
   const { end } = getProductTimestampRange(product);

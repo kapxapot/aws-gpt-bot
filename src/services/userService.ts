@@ -1,8 +1,7 @@
-import { v4 as uuid } from "uuid";
 import { User as TelegrafUser } from "telegraf/types";
 import { Message } from "../entities/message";
-import { User, UserEvent } from "../entities/user";
-import { getUserByTelegramId, storeUser, updateUser } from "../storage/userStorage";
+import { User } from "../entities/user";
+import { getUser, getUserByTelegramId, storeUser, updateUser } from "../storage/userStorage";
 import { Context } from "../entities/context";
 import { Prompt, customPromptCode, noPromptCode } from "../entities/prompt";
 import { getUserHistorySize } from "./userSettingsService";
@@ -13,39 +12,44 @@ import { getCurrentSubscription, getSubscriptionPlan } from "./subscriptionServi
 import { getPlanSettings } from "./planSettingsService";
 import { Plan } from "../entities/plan";
 import { PurchasedProduct, isPurchasedProduct } from "../entities/product";
-import { isActiveProduct } from "./productService";
+import { isActiveProduct, productToPurchasedProduct } from "./productService";
 
 type CurrentContext = {
   prompt: string | null;
   latestMessages: Message[] | null;
 };
 
-export const getOrAddUser = async (userData: TelegrafUser): Promise<User> => {
-  const user = await getUserByTelegramId(userData.id)
-    ?? await storeUser(userData);
+export async function getUserById(id: string): Promise<User | null> {
+  const user = await getUser(id);
+
+  return user
+    ? await checkUserIntegrity(user)
+    : null;
+}
+
+export async function getOrAddUser(tgUser: TelegrafUser): Promise<User> {
+  const user = await getUserByTelegramId(tgUser.id)
+    ?? await storeUser(tgUser);
 
   return await checkUserIntegrity(user);
 }
 
-/**
- * Creates products for events if they are not defined.
- */
-async function checkUserIntegrity(user: User): Promise<User> {
-  if (user.products || !user.events) {
-    return user;
-  }
+export async function addUserProduct(user: User, product: PurchasedProduct): Promise<User> {
+  const products = user.products ?? [];
 
-  const products = user.events.map(event => userEventToProduct(event));
-
-  return await updateUserProducts(user, products);
+  return await updateUserProducts(
+    user,
+    [ ...products, product ]
+  );
 }
 
 export async function updateUserProduct(user: User, product: PurchasedProduct): Promise<User> {
-  const products = user.products
-    ? user.products.map(up => up.id === product.id ? product : up)
-    : [product];
+  const products = user.products ?? [];
 
-  return await updateUserProducts(user, products);
+  return await updateUserProducts(
+    user,
+    products.map(up => up.id === product.id ? product : up)
+  );
 }
 
 export async function updateUserProducts(user: User, products: PurchasedProduct[]): Promise<User> {
@@ -161,43 +165,6 @@ export function userHasHistoryMessage(user: User): boolean {
   return !!message;
 }
 
-export async function addUserEvent(user: User, event: UserEvent): Promise<User> {
-  const events = user.events ?? [];
-  events.push(event);
-
-  const changes: Partial<User> = {
-    events
-  };
-
-  if (event.type === "purchase") {
-    // add product
-    changes.products = [
-      ...(user.products ?? []),
-      userEventToProduct(event)
-    ];
-  }
-
-  return await updateUser(user, changes);
-}
-
-function userEventToProduct(event: UserEvent): PurchasedProduct {
-  return {
-    ...event.details,
-    purchasedAt: event.at,
-    id: uuid(),
-    usage: {}
-  };
-}
-
-export async function updateUserEvents(user: User, events: UserEvent[]): Promise<User> {
-  return await updateUser(
-    user,
-    {
-      events
-    }
-  );
-}
-
 export async function waitForGptAnswer(user: User): Promise<User> {
   return await updateUser(
     user,
@@ -258,4 +225,24 @@ export function getUserActiveProduct(user: User): PurchasedProduct | null {
   return isPurchasedProduct(subscription) && isActiveProduct(subscription)
     ? subscription
     : null;
+}
+
+/**
+ * Creates products for events if they are not defined.
+ */
+async function checkUserIntegrity(user: User): Promise<User> {
+  if (user.products || !user.events) {
+    return user;
+  }
+
+  const products: PurchasedProduct[] = [];
+  
+  for (const event of user.events) {
+    if (event.type === "purchase") {
+      const product = productToPurchasedProduct(event.details, event.at);
+      products.push(product);
+    }
+  }
+
+  return await updateUserProducts(user, products);
 }

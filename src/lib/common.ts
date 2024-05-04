@@ -1,9 +1,11 @@
-export type StringLike = string | null | undefined;
+type Like<T> = T | null | undefined;
+export type StringLike = Like<string>;
 
-export const clean = (lines: StringLike[]) =>
-  lines
+export function clean(lines: StringLike[]) {
+  return lines
     .map(l => l ? l.trim() : "")
     .filter(l => !!l);
+}
 
 export function toArray<T>(value: T | T[] | undefined | null): T[] {
   if (value === null || isUndefined(value)) {

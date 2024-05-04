@@ -4,7 +4,8 @@ import { Context } from "./context";
 import { UserModelUsages } from "./modelUsage";
 import { Product, PurchasedProduct } from "./product";
 
-export type UserEvent = {
+/** @deprecated Remove in >1 month after 0.2 release */
+type UserEvent = {
   type: "purchase";
   details: Product;
   at: At;
@@ -33,6 +34,7 @@ export type User = Entity & {
   username?: string;
   phoneNumber?: string;
   context?: Context;
+  /** @deprecated Remove in >1 month after 0.2 release */
   events?: UserEvent[];
   products?: PurchasedProduct[];
   waitingForGptAnswer?: boolean;

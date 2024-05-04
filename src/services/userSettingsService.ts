@@ -4,7 +4,7 @@ import { updateUser } from "../storage/userStorage";
 
 export async function updateUserSettings(user: User, changes: Partial<UserSettings>): Promise<User> {
   const settings = {
-    ...(user.settings ?? {}),
+    ...user.settings ?? {},
     ...changes
   };
 

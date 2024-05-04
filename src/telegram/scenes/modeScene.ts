@@ -1,12 +1,12 @@
 import { BaseScene } from "telegraf/scenes";
 import { BotContext } from "../botContext";
-import { commands, commonMessages, scenes, settings } from "../../lib/constants";
-import { ButtonLike, clearAndLeave, clearInlineKeyboard, inlineKeyboard, reply, replyBackToMainDialog, replyWithKeyboard } from "../../lib/telegram";
+import { commands, scenes, settings } from "../../lib/constants";
+import { ButtonLike, clearInlineKeyboard, inlineKeyboard, reply, replyBackToMainDialog, replyWithKeyboard } from "../../lib/telegram";
 import { backToCustomPrompt, getOrAddUser, newCustomPrompt, setFreeMode, setPrompt } from "../../services/userService";
 import { getModeName, getModes, getPrompts } from "../../entities/prompt";
 import { addOtherCommandHandlers, backToChatHandler, dunnoHandler, kickHandler } from "../handlers";
 import { message } from "telegraf/filters";
-import { getUserOrLeave, sendMessageToGpt } from "../../services/messageService";
+import { getUserOrLeave } from "../../services/messageService";
 import { ModeStage, SessionData } from "../session";
 import { cancelAction, cancelButton } from "../../lib/dialog";
 
@@ -181,23 +181,13 @@ scene.action(backToCustomPromptAction, async ctx => {
 
 scene.on(message("text"), async ctx => {
   if (isStage(ctx.session, "customPromptInput")) {
-    await clearAndLeave(ctx);
-
     // switch to new custom prompt
     const customPrompt = ctx.message.text;
 
     const user = await getOrAddUser(ctx.from);
     await newCustomPrompt(user, customPrompt);
 
-    await reply(
-      ctx,
-      "Вы задали новый промт.",
-      commonMessages.backToMainDialog
-    );
-
-    await sendMessageToGpt(ctx, user, customPrompt);
-
-    return;
+    await reply(ctx, "✔ Вы задали новый промт.");
   }
 
   await backToChatHandler(ctx);
