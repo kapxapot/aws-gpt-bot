@@ -4,7 +4,7 @@ import { commands, commonMessages, scenes, settings } from "../../lib/constants"
 import { ButtonLike, clearAndLeave, clearInlineKeyboard, inlineKeyboard, reply, replyBackToMainDialog, replyWithKeyboard } from "../../lib/telegram";
 import { backToCustomPrompt, getOrAddUser, newCustomPrompt, setFreeMode, setPrompt } from "../../services/userService";
 import { getModeName, getModes, getPrompts } from "../../entities/prompt";
-import { addOtherCommandHandlers, backToMainDialogHandler, dunnoHandler, kickHandler } from "../handlers";
+import { addOtherCommandHandlers, backToChatHandler, dunnoHandler, kickHandler } from "../handlers";
 import { message } from "telegraf/filters";
 import { getUserOrLeave, sendMessageToGpt } from "../../services/messageService";
 import { ModeStage, SessionData } from "../session";
@@ -51,7 +51,7 @@ addOtherCommandHandlers(scene, commands.mode);
 
 scene.action(cancelAction, async ctx => {
   if (isStage(ctx.session, "modeSelection")) {
-    await backToMainDialogHandler(ctx);
+    await backToChatHandler(ctx);
     return;
   }
 
@@ -200,7 +200,7 @@ scene.on(message("text"), async ctx => {
     return;
   }
 
-  await backToMainDialogHandler(ctx);
+  await backToChatHandler(ctx);
 });
 
 scene.leave(async ctx => {

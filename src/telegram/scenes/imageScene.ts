@@ -1,7 +1,7 @@
 import { BaseScene } from "telegraf/scenes";
 import { BotContext } from "../botContext";
 import { commands, scenes, settings, symbols } from "../../lib/constants";
-import { addOtherCommandHandlers, backToMainDialogHandler, dunnoHandler, kickHandler } from "../handlers";
+import { addOtherCommandHandlers, backToChatHandler, dunnoHandler, kickHandler } from "../handlers";
 import { clearAndLeave, clearInlineKeyboard, inlineKeyboard, replyWithKeyboard } from "../../lib/telegram";
 import { message } from "telegraf/filters";
 import { generateImageWithGpt } from "../../services/imageService";
@@ -30,7 +30,7 @@ scene.enter(mainHandler);
 
 addOtherCommandHandlers(scene, commands.image);
 
-scene.action(cancelAction, backToMainDialogHandler);
+scene.action(cancelAction, backToChatHandler);
 
 scene.on(message("text"), async ctx => {
   if (isStage(ctx.session, "imagePromptInput")) {
@@ -60,7 +60,7 @@ scene.on(message("text"), async ctx => {
   }
 
   if (isStage(ctx.session, "anotherImage")) {
-    await backToMainDialogHandler(ctx);
+    await backToChatHandler(ctx);
     return;
   }
 

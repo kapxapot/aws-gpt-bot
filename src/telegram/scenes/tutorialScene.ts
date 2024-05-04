@@ -3,10 +3,9 @@ import { WizardScene } from "telegraf/scenes";
 import { BotContext } from "../botContext";
 import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { commands, scenes, symbols } from "../../lib/constants";
-import { addOtherCommandHandlers, backToMainDialogHandler, dunnoHandler, kickHandler } from "../handlers";
+import { addOtherCommandHandlers, backToChatHandler, dunnoHandler, kickHandler } from "../handlers";
 import { getDefaultImageSettings } from "../../services/imageService";
 import { gptokenString } from "../../services/gptokenService";
-import { message } from "telegraf/filters";
 
 function makeStepHandler(text: string, first: boolean, last: boolean) {
   const stepHandler = new Composer<BotContext>();
@@ -31,7 +30,7 @@ function makeStepHandler(text: string, first: boolean, last: boolean) {
     }
   });
 
-  stepHandler.action(exitAction, backToMainDialogHandler);
+  stepHandler.action(exitAction, backToChatHandler);
 
   if (first) {
     stepHandler.use(async (ctx) => {
@@ -167,9 +166,7 @@ ChatGPT не просто копирует данные из интернета,
 const scene = new WizardScene<BotContext>(
   scenes.tutorial,
   ...steps.map((step, index) => makeStepHandler(step, index === 0, index === steps.length - 1)),
-  async (ctx) => await ctx.scene.leave()
+  backToChatHandler
 );
-
-scene.on(message("text"), backToMainDialogHandler);
 
 export const tutorialScene = scene;

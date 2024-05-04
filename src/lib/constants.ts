@@ -6,11 +6,12 @@ export const commands = {
   support: "support",
   historySize: "history",
   temperature: "temp",
-  status: "status"
+  status: "status",
+  chat: "chat"
 } as const;
 
 export const commonMessages = {
-  backToMainDialog: "💬 Возвращаемся к основному диалогу...",
+  backToChat: "💬 Возвращаемся к диалогу с ChatGPT...",
   useTheKeyboard: "Используйте кнопки диалога. 👆"
 } as const;
 

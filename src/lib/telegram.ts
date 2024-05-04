@@ -3,7 +3,7 @@ import { StringLike, toText } from "./common";
 import { Markup } from "telegraf";
 import { settings } from "./constants";
 import { AnyContext } from "../telegram/botContext";
-import { backToMainDialogHandler } from "../telegram/handlers";
+import { backToChatHandler } from "../telegram/handlers";
 import { userHasHistoryMessage } from "../services/userService";
 import { remindButton } from "./dialog";
 import { User } from "../entities/user";
@@ -111,7 +111,7 @@ export function sliceButtons(
 
 export async function replyBackToMainDialog(ctx: AnyContext, ...lines: string[]) {
   await reply(ctx, ...lines);
-  await backToMainDialogHandler(ctx);
+  await backToChatHandler(ctx);
 }
 
 export async function reply(ctx: AnyContext, ...lines: string[]): Promise<Message.TextMessage[]> {

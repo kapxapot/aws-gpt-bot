@@ -1,7 +1,7 @@
 import { BaseScene } from "telegraf/scenes";
 import { AnyContext, BotContext } from "../botContext";
 import { commands, scenes, symbols } from "../../lib/constants";
-import { addOtherCommandHandlers, backToMainDialogHandler, dunnoHandler, kickHandler } from "../handlers";
+import { addOtherCommandHandlers, backToChatHandler, dunnoHandler, kickHandler } from "../handlers";
 import { ButtonLike, clearInlineKeyboard, contactKeyboard, contactRequestLabel, emptyKeyboard, inlineKeyboard, reply, replyBackToMainDialog, replyWithKeyboard } from "../../lib/telegram";
 import { Product, ProductCode, freeSubscription, productCodes } from "../../entities/product";
 import { isError } from "../../lib/error";
@@ -229,7 +229,7 @@ scene.on(message("contact"), async ctx => {
 
   if (!targetProductCode || !canPurchaseProduct(user, targetProductCode)) {
     await reply(ctx, "Выбранный вами продукт более не доступен.");
-    backToMainDialogHandler(ctx);
+    backToChatHandler(ctx);
 
     return;
   }
@@ -276,8 +276,8 @@ scene.action(backToStartAction, async ctx => {
   await mainHandler(ctx);
 });
 
-scene.action(cancelAction, backToMainDialogHandler);
-scene.on(message("text"), backToMainDialogHandler);
+scene.action(cancelAction, backToChatHandler);
+scene.on(message("text"), backToChatHandler);
 
 scene.use(kickHandler);
 scene.use(dunnoHandler);

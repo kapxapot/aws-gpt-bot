@@ -30,7 +30,7 @@ export function addOtherCommandHandlers(scene: Composer<BotContext>, exceptComma
     );
   });
 
-  scene.action("leave-dialog", backToMainDialogHandler);
+  scene.action("leave-dialog", backToChatHandler);
 }
 
 function getOtherCommandHandlers(command: string): HandlerTuple[] {
@@ -47,6 +47,7 @@ export function getCommandHandlers(): HandlerTuple[] {
     [commands.historySize, historySizeHandler],
     [commands.temperature, temperatureHandler],
     [commands.status, statusHandler],
+    [commands.chat, backToChatHandler]
   ];
 }
 
@@ -100,9 +101,9 @@ export async function dunnoHandler(ctx: AnyContext) {
 /**
  * 1. Clears the inline keyboard.
  * 2. Leaves the scene.
- * 3. Shows "backToMainDialog" message with a button to replay last message (if there is one).
+ * 3. Shows `backToChat` message with a button to replay last message (if there is one).
  */
-export async function backToMainDialogHandler(ctx: AnyContext) {
+export async function backToChatHandler(ctx: AnyContext) {
   await clearAndLeave(ctx);
 
   const user = await getUserOrLeave(ctx);
@@ -114,7 +115,7 @@ export async function backToMainDialogHandler(ctx: AnyContext) {
   await replyWithKeyboard(
     ctx,
     remindKeyboard(user),
-    commonMessages.backToMainDialog,
+    commonMessages.backToChat,
     getStatusMessage(user)
   );
 }
