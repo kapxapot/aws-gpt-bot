@@ -277,6 +277,7 @@ scene.action(backToStartAction, async ctx => {
 });
 
 scene.action(cancelAction, backToMainDialogHandler);
+scene.on(message("text"), backToMainDialogHandler);
 
 scene.use(kickHandler);
 scene.use(dunnoHandler);

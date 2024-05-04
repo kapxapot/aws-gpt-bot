@@ -6,6 +6,7 @@ import { commands, scenes, symbols } from "../../lib/constants";
 import { addOtherCommandHandlers, backToMainDialogHandler, dunnoHandler, kickHandler } from "../handlers";
 import { getDefaultImageSettings } from "../../services/imageService";
 import { gptokenString } from "../../services/gptokenService";
+import { message } from "telegraf/filters";
 
 function makeStepHandler(text: string, first: boolean, last: boolean) {
   const stepHandler = new Composer<BotContext>();
@@ -163,8 +164,12 @@ ChatGPT не просто копирует данные из интернета,
 👇`
 ];
 
-export const tutorialScene = new WizardScene<BotContext>(
+const scene = new WizardScene<BotContext>(
   scenes.tutorial,
   ...steps.map((step, index) => makeStepHandler(step, index === 0, index === steps.length - 1)),
   async (ctx) => await ctx.scene.leave()
 );
+
+scene.on(message("text"), backToMainDialogHandler);
+
+export const tutorialScene = scene;

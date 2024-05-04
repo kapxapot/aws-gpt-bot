@@ -200,7 +200,7 @@ scene.on(message("text"), async ctx => {
     return;
   }
 
-  await dunnoHandler(ctx);
+  await backToMainDialogHandler(ctx);
 });
 
 scene.leave(async ctx => {
