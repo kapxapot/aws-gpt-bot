@@ -1,11 +1,11 @@
 import { Scenes, Telegraf, session } from "telegraf";
 import { message } from "telegraf/filters";
 import { TelegramRequest } from "../entities/telegramRequest";
-import { parseCommandWithArgs, reply, userName } from "../lib/telegram";
+import { clearAndLeave, parseCommandWithArgs, reply, userName } from "../lib/telegram";
 import { getOrAddUser } from "../services/userService";
 import { tutorialScene } from "./scenes/tutorialScene";
 import { BotContext } from "./botContext";
-import { commands } from "../lib/constants";
+import { commands, scenes } from "../lib/constants";
 import { getCommandHandlers, kickHandler, remindHandler } from "./handlers";
 import { premiumScene } from "./scenes/premiumScene";
 import { User } from "../entities/user";
@@ -18,7 +18,7 @@ import { isDebugMode } from "../services/userSettingsService";
 import { Update } from "telegraf/types";
 import { sessionStore } from "./sessionStore";
 import { imageScene } from "./scenes/imageScene";
-import { remindAction } from "../lib/dialog";
+import { gotoPremiumAction, remindAction } from "../lib/dialog";
 import { toCompactText } from "../lib/common";
 import { bulletize } from "../lib/text";
 
@@ -67,14 +67,14 @@ export async function processTelegramRequest(tgRequest: TelegramRequest) {
         ctx,
         `Привет, <b>${userName(ctx.from)}</b>! 🤖 Я — <b>GPToid</b>, бот, созданный помогать вам в работе с <b>ChatGPT</b>!`,
         toCompactText(
-          "Здесь вы можете работать с такими моделями как <b>GPT-3.5 Turbo</b>, <b>GPT-4 Turbo</b> и <b>DALL-E 3</b>.",
+          "Здесь вы можете работать с моделями <b>GPT-3.5 Turbo</b>, <b>GPT-4 Turbo</b> и <b>DALL-E 3</b>.",
           ...bulletize(
             `Советуем начать с обучения /${commands.tutorial}, если вы новичок в <b>ChatGPT</b> и <b>DALL-E</b>.`,
             `Также у меня есть разные режимы работы: /${commands.mode}`,
             `А еще вы можете приобрести пакеты услуг /${commands.premium} для увеличения числа запросов к <b>GPT-3.5</b> и получения доступа к <b>GPT-4</b> и <b>DALL-E</b>.`
           )
         ),
-        `Вы всегда можете обратиться к нам с вопросами или предложениями: /${commands.support}`
+        `Вы всегда можете обратиться к нам с вопросами или идеями: /${commands.support}`
       );
 
       await putMetric("UserRegistered");
@@ -92,6 +92,11 @@ export async function processTelegramRequest(tgRequest: TelegramRequest) {
   getCommandHandlers().forEach(tuple => bot.command(...tuple));
 
   bot.action(remindAction, remindHandler);
+
+  bot.action(gotoPremiumAction, async ctx => {
+    await clearAndLeave(ctx);
+    await ctx.scene.enter(scenes.premium);
+  });
 
   bot.on(message("text"), async ctx => {
     const user = await getOrAddUser(ctx.from);

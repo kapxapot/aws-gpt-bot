@@ -57,7 +57,7 @@ function sceneHandler(scene: string): Handler {
 async function supportHandler(ctx: BotContext) {
   await reply(
     ctx,
-    "Напишите разработчикам бота, если у вас есть вопросы или идеи:",
+    "Заходите в нашу группу задать вопросы, предложить идеи или просто поболтать:",
     process.env.SUPPORT_URL!
   );
 }

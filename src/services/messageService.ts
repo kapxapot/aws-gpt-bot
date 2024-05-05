@@ -2,7 +2,7 @@ import { ts } from "../entities/at";
 import { getModeName } from "../entities/prompt";
 import { User } from "../entities/user";
 import { gptChatCompletion } from "../external/gptChatCompletion";
-import { capitalize, cleanJoin, commatize, first, toCompactText, toText, truncate } from "../lib/common";
+import { capitalize, cleanJoin, commatize, toCompactText, toText, truncate } from "../lib/common";
 import { isSuccess } from "../lib/error";
 import { clearAndLeave, encodeText, inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
@@ -16,32 +16,31 @@ import { isDebugMode } from "./userSettingsService";
 import { gptTimeout } from "./gptService";
 import { happened, timeLeft } from "./dateService";
 import { BotContext } from "../telegram/botContext";
-import { PureTextModelCode, TextModelCode } from "../entities/model";
-import { incUsage, isUsageLimitExceeded } from "./usageStatsService";
+import { TextModel, TextModelCode } from "../entities/model";
+import { incUsage } from "./usageStatsService";
 import { formatProductName, getActiveProducts } from "./productService";
-import { getTextModelByCode } from "./modelService";
 import { incProductUsage } from "./productUsageService";
-import { intervalPhrases, intervals } from "../entities/interval";
-import { PurchasedProduct, freeSubscription } from "../entities/product";
+import { freeSubscription } from "../entities/product";
 import { getIntervalString } from "./intervalService";
 import { formatLimit } from "./usageLimitService";
-import { cancelButton, gotoPremiumButton, remindButton } from "../lib/dialog";
+import { gotoPremiumButton, remindButton } from "../lib/dialog";
 import { getConsumptionLimits, isConsumptionLimit } from "./consumptionService";
-import { ConsumptionLimit, IntervalConsumptionLimits } from "../entities/consumption";
+import { ConsumptionLimit, ConsumptionLimits, IntervalConsumptionLimit, IntervalConsumptionLimits } from "../entities/consumption";
 import { getTextModelContexts } from "./modelContextService";
 import { bullet, bulletize } from "../lib/text";
 import { TextModelContext } from "../entities/modelContext";
 import { getSubscriptionShortDisplayName } from "./subscriptionService";
+import { formatTextConsumptionLimits } from "./consumptionFormatService";
 
 const config = {
   messageInterval: parseInt(process.env.MESSAGE_INTERVAL ?? "15") * 1000, // milliseconds
 };
 
 export async function sendMessageToGpt(ctx: BotContext, user: User, question: string, requestedAt?: number) {
-  const context = first(getTextModelContexts(user));
+  const context = await getTextModelContext(ctx, user);
 
   if (!context) {
-    throw new Error("Text model context is undefined.");
+    return;
   }
 
   const {
@@ -60,24 +59,6 @@ export async function sendMessageToGpt(ctx: BotContext, user: User, question: st
     } else {
       await reply(ctx, "Я обрабатываю ваше предыдущее сообщение, подождите... ⏳");
       return;
-    }
-  }
-
-  // we check the user's usage stats if we don't use a product,
-  // but fall back to the defaults
-  if (!product) {
-    for (const interval of intervals) {
-      const phrases = intervalPhrases[interval];
-
-      if (isUsageLimitExceeded(user, pureModelCode, interval)) {
-        await reply(
-          ctx,
-          `Вы превысили лимит сообщений на ${phrases.current}. ${phrases.smilies}`,
-          `Подождите ${phrases.next} или перейдите на тариф с более высоким лимитом: /${commands.premium}`
-        );
-  
-        return;
-      }
     }
   }
 
@@ -135,6 +116,33 @@ export async function sendMessageToGpt(ctx: BotContext, user: User, question: st
     }
 
     user = await incUsage(user, pureModelCode, message.requestedAt);
+
+    const newLimits = getConsumptionLimits(user, product, modelCode, pureModelCode);
+
+    const formattedLimits = newLimits
+      ? formatConsumptionLimits(newLimits, modelCode)
+      : null;
+
+    await reply(
+      ctx,
+      commatize([
+        `📌 Режим: <b>${getModeName(user)}</b>`,
+        model,
+        formattedLimits
+      ])
+    );
+
+    if (isDebugMode(user)) {
+      const debugInfo = buildDebugInfo(
+        user,
+        isSuccess(answer) ? answer : null,
+        model
+      );
+
+      await reply(ctx, debugInfo);
+    }
+
+    await addMessageMetrics(answer);
   } else {
     let errorMessage = answer.message;
 
@@ -149,25 +157,6 @@ export async function sendMessageToGpt(ctx: BotContext, user: User, question: st
     }
 
     await reply(ctx, `❌ ${errorMessage}`);
-  }
-
-  const formattedLimits = formatConsumptionLimits(user, product, modelCode, pureModelCode);
-  const info = buildInfo(user, formattedLimits);
-
-  await reply(ctx, info);
-
-  if (isDebugMode(user)) {
-    const debugInfo = buildDebugInfo(
-      user,
-      isSuccess(answer) ? answer : null,
-      modelCode
-    );
-
-    await reply(ctx, debugInfo);
-  }
-
-  if (isSuccess(answer)) {
-    await addMessageMetrics(answer);
   }
 }
 
@@ -230,7 +219,7 @@ async function getTextModelContext(ctx: BotContext, user: User): Promise<TextMod
     const { product, modelCode, limits, usagePoints } = context;
 
     const formattedLimits = limits
-      ? formatConsumptionLimits(limits, modelCode, usagePoints)
+      ? formatTextConsumptionLimits(limits, modelCode, usagePoints)
       : "неопределенный лимит";
 
     const subscription = product ?? freeSubscription;
@@ -250,7 +239,7 @@ async function getTextModelContext(ctx: BotContext, user: User): Promise<TextMod
 
   await replyWithKeyboard(
     ctx,
-    inlineKeyboard(gotoPremiumButton, cancelButton),
+    inlineKeyboard(gotoPremiumButton),
     toText(...messages),
     "⛔ Запросы к ChatGPT недоступны.",
     `Подождите или приобретите пакет услуг: /${commands.premium}`
@@ -260,17 +249,9 @@ async function getTextModelContext(ctx: BotContext, user: User): Promise<TextMod
 }
 
 function formatConsumptionLimits(
-  user: User,
-  product: PurchasedProduct | null,
-  modelCode: TextModelCode,
-  pureModelCode: PureTextModelCode
-): string | null {
-  const limits = getConsumptionLimits(user, product, modelCode, pureModelCode);
-
-  if (!limits) {
-    return null;
-  }
-
+  limits: ConsumptionLimits,
+  modelCode: TextModelCode
+): string {
   const what = modelCode === "gptokens" ? "гптокенов" : "запросов";
 
   return isConsumptionLimit(limits)
@@ -282,16 +263,16 @@ function formatConsumptionLimit({ limit, remaining }: ConsumptionLimit, what: st
   return `осталось ${what}: ${remaining}/${formatLimit(limit)}`;
 }
 
-function formatIntervalConsumptionLimits(limits: IntervalConsumptionLimits, what: string): string {
-  const chunks: string[] = [];
+function formatIntervalConsumptionLimits(
+  limits: IntervalConsumptionLimits,
+  what: string
+): string {
+  const format = ({ interval, limit, remaining }: IntervalConsumptionLimit) =>
+    `в ${getIntervalString(interval, "Accusative")}: ${remaining}/${formatLimit(limit)}`;
 
-  for (const { interval, limit, remaining } of limits) {
-    chunks.push(
-      `осталось ${what} в ${getIntervalString(interval, "Accusative")}: ${remaining}/${formatLimit(limit)}`
-    );
-  }
+  const chunks = limits.map(limit => format(limit));
 
-  return commatize(chunks);
+  return `осталось ${what} ${commatize(chunks)}`;
 }
 
 async function addMessageMetrics(completion: Completion) {
@@ -306,25 +287,11 @@ function formatGptMessage(message: string): string {
     return `🤖 ${encodeText(message)}`;
 }
 
-function buildInfo(user: User, formattedLimits: string | null): string {
-  const chunks: string[] = [];
-
-  chunks.push(`📌 Режим: <b>${getModeName(user)}</b>`);
-
-  if (formattedLimits) {
-    chunks.push(formattedLimits);
-  }
-
-  return commatize(chunks);
-}
-
 function buildDebugInfo(
   user: User,
   answer: Completion | null,
-  modelCode: TextModelCode
+  model: TextModel
 ): string {
-  const model = getTextModelByCode(modelCode);
-
   const chunks: string[] = [];
 
   if (answer?.usage) {

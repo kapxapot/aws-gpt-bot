@@ -5,7 +5,7 @@ import { defaultPlan } from "../entities/plan";
 import { IntervalLimits } from "../entities/planSettings";
 import { PurchasedProduct } from "../entities/product";
 import { User } from "../entities/user";
-import { isNumber } from "../lib/common";
+import { isEmpty, isNumber } from "../lib/common";
 import { getPlanSettings, getPlanSettingsModelLimit } from "./planSettingsService";
 import { getProductPlanSettings } from "./productService";
 import { getProductIntervalUsageCount, getProductUsageCount } from "./productUsageService";
@@ -80,10 +80,12 @@ function getProductConsumptionLimits(
   }
 
   // interval limits
-  return getIntervalConsumptionLimits(
+  const intervalLimits = getIntervalConsumptionLimits(
     limit,
     interval => getProductIntervalUsageCount(product.usage, modelCode, interval)
   );
+
+  return isEmpty(intervalLimits) ? null : intervalLimits;
 }
 
 function getUserConsumptionLimits(
@@ -105,10 +107,12 @@ function getUserConsumptionLimits(
   }
 
   // interval limits
-  return getIntervalConsumptionLimits(
+  const intervalLimits = getIntervalConsumptionLimits(
     limit,
     interval => getUsageCount(user.usageStats, modelCode, interval)
   );
+
+  return isEmpty(intervalLimits) ? null : intervalLimits;
 }
 
 function getIntervalConsumptionLimits(

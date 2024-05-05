@@ -76,7 +76,7 @@ export async function youMoneyHook(requestData: YouMoneyRequestData) {
     await sendTelegramMessage(
       user,
       toText(
-        "✔ Мы успешно получили ваш платеж.",
+        "✅ Мы успешно получили ваш платеж.",
         `Вы приобрели ${formatProductName(purchasedProduct, "Accusative")}.`,
         "♥ Благодарим за покупку!"
       )

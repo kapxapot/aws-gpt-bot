@@ -192,7 +192,7 @@ scene.on(message("text"), async ctx => {
     const user = await getOrAddUser(ctx.from);
     await newCustomPrompt(user, customPrompt);
 
-    await reply(ctx, "✔ Вы задали новый промт.");
+    await reply(ctx, "✅ Вы задали новый промт.");
   }
 
   await backToChatHandler(ctx);

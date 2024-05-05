@@ -18,7 +18,8 @@ export type MetricName =
   "YooMoneyError" |
   "OpenAiError" |
   "UserNotFoundError" |
-  "EmptyUserPhoneNumberError";
+  "EmptyUserPhoneNumberError" |
+  "ImageHasNoUrlError";
 
 const config = {
   env: process.env.ENV,

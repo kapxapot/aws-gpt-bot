@@ -7,9 +7,7 @@ import { Prompt, customPromptCode, noPromptCode } from "../entities/prompt";
 import { getUserHistorySize } from "./userSettingsService";
 import { addMessageToHistory, createContext, cutoffMessages, getCurrentHistory, getCurrentPrompt } from "./contextService";
 import { isSuccess } from "../lib/error";
-import { PlanSettings } from "../entities/planSettings";
 import { getCurrentSubscription, getSubscriptionPlan } from "./subscriptionService";
-import { getPlanSettings } from "./planSettingsService";
 import { Plan } from "../entities/plan";
 import { PurchasedProduct, isPurchasedProduct } from "../entities/product";
 import { isActiveProduct, productToPurchasedProduct } from "./productService";
@@ -208,11 +206,6 @@ export function isTester(user: User) {
 export function getUserPlan(user: User): Plan {
   const subscription = getCurrentSubscription(user);
   return getSubscriptionPlan(subscription);
-}
-
-export function getUserPlanSettings(user: User): PlanSettings {
-  const plan = getUserPlan(user);
-  return getPlanSettings(plan);
 }
 
 export function getUserPurchasedProducts(user: User): PurchasedProduct[] {

@@ -6,8 +6,6 @@ import { UsageStats, User } from "../entities/user";
 import { updateUser } from "../storage/userStorage";
 import { startOf } from "./dateService";
 import { buildIntervalUsages, getIntervalUsage, incIntervalUsage } from "./intervalUsageService";
-import { getPlanSettingsLimit } from "./planSettingsService";
-import { getUserPlanSettings } from "./userService";
 
 export function getLastUsedAt(usageStats: UsageStats | undefined, modelCode: PureModelCode): At | null {
   if (!usageStats) {
@@ -92,22 +90,6 @@ export async function incUsage(user: User, modelCode: PureModelCode, usedAt: At)
     user,
     setModelUsage(usageStats, modelCode, modelUsage)
   );
-}
-
-export function isUsageLimitExceeded(
-  user: User,
-  modelCode: PureModelCode,
-  interval: Interval
-): boolean {
-  const usageCount = getUsageCount(user.usageStats, modelCode, interval);
-  const settings = getUserPlanSettings(user);
-  const limit = getPlanSettingsLimit(settings, modelCode, interval);
-
-  if (!limit) {
-    return true; // no limit = exceeded
-  }
-
-  return usageCount >= limit;
 }
 
 export function getModelUsage(usageStats: UsageStats, modelCode: PureModelCode): UserModelUsage | null {

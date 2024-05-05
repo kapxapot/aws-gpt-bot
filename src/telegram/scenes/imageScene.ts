@@ -1,20 +1,14 @@
 import { BaseScene } from "telegraf/scenes";
 import { BotContext } from "../botContext";
-import { commands, scenes, settings, symbols } from "../../lib/constants";
+import { commands, scenes, settings } from "../../lib/constants";
 import { addOtherCommandHandlers, backToChatHandler, dunnoHandler, kickHandler } from "../handlers";
 import { clearAndLeave, clearInlineKeyboard, inlineKeyboard, replyWithKeyboard } from "../../lib/telegram";
 import { message } from "telegraf/filters";
 import { generateImageWithGpt } from "../../services/imageService";
 import { ImageStage, SessionData } from "../session";
-import { anotherImageAction, cancelAction, cancelButton, gotoPremiumAction, gotoPremiumButton } from "../../lib/dialog";
+import { backToStartAction, cancelAction, cancelButton, gotoPremiumAction, gotoPremiumButton } from "../../lib/dialog";
 import { getUserOrLeave } from "../../services/messageService";
-import { capitalize, cleanJoin, commatize, toCompactText, toText } from "../../lib/common";
-import { ImageModelCode } from "../../entities/model";
-import { ConsumptionLimit, ConsumptionLimits, IntervalConsumptionLimits } from "../../entities/consumption";
-import { getIntervalString } from "../../services/intervalService";
-import { formatLimit } from "../../services/usageLimitService";
-import { isConsumptionLimit } from "../../services/consumptionService";
-import { getCaseForNumber } from "../../services/grammarService";
+import { capitalize, cleanJoin, toCompactText, toText } from "../../lib/common";
 import { gptokenString } from "../../services/gptokenService";
 import { bullet, bulletize } from "../../lib/text";
 import { getImageModelContexts } from "../../services/modelContextService";
@@ -22,6 +16,7 @@ import { freeSubscription } from "../../entities/product";
 import { ImageModelContext } from "../../entities/modelContext";
 import { User } from "../../entities/user";
 import { getSubscriptionShortDisplayName } from "../../services/subscriptionService";
+import { formatImageConsumptionLimits } from "../../services/consumptionFormatService";
 
 const scene = new BaseScene<BotContext>(scenes.image);
 
@@ -52,21 +47,16 @@ scene.on(message("text"), async ctx => {
     const result = await generateImageWithGpt(ctx, imageModelContext, user, imagePrompt);
 
     if (result) {
-      setStage(ctx.session, "anotherImage");
+      setStage(ctx.session, "imageCreated");
     }
 
     return;
   }
 
-  if (isStage(ctx.session, "anotherImage")) {
-    await backToChatHandler(ctx);
-    return;
-  }
-
-  await dunnoHandler(ctx);
+  await backToChatHandler(ctx);
 });
 
-scene.action(anotherImageAction, async ctx => {
+scene.action(backToStartAction, async ctx => {
   await clearInlineKeyboard(ctx);
   await mainHandler(ctx);
 });
@@ -77,7 +67,7 @@ scene.action(gotoPremiumAction, async ctx => {
 });
 
 scene.leave(async ctx => {
-  delete ctx.session.modeData;
+  delete ctx.session.imageData;
 });
 
 scene.use(kickHandler);
@@ -122,7 +112,7 @@ async function mainHandler (ctx: BotContext) {
   }
 
   const formattedLimits = limits
-    ? formatConsumptionLimits(limits, modelCode, usagePoints)
+    ? formatImageConsumptionLimits(limits, modelCode, usagePoints)
     : "";
 
   await replyWithKeyboard(
@@ -151,7 +141,7 @@ async function getImageModelContext(ctx: BotContext, user: User): Promise<ImageM
     const { product, modelCode, limits, usagePoints } = context;
 
     const formattedLimits = limits
-      ? formatConsumptionLimits(limits, modelCode, usagePoints)
+      ? formatImageConsumptionLimits(limits, modelCode, usagePoints)
       : "неопределенный лимит";
 
     const subscription = product ?? freeSubscription;
@@ -178,63 +168,6 @@ async function getImageModelContext(ctx: BotContext, user: User): Promise<ImageM
   );
 
   return null;
-}
-
-function formatConsumptionLimits(
-  limits: ConsumptionLimits,
-  modelCode: ImageModelCode,
-  usagePoints: number
-): string {
-  const gptokens = modelCode === "gptokens";
-  const what = gptokens ? "гптокенов" : "запросов";
-
-  const formattedLimits = isConsumptionLimit(limits)
-    ? formatConsumptionLimit(limits, gptokens, what, usagePoints)
-    : formatIntervalConsumptionLimits(limits, gptokens, what, usagePoints);
-
-  const capLimits = capitalize(formattedLimits);
-
-  return gptokens
-    ? `${symbols.gptoken} ${capLimits}`
-    : capLimits;
-}
-
-function formatConsumptionLimit(
-  { limit, remaining }: ConsumptionLimit,
-  gptokens: boolean,
-  what: string,
-  usagePoints: number
-): string {
-  let formatted = `осталось ${what}: ${remaining}/${formatLimit(limit)}`;
-
-  if (gptokens) {
-    const imageCount = Math.floor(remaining / usagePoints);
-    formatted += ` = ${imageCount} ${getCaseForNumber("картинка", imageCount)}`;
-  }
-
-  return formatted;
-}
-
-function formatIntervalConsumptionLimits(
-  limits: IntervalConsumptionLimits,
-  gptokens: boolean,
-  what: string,
-  usagePoints: number
-): string {
-  const chunks: string[] = [];
-
-  for (const { interval, limit, remaining } of limits) {
-    let formatted = `осталось ${what} в ${getIntervalString(interval, "Accusative")}: ${remaining}/${formatLimit(limit)}`;
-
-    if (gptokens) {
-      const imageCount = Math.floor(remaining / usagePoints);
-      formatted += ` = ${imageCount} ${getCaseForNumber("картинка", imageCount)}`;
-    }
-
-    chunks.push(formatted);
-  }
-
-  return commatize(chunks);
 }
 
 function setStage(session: SessionData, stage: ImageStage) {

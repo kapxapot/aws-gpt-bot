@@ -16,7 +16,7 @@ export type Model = TextModel | ImageModel;
 
 export type ImageQuality = "hd";
 export type ImageSize = "1024x1024" | "1024x1792" | "1792x1024";
-export type ImageResponseFormat = "url" | "b64_json";
+export type ImageResponseFormat = "url";
 
 export type ImageSettings = {
   size: ImageSize,

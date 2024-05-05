@@ -7,7 +7,7 @@ import { Product, ProductCode, freeSubscription, productCodes } from "../../enti
 import { isError } from "../../lib/error";
 import { getSubscriptionFullDisplayName, getSubscriptionPlan, getSubscriptionShortName } from "../../services/subscriptionService";
 import { canMakePurchases, canPurchaseProduct } from "../../services/permissionService";
-import { backToStartAction, backToStartButton, cancelAction, cancelButton } from "../../lib/dialog";
+import { backToStartAction, cancelAction, cancelButton } from "../../lib/dialog";
 import { getUserOrLeave } from "../../services/messageService";
 import { SessionData } from "../session";
 import { orJoin, phoneToItu, toCompactText, toText } from "../../lib/common";
@@ -152,7 +152,7 @@ async function groupAction(ctx: BotContext, group: ProductGroup) {
     ctx,
     inlineKeyboard(
       ...buttons,
-      backToStartButton,
+      ["Назад", backToStartAction],
       cancelButton
     ),
     group.description,
@@ -261,7 +261,7 @@ async function buyProduct(ctx: BotContext, productCode: ProductCode) {
     ctx,
     inlineKeyboard(
       Markup.button.url("Оплатить", payment.url),
-      ["Купить еще", backToStartAction],
+      ["Купить еще один", backToStartAction],
       cancelButton
     ),
     `💳 Для оплаты ${getSubscriptionFullDisplayName(product, "Genitive")} <a href="${payment.url}">пройдите по ссылке</a>.`,
@@ -277,6 +277,10 @@ scene.action(backToStartAction, async ctx => {
 
 scene.action(cancelAction, backToChatHandler);
 scene.on(message("text"), backToChatHandler);
+
+scene.leave(async ctx => {
+  delete ctx.session.premiumData;
+});
 
 scene.use(kickHandler);
 scene.use(dunnoHandler);

@@ -3,7 +3,7 @@ import { ImageSettings, defaultImageSize } from "../entities/model";
 import { User } from "../entities/user";
 import { gptImageGeneration } from "../external/gptImageGeneration";
 import { getCaseForNumber } from "./grammarService";
-import { anotherImageButton, cancelButton } from "../lib/dialog";
+import { backToStartAction, cancelButton } from "../lib/dialog";
 import { isSuccess } from "../lib/error";
 import { inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
 import { storeImageRequest, updateImageRequest } from "../storage/imageRequestStorage";
@@ -13,7 +13,6 @@ import { gptTimeout } from "./gptService";
 import { putMetric } from "./metricService";
 import { incUsage } from "./usageStatsService";
 import { stopWaitingForGptImageGeneration, updateUserProduct, waitForGptImageGeneration } from "./userService";
-import { PassThrough } from "stream";
 import { incProductUsage } from "./productUsageService";
 import { toText } from "../lib/common";
 import { Markup } from "telegraf";
@@ -85,7 +84,6 @@ export async function generateImageWithGpt(
 
   await ctx.deleteMessage(messages[0].message_id);
 
-  // this doesn't work for "b64_json" format
   imageRequest = await updateImageRequest(
     imageRequest,
     {
@@ -95,35 +93,42 @@ export async function generateImageWithGpt(
   );
 
   if (isSuccess(image)) {
+    const url = image.url;
+
+    if (!url) {
+      console.error("The generated image is missing `url`.");
+      await putMetric("Error");
+      await putMetric("ImageHasNoUrlError");
+
+      await reply(
+        ctx,
+        "Не удалось нарисовать картинку. Попробуйте еще раз."
+      );
+
+      return false;
+    }
+
     await reply(
       ctx,
       `🖼 Ваша картинка по запросу <b>«${prompt}»</b> готова. 👇`
     );
 
-    if (image.url) {
-      await ctx.replyWithPhoto(image.url);
+    await ctx.replyWithPhoto(url);
 
-      await ctx.replyWithHTML(
-        toText(
-          `<a href="${image.url}">Скачать картинку</a> в хорошем качестве.`,
-          "⚠ Ссылка работает 60 минут!"
+    await ctx.replyWithHTML(
+      toText(
+        `<a href="${url}">Скачать картинку</a> в хорошем качестве.`,
+        "⚠ Ссылка работает 60 минут!"
+      ),
+      {
+        ...inlineKeyboard(
+          Markup.button.url("Скачать картинку", url),
+          ["Создать еще одну", backToStartAction],
+          cancelButton
         ),
-        {
-          ...inlineKeyboard(
-            Markup.button.url("Скачать картинку", image.url),
-            anotherImageButton,
-            cancelButton
-          ),
-          disable_web_page_preview: true
-        }
-      );
-    } else if (image.b64_json) {
-      const stream = new PassThrough();
-      stream.write(image.b64_json);
-      stream.end();
-
-      await ctx.replyWithPhoto({ source: stream });
-    }
+        disable_web_page_preview: true
+      }
+    );
 
     if (product) {
       product.usage = incProductUsage(

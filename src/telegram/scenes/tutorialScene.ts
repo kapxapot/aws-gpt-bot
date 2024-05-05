@@ -6,6 +6,7 @@ import { commands, scenes, symbols } from "../../lib/constants";
 import { addOtherCommandHandlers, backToChatHandler, dunnoHandler, kickHandler } from "../handlers";
 import { getDefaultImageSettings } from "../../services/imageService";
 import { gptokenString } from "../../services/gptokenService";
+import { defaultImageSize } from "../../entities/model";
 
 function makeStepHandler(text: string, first: boolean, last: boolean) {
   const stepHandler = new Composer<BotContext>();
@@ -141,16 +142,16 @@ ChatGPT не просто копирует данные из интернета,
 
 Обе модели доступны при покупке пакетов (/${commands.premium}) с ${symbols.gptoken} <b>гптокенами</b> — нашей специальной «валютой». На один гптокен можно написать запрос к <b>GPT-4</b>, а на два — создать картинку ${defaultImageSettings.size} в <b>DALL-E 3</b>.
 
-То есть, пакета в ${gptokenString(100)} вам хватит на 100 запросов к <b>GPT-4</b> или генерацию 50 картинок.`,
+То есть, пакета в ${gptokenString(100)} вам хватит на 100 запросов к <b>GPT-4</b> или генерацию 50 картинок размером ${defaultImageSize}.`,
 
   // step 7
-  `<b>Техподдержка</b>
+  `<b>Фан-клуб GPToid</b>
 
 Миссия <b>GPToid</b> — помочь вам в практическом освоении ChatGPT.
 
 Бот и обучение поддержат вас в этом процессе.
 
-Если у вас есть вопросы по решению ваших задач с помощью бота — пишите в поддержку /${commands.support}`,
+Если у вас есть вопросы, идеи или вы просто хотите пообщаться, добро пожаловать в наш фан-клуб /${commands.support}`,
 
   // step 8
 `<b>Обучение завершено</b>
