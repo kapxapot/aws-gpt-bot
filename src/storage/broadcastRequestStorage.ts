@@ -1,4 +1,4 @@
-import { putItem } from "../lib/database";
+import { getItem, putItem } from "../lib/database";
 import { BroadcastRequest } from "../entities/broadcastRequest";
 import { Unsaved } from "../lib/types";
 
@@ -9,3 +9,6 @@ export const storeBroadcastRequest = async (request: Unsaved<BroadcastRequest>) 
     broadcastRequestsTable,
     request
   );
+
+export const getBroadcastRequest = async (id: string): Promise<BroadcastRequest | null> =>
+  await getItem<BroadcastRequest>(broadcastRequestsTable, id);

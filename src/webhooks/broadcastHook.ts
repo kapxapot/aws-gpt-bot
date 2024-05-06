@@ -1,37 +1,34 @@
-import { toCleanArray } from "../lib/common";
+import { BroadcastRequest } from "../entities/broadcastRequest";
+import { isEmpty } from "../lib/common";
+import { Unsaved } from "../lib/types";
 import { storeBroadcastRequest } from "../storage/broadcastRequestStorage";
 
-type BroadcastPayload = {
+type BroadcastPayload = Unsaved<BroadcastRequest> & {
   apiKey: string;
-  message: string | string[];
-  users?: string[];
-  isTest?: boolean;
+};
+
+const config = {
+  apiKey: process.env.API_KEY
 };
 
 export async function broadcastHook(payload: BroadcastPayload) {
-  const apiKey = process.env.API_KEY;
-
-  if (!apiKey) {
+  if (!config.apiKey) {
     throw new Error("API key is not configured.");
   }
 
-  if (!payload.apiKey) {
-    throw new Error("Empty API key (apiKey).");
+  const { apiKey, ...request} = payload;
+
+  if (!apiKey) {
+    throw new Error("Empty `apiKey`. A string is expected.");
   }
 
-  if (payload.apiKey !== apiKey) {
-    throw new Error("Invalid API key.");
+  if (apiKey !== config.apiKey) {
+    throw new Error("Invalid `apiKey`.");
   }
 
-  const messages = toCleanArray(payload.message);
-
-  if (!messages.length) {
-    throw new Error("Empty message (message). A not empty string or an array of strings is expected.");
+  if (!payload.resumeRequestId && isEmpty(payload.messages)) {
+    throw new Error("Either `resumeRequestId` or not empty `messages` array are expected.");
   }
 
-  await storeBroadcastRequest({
-    messages,
-    users: payload.users,
-    isTest: payload.isTest
-  });
+  await storeBroadcastRequest(request);
 }

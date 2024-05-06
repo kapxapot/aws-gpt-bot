@@ -1,4 +1,4 @@
-import { putItem, scanItem, updateItem } from "../lib/database";
+import { putItem, scanItems, updateItem } from "../lib/database";
 import { User } from "../entities/user";
 import { BroadcastMessage } from "../entities/broadcastMessage";
 import { BroadcastRequest } from "../entities/broadcastRequest";
@@ -33,13 +33,12 @@ export async function updateBroadcastMessage(
   );
 }
 
-export async function findBroadcastMessage(request: BroadcastRequest, user: User): Promise<BroadcastMessage | null> {
-  return await scanItem<BroadcastMessage>(
+export async function findBroadcastMessages(request: BroadcastRequest): Promise<BroadcastMessage[]> {
+  return await scanItems<BroadcastMessage>(
     broadcastMessagesTable,
-    "requestId = :rid and userId = :uid",
+    "requestId = :rid",
     {
-      ":rid": request.id,
-      ":uid": user.id
+      ":rid": request.id
     }
   );
 }

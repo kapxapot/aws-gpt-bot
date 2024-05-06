@@ -103,4 +103,4 @@ function homogeneousJoin(
   return result;
 }
 
-export const isEmpty = <T>(array: T[]) => array.length === 0;
+export const isEmpty = <T>(array?: T[]) => !array || !array.length;

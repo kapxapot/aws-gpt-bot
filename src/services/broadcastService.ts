@@ -1,8 +1,10 @@
 import { now } from "../entities/at";
 import { BroadcastMessage } from "../entities/broadcastMessage";
 import { BroadcastRequest } from "../entities/broadcastRequest";
-import { toText } from "../lib/common";
-import { findBroadcastMessage, storeBroadcastMessage, updateBroadcastMessage } from "../storage/broadcastMessageStorage";
+import { User } from "../entities/user";
+import { isEmpty, isUndefined, toText } from "../lib/common";
+import { findBroadcastMessages, storeBroadcastMessage, updateBroadcastMessage } from "../storage/broadcastMessageStorage";
+import { getBroadcastRequest } from "../storage/broadcastRequestStorage";
 import { getAllUsers } from "../storage/userStorage";
 import { sendTelegramMessage } from "../telegram/bot";
 import { putMetric } from "./metricService";
@@ -12,20 +14,32 @@ import { getUserById } from "./userService";
  * Adds broadcast messages for all users.
  */
 export async function processBroadcastRequest(request: BroadcastRequest) {
-  const message = toText(...request.messages);
   const users = await getAllUsers();
 
-  for (const user of users) {
-    if (request.users && !request.users.some(uid => uid === user.id)) {
-      continue;
-    }
+  const resumeRequestId = request.resumeRequestId;
 
-    const existingMessage = await findBroadcastMessage(request, user);
-
-    if (!existingMessage) {
-      await storeBroadcastMessage(request, user, message, request.isTest);
-    }
+  if (!resumeRequestId) {
+    // normal run
+    await createBroadcastMessages(request, users);
+    return;
   }
+
+  // resume run
+  const resumeRequest = await getBroadcastRequest(resumeRequestId);
+
+  if (!resumeRequest) {
+    console.error(`The broadcast request to resume not found: ${resumeRequestId}`);
+    return;
+  }
+
+  const existingMessages = await findBroadcastMessages(resumeRequest);
+  const alreadyProcessedUserIds = existingMessages.map(m => m.userId);
+  const remainingUsers = users.filter(u => !alreadyProcessedUserIds.includes(u.id));
+
+  console.log(`Total users: ${users.length}, already processed users: ${alreadyProcessedUserIds.length}, remaining users: ${remainingUsers.length}.`);
+
+  // we let the new request to override the `isTest` value of the resume request
+  await createBroadcastMessages(resumeRequest, remainingUsers, request.isTest);
 }
 
 export async function sendBroadcastMessage(broadcastMessage: BroadcastMessage) {
@@ -76,5 +90,30 @@ export async function sendBroadcastMessage(broadcastMessage: BroadcastMessage) {
     );
 
     await putMetric("BroadcastMessageFailed");
+  }
+}
+
+async function createBroadcastMessages(
+  request: BroadcastRequest,
+  users: User[],
+  isTest?: boolean
+): Promise<void> {
+  const requestUsers = request.users;
+
+  const usersToBroadcast = requestUsers && !isEmpty(requestUsers)
+    ? users.filter(user => requestUsers.some(uid => uid === user.id))
+    : users;
+
+  let count = 0;
+
+  for (const user of usersToBroadcast) {
+    await storeBroadcastMessage(
+      request,
+      user,
+      toText(...request.messages ?? []),
+      isUndefined(isTest) ? request.isTest : isTest
+    );
+
+    console.log(`[${++count}/${usersToBroadcast.length}] Created a broadcast message.`);
   }
 }
