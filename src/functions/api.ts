@@ -5,7 +5,7 @@ import { Request, Response } from "express-serve-static-core/index";
 import { isDebugMode } from "../services/userSettingsService";
 import { putMetric } from "../services/metricService";
 import { storeTelegramRequest } from "../storage/telegramRequestStorage";
-import { yooMoneyHandler } from "./apiHandlers/yoomoneyHandler";
+import { yooMoneyHandler } from "./apiHandlers/yooMoneyHandler";
 import { broadcastHandler } from "./apiHandlers/broadcastHandler";
 import { couponHandler } from "./apiHandlers/couponHandler";
 
