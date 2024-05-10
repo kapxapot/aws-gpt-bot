@@ -1,5 +1,4 @@
 import { TextModel, ImageModel, ImageSettings } from "./model";
-import { Money } from "./money";
 
 type TextPrice = {
   inputPrice: number;
@@ -10,19 +9,6 @@ type TextPrice = {
 type ImagePrice = {
   settings: ImageSettings;
   price: number;
-}
-
-const gptokenPrice: Money = {
-  amount: 0.02,
-  currency: "USD"
-};
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function gptokens(count: number): Money {
-  return {
-    amount: gptokenPrice.amount * count,
-    currency: gptokenPrice.currency
-  };
 }
 
 export const textPrices: Record<TextModel, TextPrice> = {

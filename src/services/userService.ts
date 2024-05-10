@@ -11,6 +11,7 @@ import { getCurrentSubscription, getSubscriptionPlan } from "./subscriptionServi
 import { Plan } from "../entities/plan";
 import { PurchasedProduct, isPurchasedProduct } from "../entities/product";
 import { isActiveProduct, productToPurchasedProduct } from "./productService";
+import { Coupon } from "../entities/coupon";
 
 type CurrentContext = {
   prompt: string | null;
@@ -55,6 +56,33 @@ export async function updateUserProducts(user: User, products: PurchasedProduct[
     user,
     {
       products
+    }
+  );
+}
+
+export async function updateUserCoupon(user: User, coupon: Coupon): Promise<User> {
+  const coupons = user.coupons ?? [];
+
+  return await updateUserCoupons(
+    user,
+    coupons.map(uc => uc.id === coupon.id ? coupon : uc)
+  );
+}
+
+export async function addUserCoupon(user: User, coupon: Coupon): Promise<User> {
+  const coupons = user.coupons ?? [];
+
+  return await updateUserCoupons(
+    user,
+    [ ...coupons, coupon ]
+  );
+}
+
+export async function updateUserCoupons(user: User, coupons: Coupon[]): Promise<User> {
+  return await updateUser(
+    user,
+    {
+      coupons
     }
   );
 }

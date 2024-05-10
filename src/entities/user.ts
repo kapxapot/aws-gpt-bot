@@ -1,6 +1,7 @@
 import { Entity } from "../lib/types";
 import { At } from "./at";
 import { Context } from "./context";
+import { Coupon } from "./coupon";
 import { UserModelUsages } from "./modelUsage";
 import { Product, PurchasedProduct } from "./product";
 
@@ -37,6 +38,7 @@ export type User = Entity & {
   /** @deprecated Remove in >1 month after 0.2 release */
   events?: UserEvent[];
   products?: PurchasedProduct[];
+  coupons?: Coupon[];
   waitingForGptAnswer?: boolean;
   waitingForGptImageGeneration?: boolean;
   usageStats?: UsageStats;

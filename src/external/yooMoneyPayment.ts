@@ -1,10 +1,10 @@
 import axios from "axios";
-import { v4 as uuid } from "uuid";
 import { Money } from "../entities/money";
 import { Result } from "../lib/error";
 import { putMetric } from "../services/metricService";
 import { User } from "../entities/user";
 import { phoneToItu } from "../lib/common";
+import { uuid } from "../lib/uuid";
 
 export type YooMoneyPaymentData = {
   user: User;

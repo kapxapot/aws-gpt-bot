@@ -1,7 +1,7 @@
-import { BroadcastRequest } from "../entities/broadcastRequest";
-import { isEmpty } from "../lib/common";
-import { Unsaved } from "../lib/types";
-import { storeBroadcastRequest } from "../storage/broadcastRequestStorage";
+import { BroadcastRequest } from "../../entities/broadcastRequest";
+import { isEmpty } from "../../lib/common";
+import { Unsaved } from "../../lib/types";
+import { storeBroadcastRequest } from "../../storage/broadcastRequestStorage";
 
 type BroadcastPayload = Unsaved<BroadcastRequest> & {
   apiKey: string;
@@ -11,7 +11,7 @@ const config = {
   apiKey: process.env.API_KEY
 };
 
-export async function broadcastHook(payload: BroadcastPayload) {
+export async function broadcastHandler(payload: BroadcastPayload) {
   if (!config.apiKey) {
     throw new Error("API key is not configured.");
   }
@@ -26,7 +26,7 @@ export async function broadcastHook(payload: BroadcastPayload) {
     throw new Error("Invalid `apiKey`.");
   }
 
-  if (!payload.resumeRequestId && isEmpty(payload.messages)) {
+  if (!request.resumeRequestId && isEmpty(request.messages)) {
     throw new Error("Either `resumeRequestId` or not empty `messages` array are expected.");
   }
 

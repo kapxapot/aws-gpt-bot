@@ -2,8 +2,9 @@ import { PartialRecord } from "../lib/types";
 import { At } from "./at";
 import { GrammarCase, KnownWord } from "./grammar";
 import { ProductUsage } from "./modelUsage";
-import { Money } from "./money";
+import { Money, money } from "./money";
 import { Plan, defaultPlan } from "./plan";
+import { Term, term } from "./term";
 
 export type ProductType = "subscription" | "bundle";
 
@@ -30,6 +31,7 @@ export const productCodes = [
   "subscription-unlimited-30-days",
   "bundle-novice-30-days",
   "bundle-student-30-days",
+  "bundle-invite2024-30-days",
   "bundle-trial-30-days",
   "bundle-creative-30-days",
   "bundle-pro-30-days",
@@ -40,20 +42,9 @@ export const productCodes = [
 
 export type ProductCode = typeof productCodes[number];
 
-type Term = {
-  range: number;
-  unit: "day";
-};
-
-const days30: Term = {
-  range: 30,
-  unit: "day"
-};
-
-const days1: Term = {
-  range: 1,
-  unit: "day"
-};
+const days30 = term(30, "day");
+const days1 = term(1, "day");
+const overprice = money(9999);
 
 export type Product = Subscription & {
   code: ProductCode;
@@ -89,10 +80,7 @@ export const premiumSubscription: Product = {
   shortName: "Премиум",
   displayName: "Премиум на 30 дней",
   icon: "💔",
-  price: {
-    currency: "RUB",
-    amount: 290
-  },
+  price: money(290),
   details: {
     type: "subscription",
     plan: "premium",
@@ -106,10 +94,7 @@ export const unlimitedSubscription: Product = {
   shortName: "Безлимит",
   displayName: "Безлимит на 30 дней",
   icon: "💔",
-  price: {
-    currency: "RUB",
-    amount: 390
-  },
+  price: money(390),
   details: {
     type: "subscription",
     plan: "unlimited",
@@ -123,10 +108,7 @@ export const noviceBundle: Product = {
   shortName: "Новичок",
   displayName: "Новичок на 30 дней",
   icon: "👧",
-  price: {
-    currency: "RUB",
-    amount: 49
-  },
+  price: money(49),
   details: {
     type: "bundle",
     plan: "novice",
@@ -140,13 +122,24 @@ export const studentBundle: Product = {
   shortName: "Студент",
   displayName: "Студент на 30 дней",
   icon: "👨‍🎓",
-  price: {
-    currency: "RUB",
-    amount: 99
-  },
+  price: money(99),
   details: {
     type: "bundle",
     plan: "student",
+    term: days30
+  }
+};
+
+export const invite2024Bundle: Product = {
+  code: "bundle-invite2024-30-days",
+  name: "Invite 2024 Bundle - 30 Days",
+  shortName: "Приглашение 2024",
+  displayName: "Приглашение 2024 на 30 дней",
+  icon: "🧪",
+  price: overprice,
+  details: {
+    type: "bundle",
+    plan: "invite2024",
     term: days30
   }
 };
@@ -157,10 +150,7 @@ export const trialBundle: Product = {
   shortName: "Пробный",
   displayName: "Пробный на 30 дней",
   icon: "🧪",
-  price: {
-    currency: "RUB",
-    amount: 99
-  },
+  price: money(99),
   details: {
     type: "bundle",
     plan: "trial",
@@ -174,10 +164,7 @@ export const creativeBundle: Product = {
   shortName: "Творческий",
   displayName: "Творческий на 30 дней",
   icon: "👩‍🎨",
-  price: {
-    currency: "RUB",
-    amount: 199
-  },
+  price: money(199),
   details: {
     type: "bundle",
     plan: "creative",
@@ -191,10 +178,7 @@ export const proBundle: Product = {
   shortName: "Профи",
   displayName: "Профи на 30 дней",
   icon: "😎",
-  price: {
-    currency: "RUB",
-    amount: 449
-  },
+  price: money(449),
   details: {
     type: "bundle",
     plan: "pro",
@@ -208,10 +192,7 @@ export const bossBundle: Product = {
   shortName: "Босс",
   displayName: "Босс на 30 дней",
   icon: "🤴",
-  price: {
-    currency: "RUB",
-    amount: 999
-  },
+  price: money(999),
   details: {
     type: "bundle",
     plan: "boss",
@@ -228,10 +209,7 @@ export const testTinyGpt3Bundle: Product = {
   shortName: "Мелкий GPT-3",
   displayName: "Мелкий GPT-3 на 1 день",
   icon: "🛠",
-  price: {
-    currency: "RUB",
-    amount: 9999
-  },
+  price: overprice,
   details: {
     type: "bundle",
     plan: "test-tinygpt3",
@@ -248,10 +226,7 @@ export const testTinyGptokenBundle: Product = {
   shortName: "Мелкий Гптокен",
   displayName: "Мелкий Гптокен на 1 день",
   icon: "🛠",
-  price: {
-    currency: "RUB",
-    amount: 9999
-  },
+  price: overprice,
   details: {
     type: "bundle",
     plan: "test-tinygptokens",

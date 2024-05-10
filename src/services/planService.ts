@@ -67,6 +67,16 @@ export function getPlanDescription(plan: Plan, mode: DescriptionMode = "full"): 
         )
       );
 
+    case "invite2024":
+      return toCompactText(
+        "🧪 <b>Пакет «Приглашение 2024»</b>",
+        ...bulletize(
+          suffix(gptokenString(10), " = 10 запросов к <b>GPT-4</b>"),
+          iff("или 50 картинок <b>DALL-E 3</b>"),
+          price("9999 рублей на 30 дней")
+        )
+      );
+
     case "trial":
       return toCompactText(
         "🧪 <b>Пакет «Пробный»</b>",

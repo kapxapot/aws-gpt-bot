@@ -1,11 +1,11 @@
-import { v4 as uuid } from "uuid";
 import { At, ts } from "../entities/at";
 import { GrammarCase } from "../entities/grammar";
 import { ModelCode } from "../entities/model";
 import { PlanSettings } from "../entities/planSettings";
-import { Product, ProductCode, PurchasedProduct, bossBundle, creativeBundle, noviceBundle, premiumSubscription, proBundle, studentBundle, testTinyGpt3Bundle, testTinyGptokenBundle, trialBundle, unlimitedSubscription } from "../entities/product";
+import { Product, ProductCode, PurchasedProduct, bossBundle, creativeBundle, invite2024Bundle, noviceBundle, premiumSubscription, proBundle, studentBundle, testTinyGpt3Bundle, testTinyGptokenBundle, trialBundle, unlimitedSubscription } from "../entities/product";
 import { User } from "../entities/user";
 import { capitalize, cleanJoin } from "../lib/common";
+import { uuid } from "../lib/uuid";
 import { addDays, formatDate, isInRange } from "./dateService";
 import { getPlanSettings } from "./planSettingsService";
 import { isProductUsageExceeded } from "./productUsageService";
@@ -54,6 +54,7 @@ export const gpt3Products = [
 ];
 
 export const gptokenProducts = [
+  invite2024Bundle,
   trialBundle,
   creativeBundle,
   proBundle,

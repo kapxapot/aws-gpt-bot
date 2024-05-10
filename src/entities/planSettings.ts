@@ -51,6 +51,12 @@ export const planSettings: Record<Plan, PlanSettings> = {
       "gpt3": 500
     }
   },
+  "invite2024": {
+    disabled: true,
+    limits: {
+      "gptokens": 10
+    }
+  },
   "trial": {
     limits: {
       "gptokens": 20

@@ -1,6 +1,8 @@
 import { Currency } from "./currency";
 
 export type Money = {
-  currency: Currency;
   amount: number;
+  currency: Currency;
 };
+
+export const money = (amount: number, currency: Currency = "RUB"): Money => ({ amount, currency });

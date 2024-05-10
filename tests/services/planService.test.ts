@@ -1,4 +1,5 @@
 import { at, now } from "../../src/entities/at";
+import { money } from "../../src/entities/money";
 import { freeSubscription, isPurchasedProduct } from "../../src/entities/product";
 import { User } from "../../src/entities/user";
 import { addDays } from "../../src/services/dateService";
@@ -32,10 +33,7 @@ describe("getCurrentSubscription", () => {
           },
           displayName: "Премиум на 30 дней",
           name: "Premium Subscription - 30 Days",
-          price: {
-            amount: 290,
-            currency: "RUB"
-          },
+          price: money(290),
           purchasedAt: before,
           usage: {}
         },
@@ -52,10 +50,7 @@ describe("getCurrentSubscription", () => {
           },
           displayName: "Творческий на 30 дней",
           name: "Creative Bundle - 30 Days",
-          price: {
-            amount: 299,
-            currency: "RUB"
-          },
+          price: money(299),
           purchasedAt: then,
           usage: {}
         }
@@ -95,10 +90,7 @@ describe("getCurrentSubscription", () => {
           },
           displayName: "Творческий на 30 дней",
           name: "Creative Bundle - 30 Days",
-          price: {
-            amount: 299,
-            currency: "RUB"
-          },
+          price: money(299),
           purchasedAt: old,
           usage: {}
         }

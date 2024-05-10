@@ -1,11 +1,11 @@
-import { at, ts } from "../entities/at";
-import { Product } from "../entities/product";
-import { toText } from "../lib/common";
-import { putMetric } from "../services/metricService";
-import { formatProductName, productToPurchasedProduct } from "../services/productService";
-import { addUserProduct, getUserById } from "../services/userService";
-import { getPayment, updatePayment } from "../storage/paymentStorage";
-import { sendTelegramMessage } from "../telegram/bot";
+import { at, ts } from "../../entities/at";
+import { Product } from "../../entities/product";
+import { toText } from "../../lib/common";
+import { putMetric } from "../../services/metricService";
+import { formatProductName, productToPurchasedProduct } from "../../services/productService";
+import { addUserProduct, getUserById } from "../../services/userService";
+import { getPayment, updatePayment } from "../../storage/paymentStorage";
+import { sendTelegramMessage } from "../../telegram/bot";
 
 type YouMoneyRequestData = {
   event: string;
@@ -16,7 +16,7 @@ type YouMoneyRequestData = {
   };
 };
 
-export async function youMoneyHook(requestData: YouMoneyRequestData) {
+export async function yooMoneyHandler(requestData: YouMoneyRequestData) {
   const event = requestData.event;
 
   if (event !== "payment.succeeded") {

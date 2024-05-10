@@ -1,6 +1,7 @@
 import { at, now } from "../../src/entities/at";
 import { ConsumptionLimit, IntervalConsumptionLimit, IntervalConsumptionLimits } from "../../src/entities/consumption";
 import { ImageSettings, Model, ModelCode, PureModelCode } from "../../src/entities/model";
+import { money } from "../../src/entities/money";
 import { User } from "../../src/entities/user";
 import { startOfDay, startOfMonth, startOfWeek } from "../../src/services/dateService";
 import { getImageModelContexts } from "../../src/services/modelContextService";
@@ -30,10 +31,7 @@ fdescribe("getImageModelContexts", () => {
           },
           displayName: "Пробный на 30 дней",
           name: "Trial Bundle - 30 Days",
-          price: {
-            amount: 99,
-            currency: "RUB"
-          },
+          price: money(99),
           purchasedAt: thisMonth,
           shortName: "Пробный",
           usage: {
