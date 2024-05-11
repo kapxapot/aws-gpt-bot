@@ -14,9 +14,11 @@ export function getCouponTemplateByCode(code: CouponCode): CouponTemplate {
   }
 }
 
-export async function addCoupon(user: User, template: CouponTemplate): Promise<User> {
+export async function issueCoupon(user: User, template: CouponTemplate): Promise<Coupon> {
   const coupon = createCoupon(template);
-  return await addUserCoupon(user, coupon);
+  await addUserCoupon(user, coupon);
+
+  return coupon;
 }
 
 const createCoupon = (template: CouponTemplate): Coupon => ({

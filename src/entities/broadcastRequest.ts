@@ -2,7 +2,7 @@ import { Entity } from "../lib/types";
 
 export type BroadcastRequest = Entity & {
   messages?: string[];
-  users?: string[];
+  userIds?: string[];
   resumeRequestId?: string;
   isTest?: boolean;
 };

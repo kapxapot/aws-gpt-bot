@@ -30,5 +30,5 @@ export const couponV02PollReward: CouponTemplate = {
 export const couponInvite2024: CouponTemplate = {
   code: "invite2024",
   productCode: "bundle-invite2024-30-days",
-  term: term(1, "month")
+  term: term(30, "day")
 };

@@ -98,10 +98,10 @@ async function createBroadcastMessages(
   users: User[],
   isTest?: boolean
 ): Promise<void> {
-  const requestUsers = request.users;
+  const requestUserIds = request.userIds;
 
-  const usersToBroadcast = requestUsers && !isEmpty(requestUsers)
-    ? users.filter(user => requestUsers.some(uid => uid === user.id))
+  const usersToBroadcast = requestUserIds && !isEmpty(requestUserIds)
+    ? users.filter(user => requestUserIds.some(id => id === user.id))
     : users;
 
   let count = 0;

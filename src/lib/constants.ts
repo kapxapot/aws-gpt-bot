@@ -7,7 +7,8 @@ export const commands = {
   historySize: "history",
   temperature: "temp",
   status: "status",
-  chat: "chat"
+  chat: "chat",
+  coupons: "coupons"
 } as const;
 
 export const commonMessages = {

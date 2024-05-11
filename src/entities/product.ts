@@ -135,7 +135,7 @@ export const invite2024Bundle: Product = {
   name: "Invite 2024 Bundle - 30 Days",
   shortName: "Приглашение 2024",
   displayName: "Приглашение 2024 на 30 дней",
-  icon: "🧪",
+  icon: "🎫",
   price: overprice,
   details: {
     type: "bundle",

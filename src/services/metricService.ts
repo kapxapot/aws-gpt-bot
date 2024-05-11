@@ -11,6 +11,8 @@ export type MetricName =
   "PaymentReceived" |
   "RUBAmountReceived" |
   "USDAmountReceived" |
+  "CouponIssued" |
+  "CouponActivated" |
   "Error" |
   "PaymentUserNotFoundError" |
   "PaymentNotFoundError" |

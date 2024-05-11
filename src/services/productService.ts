@@ -2,7 +2,7 @@ import { At, ts } from "../entities/at";
 import { GrammarCase } from "../entities/grammar";
 import { ModelCode } from "../entities/model";
 import { PlanSettings } from "../entities/planSettings";
-import { Product, ProductCode, PurchasedProduct, bossBundle, creativeBundle, invite2024Bundle, noviceBundle, premiumSubscription, proBundle, studentBundle, testTinyGpt3Bundle, testTinyGptokenBundle, trialBundle, unlimitedSubscription } from "../entities/product";
+import { Product, ProductCode, PurchasedProduct, bossBundle, creativeBundle, invite2024Bundle, isPurchasedProduct, noviceBundle, premiumSubscription, proBundle, studentBundle, testTinyGpt3Bundle, testTinyGptokenBundle, trialBundle, unlimitedSubscription } from "../entities/product";
 import { User } from "../entities/user";
 import { capitalize, cleanJoin } from "../lib/common";
 import { uuid } from "../lib/uuid";
@@ -18,7 +18,7 @@ type TimestampRange = {
 };
 
 export function formatProductName(
-  product: PurchasedProduct,
+  product: Product,
   targetCase?: GrammarCase
 ): string {
   const productName = getSubscriptionFullDisplayName(product, targetCase);
@@ -26,7 +26,7 @@ export function formatProductName(
   return cleanJoin([
     product.icon,
     `<b>${capitalize(productName)}</b>`,
-    formatProductExpiration(product)
+    isPurchasedProduct(product) ? formatProductExpiration(product) : null
   ]);
 }
 
