@@ -13,6 +13,11 @@ type UpdatedAt = {
   updatedAtIso: string;
 }
 
+export type TimeSpan = {
+  start: number;
+  end: number;
+};
+
 export type Timestamps = CreatedAt & UpdatedAt;
 
 export function iso(ts: number): string {
@@ -63,4 +68,8 @@ export function timestamps(at?: At): Timestamps {
     ...createdTimestamps(at),
     ...updatedTimestamps(at)
   };
+}
+
+export function atSort<T>(getAt: (t: T) => At): (a: T, b: T) => number {
+  return (a: T, b: T) => getAt(b).timestamp - getAt(a).timestamp;
 }

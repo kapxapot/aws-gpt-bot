@@ -9,9 +9,11 @@ import { addMessageToHistory, createContext, cutoffMessages, getCurrentHistory, 
 import { isSuccess } from "../lib/error";
 import { getCurrentSubscription, getSubscriptionPlan } from "./subscriptionService";
 import { Plan } from "../entities/plan";
-import { PurchasedProduct, isPurchasedProduct } from "../entities/product";
-import { isActiveProduct, productToPurchasedProduct } from "./productService";
+import { PurchasedProduct } from "../entities/product";
+import { isProductActive, productToPurchasedProduct } from "./productService";
 import { Coupon } from "../entities/coupon";
+import { isCouponActive } from "./couponService";
+import { atSort } from "../entities/at";
 
 type CurrentContext = {
   prompt: string | null;
@@ -236,16 +238,29 @@ export function getUserPlan(user: User): Plan {
   return getSubscriptionPlan(subscription);
 }
 
-export function getUserPurchasedProducts(user: User): PurchasedProduct[] {
+export function getUserProducts(user: User): PurchasedProduct[] {
   return user.products ?? [];
 }
 
-export function getUserActiveProduct(user: User): PurchasedProduct | null {
-  const subscription = getCurrentSubscription(user);
+/**
+ * Returns user's active products sorted by their purchase date descending.
+ */
+export const getUserActiveProducts = (user: User): PurchasedProduct[] =>
+  getUserProducts(user)
+    .filter(product => isProductActive(product))
+    .sort(atSort(product => product.purchasedAt));
 
-  return isPurchasedProduct(subscription) && isActiveProduct(subscription)
-    ? subscription
-    : null;
+export function getUserCoupons(user: User): Coupon[] {
+  return user.coupons ?? [];
+}
+
+/**
+ * Returns user's active coupons sorted by their issue date descending.
+ */
+export function getUserActiveCoupons(user: User): Coupon[] {
+  return getUserCoupons(user)
+    .filter(coupon => isCouponActive(coupon))
+    .sort(atSort(coupon => coupon.issuedAt));
 }
 
 /**

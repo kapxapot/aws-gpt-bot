@@ -2,9 +2,9 @@ import { PartialRecord } from "../lib/types";
 import { At } from "./at";
 import { GrammarCase, KnownWord } from "./grammar";
 import { ProductUsage } from "./modelUsage";
-import { Money, money } from "./money";
+import { Money, money, overprice } from "./money";
 import { Plan, defaultPlan } from "./plan";
-import { Term, term } from "./term";
+import { Term, days1, days30 } from "./term";
 
 export type ProductType = "subscription" | "bundle";
 
@@ -41,10 +41,6 @@ export const productCodes = [
 ] as const;
 
 export type ProductCode = typeof productCodes[number];
-
-const days30 = term(30, "day");
-const days1 = term(1, "day");
-const overprice = money(9999);
 
 export type Product = Subscription & {
   code: ProductCode;

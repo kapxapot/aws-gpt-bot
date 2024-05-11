@@ -2,11 +2,13 @@ import { inspect } from "util";
 import { Composer } from "telegraf";
 import { BotContext } from "./botContext";
 import { commands, commonMessages, scenes } from "../lib/constants";
-import { clearAndLeave, clearInlineKeyboard, inlineKeyboard, remindKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
+import { clearAndLeave, clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
 import { historySizeHandler } from "./handlers/historySizeHandler";
 import { temperatureHandler } from "./handlers/temperatureHandler";
 import { getStatusMessage, getUserOrLeave, showLastHistoryMessage, showStatus } from "../services/messageService";
 import { isDebugMode } from "../services/userSettingsService";
+import { userHasHistoryMessage } from "../services/userService";
+import { remindButton } from "../lib/dialog";
 
 type Handler = (ctx: BotContext) => Promise<void | unknown>;
 type HandlerTuple = [command: string, handler: Handler];
@@ -109,9 +111,13 @@ export async function backToChatHandler(ctx: BotContext) {
     return;
   }
 
+  const remindKeyboard = userHasHistoryMessage(user)
+    ? inlineKeyboard(remindButton)
+    : null;
+
   await replyWithKeyboard(
     ctx,
-    remindKeyboard(user),
+    remindKeyboard,
     commonMessages.backToChat,
     getStatusMessage(user)
   );

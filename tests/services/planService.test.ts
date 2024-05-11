@@ -1,6 +1,7 @@
 import { at, now } from "../../src/entities/at";
 import { money } from "../../src/entities/money";
 import { freeSubscription, isPurchasedProduct } from "../../src/entities/product";
+import { days30 } from "../../src/entities/term";
 import { User } from "../../src/entities/user";
 import { addDays } from "../../src/services/dateService";
 import { getCurrentSubscription } from "../../src/services/subscriptionService";
@@ -25,10 +26,7 @@ describe("getCurrentSubscription", () => {
           code: "subscription-premium-30-days",
           details: {
             plan: "premium",
-            term: {
-              range: 30,
-              unit: "day"
-            },
+            term: days30,
             type: "subscription"
           },
           displayName: "Премиум на 30 дней",
@@ -42,10 +40,7 @@ describe("getCurrentSubscription", () => {
           code: "bundle-creative-30-days",
           details: {
             plan: "creative",
-            term: {
-              range: 30,
-              unit: "day"
-            },
+            term: days30,
             type: "bundle"
           },
           displayName: "Творческий на 30 дней",
@@ -82,10 +77,7 @@ describe("getCurrentSubscription", () => {
           code: "bundle-creative-30-days",
           details: {
             plan: "creative",
-            term: {
-              range: 30,
-              unit: "day"
-            },
+            term: days30,
             type: "bundle"
           },
           displayName: "Творческий на 30 дней",

@@ -6,8 +6,9 @@ import { getActiveConsumptionLimit, getConsumptionLimits } from "./consumptionSe
 import { getDefaultImageSettings } from "./imageService";
 import { getImageModelByCode, getTextModelByCode, isImageModelCode, isTextModelCode, purifyImageModelCode, purifyTextModelCode } from "./modelService";
 import { getImageModelUsagePoints, getTextModelUsagePoints } from "./modelUsageService";
-import { getActiveProducts, getProductAvailableModels } from "./productService";
+import { getProductAvailableModels } from "./productService";
 import { getLastUsedAt } from "./usageStatsService";
+import { getUserActiveProducts } from "./userService";
 
 type ProductModel = {
   product: PurchasedProduct | null;
@@ -109,7 +110,7 @@ function buildImageModelContext(
 
 function getProductModels(user: User): ProductModel[] {
   const productModels: ProductModel[] = [];
-  const products = getActiveProducts(user);
+  const products = getUserActiveProducts(user);
 
   for (const product of products) {
     const modelCodes = getProductAvailableModels(product);

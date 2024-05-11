@@ -1,12 +1,8 @@
 import { InlineKeyboardButton, InlineKeyboardMarkup, Message, ReplyKeyboardMarkup, ReplyKeyboardRemove, User as TelegrafUser } from "telegraf/types";
-import { StringLike, toText } from "./common";
+import { StringLike, last, toText } from "./common";
 import { Markup } from "telegraf";
 import { settings } from "./constants";
 import { BotContext } from "../telegram/botContext";
-import { backToChatHandler } from "../telegram/handlers";
-import { userHasHistoryMessage } from "../services/userService";
-import { remindButton } from "./dialog";
-import { User } from "../entities/user";
 
 export const contactRequestLabel = "📱 Отправить номер";
 
@@ -35,13 +31,6 @@ export function inlineKeyboard(...buttonLikes: ButtonLike[]): InlineKeyboard {
   return Markup.inlineKeyboard(
     sliceButtons(buttons)
   );
-}
-
-export function remindKeyboard(user: User): InlineKeyboard {
-  const hasMessage = userHasHistoryMessage(user);
-  const buttons = hasMessage ? [remindButton] : []
-
-  return inlineKeyboard(...buttons);
 }
 
 export async function clearInlineKeyboard(ctx: BotContext) {
@@ -109,39 +98,38 @@ export function sliceButtons(
   return result;
 }
 
-export async function replyBackToMainDialog(ctx: BotContext, ...lines: string[]) {
-  await reply(ctx, ...lines);
-  await backToChatHandler(ctx);
-}
-
-export async function reply(ctx: BotContext, ...lines: string[]): Promise<Message.TextMessage[]> {
+export async function reply(
+  ctx: BotContext,
+  ...lines: StringLike[]
+): Promise<Message.TextMessage[]> {
   const slices = sliceText(toText(...lines));
-
-  const messages = [];
-
-  for (const slice of slices) {
-    messages.push(
-      await ctx.replyWithHTML(slice)
-    );
-  }
-
-  return messages;
+  return await replyWithSlices(ctx, slices);
 }
 
 export async function replyWithKeyboard(
   ctx: BotContext,
-  keyboard: InlineKeyboard,
+  keyboard: InlineKeyboard | null,
   ...lines: StringLike[]
-) {
-  const slices = sliceText(toText(...lines));
-
-  for (let i = 0; i < slices.length; i++) {
-    if (i !== slices.length - 1) {
-      await ctx.replyWithHTML(slices[i]);
-    } else {
-      await ctx.replyWithHTML(slices[i], keyboard);
-    }
+): Promise<Message.TextMessage[]> {
+  if (!keyboard) {
+    return await reply(ctx, ...lines);
   }
+
+  const slices = sliceText(toText(...lines));
+  const lastSlice = last(slices);
+
+  if (!lastSlice) {
+    return [];
+  }
+
+  const otherSlices = slices.slice(0, -1);
+  const messages = await replyWithSlices(ctx, otherSlices);
+
+  messages.push(
+    await ctx.replyWithHTML(lastSlice, keyboard)
+  );
+
+  return messages;
 }
 
 export function encodeText(text: string): string {
@@ -191,4 +179,16 @@ export function extractArgs(ctx: BotContext): string[] | null {
   const { args } = parseCommandWithArgs(ctx.message.text);
 
   return args;
+}
+
+async function replyWithSlices(ctx: BotContext, slices: string[]): Promise<Message.TextMessage[]> {
+  const messages = [];
+
+  for (const slice of slices) {
+    messages.push(
+      await ctx.replyWithHTML(slice)
+    );
+  }
+
+  return messages;
 }

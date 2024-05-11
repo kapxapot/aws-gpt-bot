@@ -2,11 +2,11 @@ import { ts } from "../entities/at";
 import { getModeName } from "../entities/prompt";
 import { User } from "../entities/user";
 import { gptChatCompletion } from "../external/gptChatCompletion";
-import { capitalize, cleanJoin, commatize, toCompactText, toText, truncate } from "../lib/common";
+import { capitalize, cleanJoin, commatize, isEmpty, toCompactText, toText, truncate } from "../lib/common";
 import { isSuccess } from "../lib/error";
 import { clearAndLeave, encodeText, inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
-import { addMessageToUser, getLastHistoryMessage, getOrAddUser, stopWaitingForGptAnswer, updateUserProduct, waitForGptAnswer } from "./userService";
+import { addMessageToUser, getLastHistoryMessage, getOrAddUser, getUserActiveCoupons, getUserActiveProducts, stopWaitingForGptAnswer, updateUserProduct, waitForGptAnswer } from "./userService";
 import { commands } from "../lib/constants";
 import { getCurrentHistory } from "./contextService";
 import { formatWordNumber } from "./grammarService";
@@ -18,7 +18,7 @@ import { happened, timeLeft } from "./dateService";
 import { BotContext } from "../telegram/botContext";
 import { TextModel, TextModelCode } from "../entities/model";
 import { incUsage } from "./usageStatsService";
-import { formatProductName, getActiveProducts } from "./productService";
+import { formatProductName } from "./productService";
 import { incProductUsage } from "./productUsageService";
 import { freeSubscription } from "../entities/product";
 import { getIntervalString } from "./intervalService";
@@ -31,6 +31,8 @@ import { bullet, bulletize } from "../lib/text";
 import { TextModelContext } from "../entities/modelContext";
 import { getSubscriptionShortDisplayName } from "./subscriptionService";
 import { formatTextConsumptionLimits } from "./consumptionFormatService";
+import { Coupon } from "../entities/coupon";
+import { backToChatHandler } from "../telegram/handlers";
 
 const config = {
   messageInterval: parseInt(process.env.MESSAGE_INTERVAL ?? "15") * 1000, // milliseconds
@@ -169,10 +171,12 @@ export async function showStatus(ctx: BotContext, user: User) {
 }
 
 export function getStatusMessage(user: User): string {
-  const products = getActiveProducts(user);
+  const products = getUserActiveProducts(user);
+  const coupons = getUserActiveCoupons(user);
 
   return toText(
     ...products.map(product => formatProductName(product)),
+    isEmpty(coupons) ? null : formatCouponsString(coupons),
     `Режим: <b>${getModeName(user)}</b>`
   );
 }
@@ -203,6 +207,15 @@ export async function getUserOrLeave(ctx: BotContext): Promise<User | null> {
   await putMetric("UserNotFoundError");
 
   return null;
+}
+
+export async function replyBackToMainDialog(ctx: BotContext, ...lines: string[]) {
+  await reply(ctx, ...lines);
+  await backToChatHandler(ctx);
+}
+
+function formatCouponsString(coupons: Coupon[]): string {
+  return `У вас ${formatWordNumber("купон", coupons.length)}. Активировать: /${commands.coupons}`;
 }
 
 async function getTextModelContext(ctx: BotContext, user: User): Promise<TextModelContext | null> {

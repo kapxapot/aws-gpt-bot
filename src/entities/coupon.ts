@@ -1,7 +1,7 @@
 import { Id } from "../lib/types";
 import { At } from "./at";
 import { ProductCode } from "./product";
-import { Term, term } from "./term";
+import { Term, days30, term } from "./term";
 
 export const couponCodes = [
   "v0.2-poll-reward",
@@ -17,8 +17,8 @@ export type CouponTemplate = {
 };
 
 export type Coupon = CouponTemplate & Id & {
-  createdAt: At;
-  usedAt?: At;
+  issuedAt: At;
+  activatedAt?: At;
 };
 
 export const couponV02PollReward: CouponTemplate = {
@@ -30,5 +30,5 @@ export const couponV02PollReward: CouponTemplate = {
 export const couponInvite2024: CouponTemplate = {
   code: "invite2024",
   productCode: "bundle-invite2024-30-days",
-  term: term(30, "day")
+  term: days30
 };

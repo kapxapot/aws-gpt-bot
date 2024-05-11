@@ -6,3 +6,5 @@ export type Money = {
 };
 
 export const money = (amount: number, currency: Currency = "RUB"): Money => ({ amount, currency });
+
+export const overprice = money(9999);

@@ -1,10 +1,11 @@
 import { format } from "date-fns";
 import { settings } from "../lib/constants";
-import { At, ts } from "../entities/at";
+import { At, TimeSpan, ts } from "../entities/at";
 import { Interval } from "../entities/interval";
 import { isNumber } from "../lib/common";
+import { Term } from "../entities/term";
 
-type DateLike = At | Date | number;
+export type DateLike = At | Date | number;
 
 /**
  * Returns *system* start of the day for a given date.
@@ -29,16 +30,6 @@ export function startOfWeek(dateLike?: DateLike): number {
   const weekday = getWeekday(utcStart);
 
   return addDays(start, 1 - weekday);
-}
-
-/**
- * 1 - Monday, ..., 7 - Sunday
- */
-function getWeekday(dateLike: DateLike): number {
-  const date = toDate(dateLike);
-  const weekday = date.getDay();
-
-  return weekday > 0 ? weekday : 7;
 }
 
 export function startOfMonth(dateLike?: DateLike): number {
@@ -79,9 +70,14 @@ export function formatDate(dateLike: DateLike, formatStr: string): string {
   return format(adjustedTs, formatStr);
 }
 
-function alignWithUtc(dateLike: DateLike): number {
-  const date = toDate(addHours(dateLike, -settings.systemTimeOffset));
-  return addMinutes(date, date.getTimezoneOffset());
+export function addMonths(dateLike: DateLike, months: number): number {
+  const date = toDate(dateLike);
+  return date.setMonth(date.getMonth() + months);
+}
+
+export function addWeeks(dateLike: DateLike, weeks: number): number {
+  const date = toDate(dateLike);
+  return date.setDate(date.getDate() + weeks * 7);
 }
 
 export function addDays(dateLike: DateLike, days: number): number {
@@ -99,24 +95,19 @@ export function addMinutes(dateLike: DateLike, minutes: number): number {
   return date.setMinutes(date.getMinutes() + minutes);
 }
 
-function toDate(date: DateLike): Date {
-  if (date instanceof Date) {
-    return date;
+export function addTerm(dateLike: DateLike, term: Term): number {
+  const date = toDate(dateLike);
+
+  switch (term.interval) {
+    case "day":
+      return addDays(date, term.length);
+
+    case "week":
+      return addWeeks(date, term.length);
+
+    case "month":
+      return addMonths(date, term.length);
   }
-
-  return isNumber(date)
-    ? new Date(date)
-    : new Date(date.timestamp);
-}
-
-function toTs(date: DateLike): number {
-  if (date instanceof Date) {
-    return date.getTime();
-  }
-
-  return isNumber(date)
-    ? date
-    : date.timestamp;
 }
 
 /**
@@ -142,7 +133,44 @@ export function timeLeft(start: number, interval: number, timestamp?: number): n
   return start + interval - time;
 }
 
-export function isInRange(dateLike: DateLike, start: number, end: number): boolean {
+export function isInRange(dateLike: DateLike, span: TimeSpan): boolean {
   const ts = toTs(dateLike);
-  return ts >= start && ts < end;
+  return ts >= span.start && ts < span.end;
+}
+
+export const isExpired = (span: TimeSpan) => !isInRange(ts(), span);
+
+/**
+ * 1 - Monday, ..., 7 - Sunday
+ */
+function getWeekday(dateLike: DateLike): number {
+  const date = toDate(dateLike);
+  const weekday = date.getDay();
+
+  return weekday > 0 ? weekday : 7;
+}
+
+function alignWithUtc(dateLike: DateLike): number {
+  const date = toDate(addHours(dateLike, -settings.systemTimeOffset));
+  return addMinutes(date, date.getTimezoneOffset());
+}
+
+function toDate(date: DateLike): Date {
+  if (date instanceof Date) {
+    return date;
+  }
+
+  return isNumber(date)
+    ? new Date(date)
+    : new Date(date.timestamp);
+}
+
+function toTs(date: DateLike): number {
+  if (date instanceof Date) {
+    return date.getTime();
+  }
+
+  return isNumber(date)
+    ? date
+    : date.timestamp;
 }

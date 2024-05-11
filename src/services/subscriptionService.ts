@@ -3,10 +3,10 @@ import { Subscription, freeSubscription, productTypeDisplayNames } from "../enti
 import { User } from "../entities/user";
 import { first } from "../lib/common";
 import { getCase } from "./grammarService";
-import { getActiveProducts } from "./productService";
+import { getUserActiveProducts } from "./userService";
 
 export const getCurrentSubscription = (user: User) =>
-  first(getActiveProducts(user)) ?? freeSubscription;
+  first(getUserActiveProducts(user)) ?? freeSubscription;
 
 export const getSubscriptionPlan = (subscription: Subscription) => subscription.details.plan;
 

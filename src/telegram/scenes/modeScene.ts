@@ -1,12 +1,12 @@
 import { BaseScene } from "telegraf/scenes";
 import { BotContext } from "../botContext";
 import { commands, scenes, settings } from "../../lib/constants";
-import { ButtonLike, clearInlineKeyboard, inlineKeyboard, reply, replyBackToMainDialog, replyWithKeyboard } from "../../lib/telegram";
+import { ButtonLike, clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { backToCustomPrompt, getOrAddUser, newCustomPrompt, setFreeMode, setPrompt } from "../../services/userService";
 import { getModeName, getModes, getPrompts } from "../../entities/prompt";
 import { addOtherCommandHandlers, backToChatHandler, dunnoHandler, kickHandler } from "../handlers";
 import { message } from "telegraf/filters";
-import { getUserOrLeave } from "../../services/messageService";
+import { getUserOrLeave, replyBackToMainDialog } from "../../services/messageService";
 import { ModeStage, SessionData } from "../session";
 import { cancelAction, cancelButton } from "../../lib/dialog";
 

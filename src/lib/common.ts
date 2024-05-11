@@ -35,6 +35,10 @@ export function first<T>(array: T[]): T | null {
   return !isEmpty(array) ? array[0] : null;
 }
 
+export function last<T>(array: T[]): T | null {
+  return !isEmpty(array) ? array[array.length - 1] : null;
+}
+
 export function phoneToItu(phone: string | undefined): string | null {
   if (!phone) {
     return null;

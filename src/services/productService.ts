@@ -1,21 +1,14 @@
-import { At, ts } from "../entities/at";
+import { At, TimeSpan } from "../entities/at";
 import { GrammarCase } from "../entities/grammar";
 import { ModelCode } from "../entities/model";
 import { PlanSettings } from "../entities/planSettings";
 import { Product, ProductCode, PurchasedProduct, bossBundle, creativeBundle, invite2024Bundle, isPurchasedProduct, noviceBundle, premiumSubscription, proBundle, studentBundle, testTinyGpt3Bundle, testTinyGptokenBundle, trialBundle, unlimitedSubscription } from "../entities/product";
-import { User } from "../entities/user";
 import { capitalize, cleanJoin } from "../lib/common";
 import { uuid } from "../lib/uuid";
-import { addDays, formatDate, isInRange } from "./dateService";
+import { addDays, addTerm, formatDate, isExpired } from "./dateService";
 import { getPlanSettings } from "./planSettingsService";
 import { isProductUsageExceeded } from "./productUsageService";
 import { getSubscriptionFullDisplayName, getSubscriptionPlan } from "./subscriptionService";
-import { getUserPurchasedProducts } from "./userService";
-
-type TimestampRange = {
-  start: number;
-  end: number;
-};
 
 export function formatProductName(
   product: Product,
@@ -62,23 +55,8 @@ export const gptokenProducts = [
   testTinyGptokenBundle
 ];
 
-export const isActiveProduct = (product: PurchasedProduct) =>
+export const isProductActive = (product: PurchasedProduct) =>
   !isProductExpired(product) && !isProductExhausted(product);
-
-/**
- * Returns user's active products sorted by their purchase date descending.
- */
-export const getActiveProducts = (user: User): PurchasedProduct[] =>
-  getUserPurchasedProducts(user)
-    .filter(product => isActiveProduct(product))
-    .sort((a, b) => b.purchasedAt.timestamp - a.purchasedAt.timestamp);
-
-export function getProductTimestampRange(product: PurchasedProduct): TimestampRange {
-  const start = product.purchasedAt.timestamp;
-  const end = addDays(start, product.details.term.range + 1);
-
-  return { start, end };
-}
 
 export function getProductPlanSettings(product: PurchasedProduct): PlanSettings {
   const plan = getSubscriptionPlan(product);
@@ -98,16 +76,24 @@ export function productToPurchasedProduct(product: Product, purchasedAt: At): Pu
   };
 }
 
+function getProductSpan(product: PurchasedProduct): TimeSpan {
+  const start = product.purchasedAt.timestamp;
+  const endOfTerm = addTerm(start, product.details.term);
+  const end = addDays(endOfTerm, 1);
+
+  return { start, end };
+}
+
 function formatProductExpiration(product: PurchasedProduct): string {
-  const { end } = getProductTimestampRange(product);
+  const { end } = getProductSpan(product);
   const expiresAt = new Date(end);
 
   return `(действует по ${formatDate(expiresAt, "dd.MM.yyyy")})`;
 }
 
 function isProductExpired(product: PurchasedProduct): boolean {
-  const { start, end } = getProductTimestampRange(product);
-  return !isInRange(ts(), start, end);
+  const span = getProductSpan(product);
+  return isExpired(span);
 }
 
 const isProductExhausted = (product: PurchasedProduct) =>

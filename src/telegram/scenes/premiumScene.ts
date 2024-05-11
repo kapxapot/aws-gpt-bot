@@ -2,24 +2,25 @@ import { BaseScene } from "telegraf/scenes";
 import { BotContext } from "../botContext";
 import { commands, scenes, symbols } from "../../lib/constants";
 import { addOtherCommandHandlers, backToChatHandler, dunnoHandler, kickHandler } from "../handlers";
-import { ButtonLike, clearInlineKeyboard, contactKeyboard, contactRequestLabel, emptyKeyboard, inlineKeyboard, reply, replyBackToMainDialog, replyWithKeyboard } from "../../lib/telegram";
+import { ButtonLike, clearInlineKeyboard, contactKeyboard, contactRequestLabel, emptyKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { Product, ProductCode, freeSubscription, productCodes } from "../../entities/product";
 import { isError } from "../../lib/error";
 import { getSubscriptionFullDisplayName, getSubscriptionPlan, getSubscriptionShortName } from "../../services/subscriptionService";
 import { canMakePurchases, canPurchaseProduct } from "../../services/permissionService";
 import { backToStartAction, cancelAction, cancelButton } from "../../lib/dialog";
-import { getUserOrLeave } from "../../services/messageService";
+import { getUserOrLeave, replyBackToMainDialog } from "../../services/messageService";
 import { SessionData } from "../session";
 import { orJoin, phoneToItu, toCompactText, toText } from "../../lib/common";
 import { message } from "telegraf/filters";
 import { updateUser } from "../../storage/userStorage";
-import { getActiveProducts, getProductByCode, gpt3Products, gptokenProducts } from "../../services/productService";
+import { getProductByCode, gpt3Products, gptokenProducts } from "../../services/productService";
 import { User } from "../../entities/user";
 import { getPlanDescription } from "../../services/planService";
 import { gptokenString } from "../../services/gptokenService";
 import { bulletize } from "../../lib/text";
 import { createPayment } from "../../services/paymentService";
 import { Markup } from "telegraf";
+import { getUserActiveProducts } from "../../services/userService";
 
 type Message = string;
 
@@ -79,7 +80,7 @@ async function mainHandler(ctx: BotContext) {
   const productCount = validProductGroups.reduce((sum, group) => sum + group.products.length, 0);
 
   const subscriptions = [
-    ...getActiveProducts(user),
+    ...getUserActiveProducts(user),
     freeSubscription
   ];
 
