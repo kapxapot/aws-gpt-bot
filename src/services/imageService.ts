@@ -2,7 +2,7 @@ import { now } from "../entities/at";
 import { ImageSettings, defaultImageSize } from "../entities/model";
 import { User } from "../entities/user";
 import { gptImageGeneration } from "../external/gptImageGeneration";
-import { getCaseForNumber } from "./grammarService";
+import { formatWordNumber } from "./grammarService";
 import { backToStartAction, cancelButton } from "../lib/dialog";
 import { isSuccess } from "../lib/error";
 import { inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
@@ -58,7 +58,7 @@ export async function generateImageWithGpt(
     if (seconds > 0) {
       await reply(
         ctx,
-        `Вы отправляете запросы слишком часто. Подождите ${seconds} ${getCaseForNumber("секунда", seconds)}... ⏳`
+        `Вы отправляете запросы слишком часто. Подождите ${formatWordNumber("секунда", seconds)}... ⏳`
       );
 
       return false;

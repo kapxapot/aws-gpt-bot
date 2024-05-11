@@ -9,7 +9,7 @@ import { storeMessage } from "../storage/messageStorage";
 import { addMessageToUser, getLastHistoryMessage, getOrAddUser, stopWaitingForGptAnswer, updateUserProduct, waitForGptAnswer } from "./userService";
 import { commands } from "../lib/constants";
 import { getCurrentHistory } from "./contextService";
-import { getCaseForNumber } from "./grammarService";
+import { formatWordNumber } from "./grammarService";
 import { Completion } from "../entities/message";
 import { putMetric } from "./metricService";
 import { isDebugMode } from "./userSettingsService";
@@ -70,7 +70,7 @@ export async function sendMessageToGpt(ctx: BotContext, user: User, question: st
     if (seconds > 0) {
       await reply(
         ctx,
-        `Вы отправляете сообщения слишком часто. Подождите ${seconds} ${getCaseForNumber("секунда", seconds)}... ⏳`
+        `Вы отправляете сообщения слишком часто. Подождите ${formatWordNumber("секунда", seconds)}... ⏳`
       );
 
       return;

@@ -14,6 +14,71 @@ const groupSettings: Record<GrammarCase, GroupSetting> = {
   "Prepositional": { case: "Prepositional", number: "Plural" }
 };
 
+/**
+ * Returns noun form that corresponds the provided natural number.
+ */
+export function getCaseForNumber(word: KnownWord, num: number, targetCase: GrammarCase = "Nominative"): string {
+  if (num < 0) {
+    throw Error("Number must be non-negative.");
+  }
+
+  // group 3
+  // case = "Genitive";
+  // caseNumber = "Plural";
+  let group = 3;
+
+  // only two last digits define the noun form
+  num = num % 100;
+
+  if (num < 5 || num > 20) {
+    switch (num % 10) {
+      // group 1
+      case 1:
+        // case = "Nominative";
+        // caseNumber = "Singular";
+        group = 1;
+        break;
+
+      // group 2
+      case 2:
+      case 3:
+      case 4:
+        // case = "Genitive";
+        // caseNumber = "Singular";
+        group = 2;
+        break;
+    }
+  }
+
+  const setting = getCaseByNumberGroupSetting(targetCase, group);
+
+  return getCase(word, setting.case, setting.number);
+}
+
+export function formatWordNumber(word: KnownWord, num: number, targetCase: GrammarCase = "Nominative"): string {
+  return `${num} ${getCaseForNumber(word, num, targetCase)}`;
+}
+
+export function getCase(
+  word: KnownWord,
+  grammarCase: GrammarCase = "Nominative",
+  grammarNumber: GrammarNumber = "Singular"
+): string {
+  const wordCaseData = isTemplateWord(word)
+    ? genuineCaseData[word]
+    : derivedCaseData[word];
+
+  const templateWord = isTemplateWord(word)
+    ? word
+    : derivedCaseData[word].template;
+
+  const caseForms = caseTemplates[templateWord];
+  const caseIndex = cases.indexOf(grammarCase);
+  const template = caseForms[grammarNumber][caseIndex];
+
+  return template.replace("%", wordCaseData.base);
+}
+
 // именительный - кто что (у меня есть...)
 // 1, 21 карта/стол (кто что, И, ед)
 // 2, 3, 4 карты/стола (кого чего, Р, ед)
@@ -57,67 +122,6 @@ function getCaseByNumberGroupSetting(grammarCase: GrammarCase, group: number): G
   ];
 
   return groups[group - 1];
-}
-
-/**
- * Returns noun form that corresponds the provided natural number.
- */
-export function getCaseForNumber(word: KnownWord, num: number, targetCase: GrammarCase = "Nominative"): string {
-  if (num < 0) {
-    throw Error("Number must be non-negative.");
-  }
-
-  // group 3
-  // case = "Genitive";
-  // caseNumber = "Plural";
-  let group = 3;
-
-  // only two last digits define the noun form
-  num = num % 100;
-
-  if (num < 5 || num > 20) {
-    switch (num % 10) {
-      // group 1
-      case 1:
-        // case = "Nominative";
-        // caseNumber = "Singular";
-        group = 1;
-        break;
-
-      // group 2
-      case 2:
-      case 3:
-      case 4:
-        // case = "Genitive";
-        // caseNumber = "Singular";
-        group = 2;
-        break;
-    }
-  }
-
-  const setting = getCaseByNumberGroupSetting(targetCase, group);
-
-  return getCase(word, setting.case, setting.number);
-}
-
-export function getCase(
-  word: KnownWord,
-  grammarCase: GrammarCase = "Nominative",
-  grammarNumber: GrammarNumber = "Singular"
-): string {
-  const wordCaseData = isTemplateWord(word)
-    ? genuineCaseData[word]
-    : derivedCaseData[word];
-
-  const templateWord = isTemplateWord(word)
-    ? word
-    : derivedCaseData[word].template;
-
-  const caseForms = caseTemplates[templateWord];
-  const caseIndex = cases.indexOf(grammarCase);
-  const template = caseForms[grammarNumber][caseIndex];
-
-  return template.replace("%", wordCaseData.base);
 }
 
 function isTemplateWord(word: KnownWord): word is TemplateWord {

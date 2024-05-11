@@ -4,7 +4,7 @@ import { ImageModelCode, ModelCode, TextModelCode } from "../entities/model";
 import { capitalize, commatize } from "../lib/common";
 import { symbols } from "../lib/constants";
 import { isConsumptionLimit } from "./consumptionService";
-import { getCaseForNumber } from "./grammarService";
+import { formatWordNumber } from "./grammarService";
 import { getIntervalString } from "./intervalService";
 import { formatLimit } from "./usageLimitService";
 
@@ -51,7 +51,7 @@ function formatConsumptionLimit(
 
   if (gptokens) {
     const remainingCount = Math.floor(remaining / usagePoints);
-    formatted += ` = ${remainingCount} ${getCaseForNumber(word, remainingCount)}`;
+    formatted += ` = ${formatWordNumber(word, remainingCount)}`;
   }
 
   return formatted;
@@ -71,7 +71,7 @@ function formatIntervalConsumptionLimits(
 
     if (gptokens) {
       const remainingCount = Math.floor(remaining / usagePoints);
-      formatted += ` = ${remainingCount} ${getCaseForNumber(word, remainingCount)}`;
+      formatted += ` = ${formatWordNumber(word, remainingCount)}`;
     }
 
     chunks.push(formatted);
