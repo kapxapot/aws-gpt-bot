@@ -98,15 +98,15 @@ export function addMinutes(dateLike: DateLike, minutes: number): number {
 export function addTerm(dateLike: DateLike, term: Term): number {
   const date = toDate(dateLike);
 
-  switch (term.interval) {
+  switch (term.unit) {
     case "day":
-      return addDays(date, term.length);
+      return addDays(date, term.range);
 
     case "week":
-      return addWeeks(date, term.length);
+      return addWeeks(date, term.range);
 
     case "month":
-      return addMonths(date, term.length);
+      return addMonths(date, term.range);
   }
 }
 

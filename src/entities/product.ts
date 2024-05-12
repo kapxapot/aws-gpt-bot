@@ -1,3 +1,4 @@
+import { symbols } from "../lib/constants";
 import { PartialRecord } from "../lib/types";
 import { At } from "./at";
 import { GrammarCase, KnownWord } from "./grammar";
@@ -131,7 +132,7 @@ export const invite2024Bundle: Product = {
   name: "Invite 2024 Bundle - 30 Days",
   shortName: "Приглашение 2024",
   displayName: "Приглашение 2024 на 30 дней",
-  icon: "🎫",
+  icon: symbols.coupon,
   price: overprice,
   details: {
     type: "bundle",

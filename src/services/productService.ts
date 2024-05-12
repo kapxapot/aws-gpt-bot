@@ -76,7 +76,7 @@ export function productToPurchasedProduct(product: Product, purchasedAt: At): Pu
   };
 }
 
-function getProductSpan(product: PurchasedProduct): TimeSpan {
+export function getProductSpan(product: PurchasedProduct): TimeSpan {
   const start = product.purchasedAt.timestamp;
   const endOfTerm = addTerm(start, product.details.term);
   const end = addDays(endOfTerm, 1);

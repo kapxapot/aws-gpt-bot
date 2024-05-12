@@ -7,7 +7,7 @@ import { isSuccess } from "../lib/error";
 import { clearAndLeave, encodeText, inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
 import { addMessageToUser, getLastHistoryMessage, getOrAddUser, getUserActiveCoupons, getUserActiveProducts, stopWaitingForGptAnswer, updateUserProduct, waitForGptAnswer } from "./userService";
-import { commands } from "../lib/constants";
+import { commands, symbols } from "../lib/constants";
 import { getCurrentHistory } from "./contextService";
 import { formatWordNumber } from "./grammarService";
 import { Completion } from "../entities/message";
@@ -215,7 +215,7 @@ export async function replyBackToMainDialog(ctx: BotContext, ...lines: string[])
 }
 
 function formatCouponsString(coupons: Coupon[]): string {
-  return `У вас ${formatWordNumber("купон", coupons.length)}. Активировать: /${commands.coupons}`;
+  return `${symbols.coupon} У вас ${formatWordNumber("купон", coupons.length)}. Активировать: /${commands.coupons}`;
 }
 
 async function getTextModelContext(ctx: BotContext, user: User): Promise<TextModelContext | null> {

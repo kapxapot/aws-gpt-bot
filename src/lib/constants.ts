@@ -48,5 +48,7 @@ export const settings = {
 export const symbols = {
   infinity: "♾",
   gptoken: "🍥",
-  bullet: "🔹"
+  bullet: "🔹",
+  warning: "⚠",
+  coupon: "🎫"
 } as const;

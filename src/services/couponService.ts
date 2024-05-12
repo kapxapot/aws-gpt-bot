@@ -3,7 +3,7 @@ import { Coupon, CouponCode, CouponTemplate, couponInvite2024, couponV02PollRewa
 import { intervalWords } from "../entities/interval";
 import { User } from "../entities/user";
 import { toText } from "../lib/common";
-import { commands } from "../lib/constants";
+import { commands, symbols } from "../lib/constants";
 import { uuid } from "../lib/uuid";
 import { sendTelegramMessage } from "../telegram/bot";
 import { addDays, addTerm, isExpired } from "./dateService";
@@ -30,13 +30,13 @@ export async function issueCoupon(user: User, template: CouponTemplate): Promise
   await putMetric("CouponIssued");
 
   const product = getProductByCode(coupon.productCode);
-  const word = intervalWords[coupon.term.interval];
+  const word = intervalWords[coupon.term.unit];
 
   await sendTelegramMessage(
     user,
     toText(
       `🎉 Вы получили купон на активацию ${formatProductName(product, "Genitive")}.`,
-      `Внимание! Срок действия купона ограничен, его нужно активировать в течение <b>${formatWordNumber(word, coupon.term.length, "Genitive")}</b>.`,
+      `${symbols.warning} Внимание! Срок действия купона ограничен, его нужно активировать в течение <b>${formatWordNumber(word, coupon.term.range, "Genitive")}</b>.`,
       `Активировать купон: /${commands.coupons}`
     )
   );
@@ -47,19 +47,19 @@ export async function issueCoupon(user: User, template: CouponTemplate): Promise
 export const isCouponActive = (coupon: Coupon) =>
   !isCouponActivated(coupon) && !isCouponExpired(coupon);
 
-const isCouponActivated = (coupon: Coupon) => !!coupon.activatedAt;
-
-function isCouponExpired(coupon: Coupon): boolean {
-  const span = getCouponSpan(coupon);
-  return isExpired(span);
-}
-
-function getCouponSpan(coupon: Coupon): TimeSpan {
+export function getCouponSpan(coupon: Coupon): TimeSpan {
   const start = coupon.issuedAt.timestamp;
   const endOfTerm = addTerm(start, coupon.term);
   const end = addDays(endOfTerm, 1);
 
   return { start, end };
+}
+
+const isCouponActivated = (coupon: Coupon) => !!coupon.activatedAt;
+
+function isCouponExpired(coupon: Coupon): boolean {
+  const span = getCouponSpan(coupon);
+  return isExpired(span);
 }
 
 const createCoupon = (template: CouponTemplate): Coupon => ({

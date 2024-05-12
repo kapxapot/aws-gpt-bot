@@ -17,6 +17,7 @@ import { incProductUsage } from "./productUsageService";
 import { toText } from "../lib/common";
 import { Markup } from "telegraf";
 import { ImageModelContext } from "../entities/modelContext";
+import { symbols } from "../lib/constants";
 
 const config = {
   imageInterval: parseInt(process.env.IMAGE_INTERVAL ?? "60") * 1000, // milliseconds
@@ -118,7 +119,7 @@ export async function generateImageWithGpt(
     await ctx.replyWithHTML(
       toText(
         `<a href="${url}">Скачать картинку</a> в хорошем качестве.`,
-        "⚠ Ссылка работает 60 минут!"
+        `${symbols.warning} Ссылка работает 60 минут!`
       ),
       {
         ...inlineKeyboard(
