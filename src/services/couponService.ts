@@ -55,6 +55,10 @@ export function getCouponSpan(coupon: Coupon): TimeSpan {
   return { start, end };
 }
 
+export function formatCouponsString(coupons: Coupon[]): string {
+  return `${symbols.coupon} У вас ${formatWordNumber("купон", coupons.length)}. Активировать: /${commands.coupons}`;
+}
+
 const isCouponActivated = (coupon: Coupon) => !!coupon.activatedAt;
 
 function isCouponExpired(coupon: Coupon): boolean {

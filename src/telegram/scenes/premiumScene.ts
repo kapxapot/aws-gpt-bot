@@ -10,7 +10,7 @@ import { canMakePurchases, canPurchaseProduct } from "../../services/permissionS
 import { backToStartAction, cancelAction, cancelButton } from "../../lib/dialog";
 import { getUserOrLeave, replyBackToMainDialog } from "../../services/messageService";
 import { SessionData } from "../session";
-import { orJoin, phoneToItu, toCompactText, toText } from "../../lib/common";
+import { isEmpty, orJoin, phoneToItu, toCompactText, toText } from "../../lib/common";
 import { message } from "telegraf/filters";
 import { updateUser } from "../../storage/userStorage";
 import { getProductByCode, gpt3Products, gptokenProducts } from "../../services/productService";
@@ -20,7 +20,8 @@ import { gptokenString } from "../../services/gptokenService";
 import { bulletize } from "../../lib/text";
 import { createPayment } from "../../services/paymentService";
 import { Markup } from "telegraf";
-import { getUserActiveProducts } from "../../services/userService";
+import { getUserActiveCoupons, getUserActiveProducts } from "../../services/userService";
+import { formatCouponsString } from "../../services/couponService";
 
 type Message = string;
 
@@ -90,6 +91,14 @@ async function mainHandler(ctx: BotContext) {
       .map(subscription => getSubscriptionPlan(subscription))
       .map(plan => getPlanDescription(plan, "shortest"))
   ];
+
+  const coupons = getUserActiveCoupons(user);
+
+  if (!isEmpty(coupons)) {
+    messages.push(
+      formatCouponsString(coupons)
+    );
+  }
 
   if (!productCount) {
     messages.push("На данный момент доступных пакетов нет.");

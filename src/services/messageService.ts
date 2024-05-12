@@ -7,7 +7,7 @@ import { isSuccess } from "../lib/error";
 import { clearAndLeave, encodeText, inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
 import { addMessageToUser, getLastHistoryMessage, getOrAddUser, getUserActiveCoupons, getUserActiveProducts, stopWaitingForGptAnswer, updateUserProduct, waitForGptAnswer } from "./userService";
-import { commands, symbols } from "../lib/constants";
+import { commands } from "../lib/constants";
 import { getCurrentHistory } from "./contextService";
 import { formatWordNumber } from "./grammarService";
 import { Completion } from "../entities/message";
@@ -31,8 +31,8 @@ import { bullet, bulletize } from "../lib/text";
 import { TextModelContext } from "../entities/modelContext";
 import { getSubscriptionShortDisplayName } from "./subscriptionService";
 import { formatTextConsumptionLimits } from "./consumptionFormatService";
-import { Coupon } from "../entities/coupon";
 import { backToChatHandler } from "../telegram/handlers";
+import { formatCouponsString } from "./couponService";
 
 const config = {
   messageInterval: parseInt(process.env.MESSAGE_INTERVAL ?? "15") * 1000, // milliseconds
@@ -212,10 +212,6 @@ export async function getUserOrLeave(ctx: BotContext): Promise<User | null> {
 export async function replyBackToMainDialog(ctx: BotContext, ...lines: string[]) {
   await reply(ctx, ...lines);
   await backToChatHandler(ctx);
-}
-
-function formatCouponsString(coupons: Coupon[]): string {
-  return `${symbols.coupon} У вас ${formatWordNumber("купон", coupons.length)}. Активировать: /${commands.coupons}`;
 }
 
 async function getTextModelContext(ctx: BotContext, user: User): Promise<TextModelContext | null> {
