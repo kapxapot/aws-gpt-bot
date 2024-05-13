@@ -64,7 +64,7 @@ addSceneCommandHandlers(scene);
 scene.action(cancelAction, backToChatHandler);
 
 scene.on(message("text"), async ctx => {
-  await reply(ctx, `I : ${ctx.message.text}`);
+  await reply(ctx, `I got: ${ctx.message.text}`);
   await backToChatHandler(ctx);
 });
 
