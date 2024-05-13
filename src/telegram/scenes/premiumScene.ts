@@ -8,7 +8,7 @@ import { isError } from "../../lib/error";
 import { getSubscriptionFullDisplayName, getSubscriptionPlan, getSubscriptionShortName } from "../../services/subscriptionService";
 import { canMakePurchases, canPurchaseProduct } from "../../services/permissionService";
 import { backToStartAction, cancelAction, cancelButton } from "../../lib/dialog";
-import { getUserOrLeave, replyBackToMainDialog } from "../../services/messageService";
+import { getUserOrLeave, notAllowedMessage, replyBackToMainDialog } from "../../services/messageService";
 import { SessionData } from "../session";
 import { isEmpty, orJoin, phoneToItu, toCompactText, toText } from "../../lib/common";
 import { message } from "telegraf/filters";
@@ -107,7 +107,7 @@ async function mainHandler(ctx: BotContext) {
       await replyBackToMainDialog(
         ctx,
         ...messages,
-        "⛔ Покупки недоступны."
+        notAllowedMessage("Покупки недоступны.")
       );
     }
 

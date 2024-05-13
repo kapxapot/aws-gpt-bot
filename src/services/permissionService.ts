@@ -6,7 +6,8 @@ import { getProductByCode } from "./productService";
 import { getSubscriptionPlan } from "./subscriptionService";
 import { isTester } from "./userService";
 
-export const canMakePurchases = (user: User) => isProd() || isTester(user);
+export const canMakePurchases = (user: User) => isProdOrTester(user);
+export const canGenerateImages = (user: User) => isProdOrTester(user);
 
 export function canPurchaseProduct(user: User, productCode: ProductCode) {
   if (!canMakePurchases(user)) {
@@ -18,3 +19,5 @@ export function canPurchaseProduct(user: User, productCode: ProductCode) {
 
   return isPlanActive(plan);
 }
+
+const isProdOrTester = (user: User) => isProd() || isTester(user);

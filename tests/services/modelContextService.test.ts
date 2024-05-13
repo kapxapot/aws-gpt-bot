@@ -135,7 +135,7 @@ fdescribe("getImageModelContexts", () => {
 
     const freeLimit: IntervalConsumptionLimit = { 
       interval: "week",
-      limit: 1,
+      limit: 3,
       consumed: 6,
       remaining: 0
     };

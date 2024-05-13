@@ -52,5 +52,6 @@ export const symbols = {
   gptoken: "🍥",
   bullet: "🔹",
   warning: "⚠",
-  coupon: "🎫"
+  coupon: "🎫",
+  stop: "⛔"
 } as const;

@@ -7,7 +7,7 @@ import { isSuccess } from "../lib/error";
 import { clearAndLeave, encodeText, inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
 import { addMessageToUser, getLastHistoryMessage, getOrAddUser, getUserActiveCoupons, getUserActiveProducts, stopWaitingForGptAnswer, updateUserProduct, waitForGptAnswer } from "./userService";
-import { commands } from "../lib/constants";
+import { commands, symbols } from "../lib/constants";
 import { getCurrentHistory } from "./contextService";
 import { formatWordNumber } from "./grammarService";
 import { Completion } from "../entities/message";
@@ -36,6 +36,7 @@ import { formatCouponsString } from "./couponService";
 
 const config = {
   messageInterval: parseInt(process.env.MESSAGE_INTERVAL ?? "15") * 1000, // milliseconds
+  mainBot: process.env.MAIN_BOT
 };
 
 export async function sendMessageToGpt(ctx: BotContext, user: User, question: string, requestedAt?: number) {
@@ -212,6 +213,13 @@ export async function getUserOrLeave(ctx: BotContext): Promise<User | null> {
 export async function replyBackToMainDialog(ctx: BotContext, ...lines: string[]) {
   await reply(ctx, ...lines);
   await backToChatHandler(ctx);
+}
+
+export function notAllowedMessage(message: string): string {
+  return cleanJoin([
+    `${symbols.stop} ${message}`,
+    config.mainBot ? `Используйте основной бот: @${config.mainBot}` : null
+  ]);
 }
 
 async function getTextModelContext(ctx: BotContext, user: User): Promise<TextModelContext | null> {

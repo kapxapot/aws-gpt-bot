@@ -7,7 +7,7 @@ import { message } from "telegraf/filters";
 import { generateImageWithGpt } from "../../services/imageService";
 import { ImageStage, SessionData } from "../session";
 import { backToStartAction, cancelAction, cancelButton, gotoPremiumAction, gotoPremiumButton } from "../../lib/dialog";
-import { getUserOrLeave } from "../../services/messageService";
+import { getUserOrLeave, notAllowedMessage, replyBackToMainDialog } from "../../services/messageService";
 import { capitalize, cleanJoin, toCompactText, toText } from "../../lib/common";
 import { gptokenString } from "../../services/gptokenService";
 import { bullet, bulletize } from "../../lib/text";
@@ -17,6 +17,7 @@ import { ImageModelContext } from "../../entities/modelContext";
 import { User } from "../../entities/user";
 import { getSubscriptionShortDisplayName } from "../../services/subscriptionService";
 import { formatImageConsumptionLimits } from "../../services/consumptionFormatService";
+import { canGenerateImages } from "../../services/permissionService";
 
 const scene = new BaseScene<BotContext>(scenes.image);
 
@@ -79,6 +80,15 @@ async function mainHandler (ctx: BotContext) {
   const user = await getUserOrLeave(ctx);
 
   if (!user) {
+    return;
+  }
+
+  if (!canGenerateImages(user)) {
+    await replyBackToMainDialog(
+      ctx,
+      notAllowedMessage("Генерация картинок недоступна.")
+    );
+
     return;
   }
 
