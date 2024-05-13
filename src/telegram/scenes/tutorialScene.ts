@@ -3,50 +3,10 @@ import { WizardScene } from "telegraf/scenes";
 import { BotContext } from "../botContext";
 import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { commands, scenes, symbols } from "../../lib/constants";
-import { addOtherCommandHandlers, backToChatHandler, dunnoHandler, kickHandler } from "../handlers";
+import { addSceneCommandHandlers, backToChatHandler, dunnoHandler, kickHandler } from "../handlers";
 import { getDefaultImageSettings } from "../../services/imageService";
 import { gptokenString } from "../../services/gptokenService";
 import { defaultImageSize } from "../../entities/model";
-
-function makeStepHandler(text: string, first: boolean, last: boolean) {
-  const stepHandler = new Composer<BotContext>();
-
-  const nextAction = "next";
-  const exitAction = "exit";
-
-  const keyboard = inlineKeyboard(
-    ["Дальше", nextAction],
-    ["Закончить", exitAction]
-  );
-
-  stepHandler.action(nextAction, async (ctx) => {
-    await clearInlineKeyboard(ctx);
-
-    if (last) {
-      await reply(ctx, text);
-      await ctx.scene.leave();
-    } else {
-      await replyWithKeyboard(ctx, keyboard, text);
-      ctx.wizard.next();
-    }
-  });
-
-  stepHandler.action(exitAction, backToChatHandler);
-
-  if (first) {
-    stepHandler.use(async (ctx) => {
-      await replyWithKeyboard(ctx, keyboard, text);
-      ctx.wizard.next();
-    });
-  } else {
-    addOtherCommandHandlers(stepHandler, commands.tutorial);
-
-    stepHandler.use(kickHandler);
-    stepHandler.use(dunnoHandler);
-  }
-
-  return stepHandler;
-}
 
 const defaultImageSettings = getDefaultImageSettings();
 
@@ -171,3 +131,43 @@ const scene = new WizardScene<BotContext>(
 );
 
 export const tutorialScene = scene;
+
+function makeStepHandler(text: string, first: boolean, last: boolean) {
+  const stepHandler = new Composer<BotContext>();
+
+  const nextAction = "next";
+  const exitAction = "exit";
+
+  const keyboard = inlineKeyboard(
+    ["Дальше", nextAction],
+    ["Закончить", exitAction]
+  );
+
+  stepHandler.action(nextAction, async (ctx) => {
+    await clearInlineKeyboard(ctx);
+
+    if (last) {
+      await reply(ctx, text);
+      await ctx.scene.leave();
+    } else {
+      await replyWithKeyboard(ctx, keyboard, text);
+      ctx.wizard.next();
+    }
+  });
+
+  stepHandler.action(exitAction, backToChatHandler);
+
+  if (first) {
+    stepHandler.use(async (ctx) => {
+      await replyWithKeyboard(ctx, keyboard, text);
+      ctx.wizard.next();
+    });
+  } else {
+    addSceneCommandHandlers(stepHandler);
+
+    stepHandler.use(kickHandler);
+    stepHandler.use(dunnoHandler);
+  }
+
+  return stepHandler;
+}

@@ -7,6 +7,7 @@ import { getSubscriptionPlan } from "./subscriptionService";
 import { isTester } from "./userService";
 
 export const canMakePurchases = (user: User) => isProdOrTester(user);
+export const canUseGpt = (user: User) => isProdOrTester(user);
 export const canGenerateImages = (user: User) => isProdOrTester(user);
 
 export function canPurchaseProduct(user: User, productCode: ProductCode) {

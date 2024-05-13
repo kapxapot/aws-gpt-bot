@@ -1,17 +1,17 @@
 import { BaseScene } from "telegraf/scenes";
 import { BotContext } from "../botContext";
-import { commands, scenes, settings } from "../../lib/constants";
-import { addOtherCommandHandlers, backToChatHandler, dunnoHandler, kickHandler } from "../handlers";
+import { scenes, settings } from "../../lib/constants";
+import { addSceneCommandHandlers, backToChatHandler, dunnoHandler, kickHandler } from "../handlers";
 import { message } from "telegraf/filters";
 import { cancelAction, cancelButton } from "../../lib/dialog";
 import { getUserOrLeave } from "../../services/messageService";
 import { getUserActiveCoupons } from "../../services/userService";
-import { inlineKeyboard, replyWithKeyboard } from "../../lib/telegram";
+import { inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { formatWordNumber } from "../../services/grammarService";
 import { toCompactText } from "../../lib/common";
 import { formatProductName, getProductByCode } from "../../services/productService";
 import { formatCouponExpiration } from "../../services/couponService";
-import { flattenUuid } from "../../lib/uuid";
+import { getIdChunk } from "../../lib/uuid";
 
 const scene = new BaseScene<BotContext>(scenes.coupons);
 
@@ -36,6 +36,7 @@ scene.enter(async ctx => {
   }
 
   const displayCount = Math.min(settings.couponsToShow, couponCount);
+  const usedChunks: string[] = [];
 
   await replyWithKeyboard(
     ctx,
@@ -45,21 +46,25 @@ scene.enter(async ctx => {
       .slice(0, displayCount)
       .map(coupon => {
         const product = getProductByCode(coupon.productCode);
+        const idChunk = getIdChunk(usedChunks, coupon.id);
+
+        usedChunks.push(idChunk);
 
         return toCompactText(
           formatProductName(product),
-          `Действует по ${formatCouponExpiration(coupon)}.`,
-          `Активировать: /ac_${flattenUuid(coupon.id)}`
+          `Годен до ${formatCouponExpiration(coupon)}.`,
+          `Активировать: /activate_${idChunk}`
         );
       })
   );
 });
 
-addOtherCommandHandlers(scene, commands.coupons);
+addSceneCommandHandlers(scene);
 
 scene.action(cancelAction, backToChatHandler);
 
 scene.on(message("text"), async ctx => {
+  await reply(ctx, `I : ${ctx.message.text}`);
   await backToChatHandler(ctx);
 });
 

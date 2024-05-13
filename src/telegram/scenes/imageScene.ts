@@ -1,7 +1,7 @@
 import { BaseScene } from "telegraf/scenes";
 import { BotContext } from "../botContext";
 import { commands, scenes, settings } from "../../lib/constants";
-import { addOtherCommandHandlers, backToChatHandler, dunnoHandler, kickHandler } from "../handlers";
+import { addSceneCommandHandlers, backToChatHandler, dunnoHandler, kickHandler } from "../handlers";
 import { clearAndLeave, clearInlineKeyboard, inlineKeyboard, replyWithKeyboard } from "../../lib/telegram";
 import { message } from "telegraf/filters";
 import { generateImageWithGpt } from "../../services/imageService";
@@ -23,7 +23,7 @@ const scene = new BaseScene<BotContext>(scenes.image);
 
 scene.enter(mainHandler);
 
-addOtherCommandHandlers(scene, commands.image);
+addSceneCommandHandlers(scene);
 
 scene.action(cancelAction, backToChatHandler);
 

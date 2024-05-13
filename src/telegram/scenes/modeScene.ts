@@ -1,10 +1,10 @@
 import { BaseScene } from "telegraf/scenes";
 import { BotContext } from "../botContext";
-import { commands, scenes, settings } from "../../lib/constants";
+import { scenes, settings } from "../../lib/constants";
 import { ButtonLike, clearAndLeave, clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { backToCustomPrompt, getOrAddUser, newCustomPrompt, setFreeMode, setPrompt } from "../../services/userService";
 import { getModeName, getModes, getPrompts } from "../../entities/prompt";
-import { addOtherCommandHandlers, backToChatHandler, dunnoHandler, kickHandler } from "../handlers";
+import { addSceneCommandHandlers, backToChatHandler, dunnoHandler, kickHandler } from "../handlers";
 import { message } from "telegraf/filters";
 import { getUserOrLeave, replyBackToMainDialog, sendMessageToGpt } from "../../services/messageService";
 import { ModeStage, SessionData } from "../session";
@@ -47,7 +47,7 @@ async function modeSelectionHandler(ctx: BotContext) {
   );
 }
 
-addOtherCommandHandlers(scene, commands.mode);
+addSceneCommandHandlers(scene);
 
 scene.action(cancelAction, async ctx => {
   if (isStage(ctx.session, "modeSelection")) {

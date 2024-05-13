@@ -13,29 +13,16 @@ import { remindButton } from "../lib/dialog";
 type Handler = (ctx: BotContext) => Promise<void | unknown>;
 type HandlerTuple = [command: string, handler: Handler];
 
-export function addOtherCommandHandlers(scene: Composer<BotContext>, exceptCommand: string) {
-  getOtherCommandHandlers(exceptCommand).forEach(tuple => {
-    const [command, handler] = tuple;
+export function addSceneCommandHandlers(scene: Composer<BotContext>) {
+  getCommandHandlers()
+    .forEach(tuple => {
+      const [command, handler] = tuple;
 
-    scene.command(command, async (ctx) => {
-      await clearAndLeave(ctx);
-      await handler(ctx);
+      scene.command(command, async (ctx) => {
+        await clearAndLeave(ctx);
+        await handler(ctx);
+      });
     });
-  });
-
-  scene.command(exceptCommand, async (ctx) => {
-    await replyWithKeyboard(
-      ctx,
-      inlineKeyboard(["Покинуть диалог", "leave-dialog"]),
-      `Вы уже находитесь в диалоге этой команды. ${commonMessages.useTheKeyboard}`
-    );
-  });
-
-  scene.action("leave-dialog", backToChatHandler);
-}
-
-function getOtherCommandHandlers(command: string): HandlerTuple[] {
-  return getCommandHandlers().filter(tuple => tuple[0] !== command);
 }
 
 export function getCommandHandlers(): HandlerTuple[] {
@@ -51,28 +38,6 @@ export function getCommandHandlers(): HandlerTuple[] {
     [commands.support, supportHandler],
     [commands.status, statusHandler]
   ];
-}
-
-function sceneHandler(scene: string): Handler {
-  return async (ctx: BotContext) => await ctx.scene.enter(scene);
-}
-
-async function supportHandler(ctx: BotContext) {
-  await reply(
-    ctx,
-    "Заходите в нашу группу задать вопросы, предложить идеи или просто поболтать:",
-    process.env.SUPPORT_URL!
-  );
-}
-
-async function statusHandler(ctx: BotContext) {
-  const user = await getUserOrLeave(ctx);
-
-  if (!user) {
-    return;
-  }
-
-  await showStatus(ctx, user);
 }
 
 export async function kickHandler(ctx: BotContext, next: () => Promise<void>) {
@@ -134,4 +99,26 @@ export async function remindHandler(ctx: BotContext) {
   }
 
   await showLastHistoryMessage(ctx, user, "Похоже, разговор только начался. В истории пусто.");
+}
+
+function sceneHandler(scene: string): Handler {
+  return async (ctx: BotContext) => await ctx.scene.enter(scene);
+}
+
+async function supportHandler(ctx: BotContext) {
+  await reply(
+    ctx,
+    "Заходите в нашу группу задать вопросы, предложить идеи или просто поболтать:",
+    process.env.SUPPORT_URL!
+  );
+}
+
+async function statusHandler(ctx: BotContext) {
+  const user = await getUserOrLeave(ctx);
+
+  if (!user) {
+    return;
+  }
+
+  await showStatus(ctx, user);
 }

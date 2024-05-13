@@ -10,7 +10,7 @@ import { getCommandHandlers, kickHandler, remindHandler } from "./handlers";
 import { premiumScene } from "./scenes/premiumScene";
 import { User } from "../entities/user";
 import { inspect } from "util";
-import { getUserOrLeave, sendMessageToGpt, showStatus } from "../services/messageService";
+import { getUserOrLeave, notAllowedMessage, sendMessageToGpt, showStatus } from "../services/messageService";
 import { modeScene } from "./scenes/modeScene";
 import { getUsersCount, updateUser } from "../storage/userStorage";
 import { putMetric } from "../services/metricService";
@@ -22,20 +22,12 @@ import { gotoPremiumAction, remindAction } from "../lib/dialog";
 import { toCompactText } from "../lib/common";
 import { bulletize } from "../lib/text";
 import { couponsScene } from "./scenes/couponsScene";
+import { canUseGpt } from "../services/permissionService";
 
 const config = {
   botToken: process.env.BOT_TOKEN!,
   timeout: parseInt(process.env.TELEGRAF_TIMEOUT ?? "0") * 1000
 };
-
-function getBot() {
-  return new Telegraf<BotContext>(
-    config.botToken,
-    {
-      handlerTimeout: config.timeout
-    }
-  );
-}
 
 export async function processTelegramRequest(tgRequest: TelegramRequest) {
   const bot = getBot();
@@ -96,7 +88,8 @@ export async function processTelegramRequest(tgRequest: TelegramRequest) {
     }
   });
 
-  getCommandHandlers().forEach(tuple => bot.command(...tuple));
+  getCommandHandlers()
+    .forEach(tuple => bot.command(...tuple));
 
   bot.action(remindAction, remindHandler);
 
@@ -107,6 +100,15 @@ export async function processTelegramRequest(tgRequest: TelegramRequest) {
 
   bot.on(message("text"), async ctx => {
     const user = await getOrAddUser(ctx.from);
+
+    if (!canUseGpt(user)) {
+      await reply(
+        ctx,
+        notAllowedMessage("Диалог недоступен.")
+      );
+
+      return;
+    }
 
     await sendMessageToGpt(ctx, user, ctx.message.text, tgRequest.createdAt);
   });
@@ -138,6 +140,15 @@ export async function sendTelegramMessage(user: User, message: string) {
     message,
     {
       parse_mode: "HTML"
+    }
+  );
+}
+
+function getBot() {
+  return new Telegraf<BotContext>(
+    config.botToken,
+    {
+      handlerTimeout: config.timeout
     }
   );
 }
