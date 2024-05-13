@@ -6,7 +6,7 @@ import { toText } from "../lib/common";
 import { commands, symbols } from "../lib/constants";
 import { uuid } from "../lib/uuid";
 import { sendTelegramMessage } from "../telegram/bot";
-import { addDays, addTerm, isExpired } from "./dateService";
+import { addDays, addTerm, formatDate, isExpired } from "./dateService";
 import { formatWordNumber } from "./grammarService";
 import { putMetric } from "./metricService";
 import { formatProductName, getProductByCode } from "./productService";
@@ -37,7 +37,7 @@ export async function issueCoupon(user: User, template: CouponTemplate): Promise
     toText(
       `🎉 Вы получили купон на активацию ${formatProductName(product, "Genitive")}.`,
       `${symbols.warning} Внимание! Срок действия купона ограничен, его нужно активировать в течение <b>${formatWordNumber(word, coupon.term.range, "Genitive")}</b>.`,
-      `Активировать купон: /${commands.coupons}`
+      `Активировать: /${commands.coupons}`
     )
   );
 
@@ -56,7 +56,14 @@ export function getCouponSpan(coupon: Coupon): TimeSpan {
 }
 
 export function formatCouponsString(coupons: Coupon[]): string {
-  return `${symbols.coupon} У вас ${formatWordNumber("купон", coupons.length)}. Активировать: /${commands.coupons}`;
+  return `${symbols.coupon} У вас ${formatWordNumber("купон", coupons.length)}: /${commands.coupons}`;
+}
+
+export function formatCouponExpiration(coupon: Coupon): string {
+  const { end } = getCouponSpan(coupon);
+  const expiresAt = new Date(end);
+
+  return formatDate(expiresAt, "dd.MM.yyyy");
 }
 
 const isCouponActivated = (coupon: Coupon) => !!coupon.activatedAt;

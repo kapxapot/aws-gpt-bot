@@ -19,7 +19,9 @@ export function formatProductName(
   return cleanJoin([
     product.icon,
     `<b>${capitalize(productName)}</b>`,
-    isPurchasedProduct(product) ? formatProductExpiration(product) : null
+    isPurchasedProduct(product)
+      ? `(действует по ${formatProductExpiration(product)})`
+      : null
   ]);
 }
 
@@ -88,7 +90,7 @@ function formatProductExpiration(product: PurchasedProduct): string {
   const { end } = getProductSpan(product);
   const expiresAt = new Date(end);
 
-  return `(действует по ${formatDate(expiresAt, "dd.MM.yyyy")})`;
+  return formatDate(expiresAt, "dd.MM.yyyy");
 }
 
 function isProductExpired(product: PurchasedProduct): boolean {

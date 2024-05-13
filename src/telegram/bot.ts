@@ -21,6 +21,7 @@ import { imageScene } from "./scenes/imageScene";
 import { gotoPremiumAction, remindAction } from "../lib/dialog";
 import { toCompactText } from "../lib/common";
 import { bulletize } from "../lib/text";
+import { couponsScene } from "./scenes/couponsScene";
 
 const config = {
   botToken: process.env.BOT_TOKEN!,
@@ -43,7 +44,13 @@ export async function processTelegramRequest(tgRequest: TelegramRequest) {
     store: sessionStore()
   }));
 
-  const stage = new Scenes.Stage<BotContext>([tutorialScene, premiumScene, modeScene, imageScene]);
+  const stage = new Scenes.Stage<BotContext>([
+    tutorialScene,
+    premiumScene,
+    modeScene,
+    imageScene,
+    couponsScene
+  ]);
 
   bot.use(stage.middleware());
 

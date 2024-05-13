@@ -44,11 +44,12 @@ export function getCommandHandlers(): HandlerTuple[] {
     [commands.mode, sceneHandler(scenes.mode)],
     [commands.premium, sceneHandler(scenes.premium)],
     [commands.image, sceneHandler(scenes.image)],
-    [commands.support, supportHandler],
+    [commands.coupons, sceneHandler(scenes.coupons)],
     [commands.historySize, historySizeHandler],
     [commands.temperature, temperatureHandler],
-    [commands.status, statusHandler],
-    [commands.chat, backToChatHandler]
+    [commands.chat, backToChatHandler],
+    [commands.support, supportHandler],
+    [commands.status, statusHandler]
   ];
 }
 

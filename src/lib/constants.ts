@@ -20,7 +20,8 @@ export const scenes = {
   tutorial: "TUTORIAL_SCENE",
   mode: "MODE_SCENE",
   premium: "PREMIUM_SCENE",
-  image: "IMAGE_SCENE"
+  image: "IMAGE_SCENE",
+  coupons: "COUPONS_SCENE"
 } as const;
 
 export const settings = {
@@ -42,7 +43,8 @@ export const settings = {
     maxMessageLength: 4096,
     maxButtonTextLength: 14
   },
-  defaultUsagePoints: 1
+  defaultUsagePoints: 1,
+  couponsToShow: 10
 } as const;
 
 export const symbols = {
