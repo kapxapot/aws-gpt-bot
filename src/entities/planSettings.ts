@@ -21,7 +21,7 @@ export const planSettings: Record<Plan, PlanSettings> = {
         "month": 100
       },
       "dalle3": {
-        "week": 1
+        "week": 3
       }
     }
   },

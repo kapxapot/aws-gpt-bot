@@ -25,7 +25,7 @@ export function getPlanDescription(plan: Plan, mode: DescriptionMode = "full"): 
           iff("модель <b>GPT-3.5</b>"),
           "5 запросов в день",
           "100 запросов в месяц",
-          "1 запрос к <b>DALL-E 3</b> в неделю"
+          "3 запроса к <b>DALL-E 3</b> в неделю"
         )
       );
 
