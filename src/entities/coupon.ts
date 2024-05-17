@@ -29,20 +29,20 @@ export const couponPollReward: CouponTemplate = {
   term: months(3)
 };
 
-export const couponInvite: CouponTemplate = {
-  code: "invite",
-  productCode: "bundle-promo-30-days",
-  term: days(30)
-};
-
 export const couponWelcome: CouponTemplate = {
   code: "welcome",
   productCode: "bundle-trial-30-days",
   term: months(3)
 };
 
+export const couponInvite: CouponTemplate = {
+  code: "invite",
+  productCode: "bundle-promo-30-days",
+  term: days(30)
+};
+
 export const couponFanclubPromo: CouponTemplate = {
-  code: "welcome",
+  code: "fanclub-promo",
   productCode: "bundle-promo-30-days",
   term: days(30)
 };
