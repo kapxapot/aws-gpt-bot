@@ -76,7 +76,7 @@ scene.use(dunnoHandler);
 
 export const imageScene = scene;
 
-async function mainHandler (ctx: BotContext) {
+async function mainHandler(ctx: BotContext) {
   const user = await getUserOrLeave(ctx);
 
   if (!user) {

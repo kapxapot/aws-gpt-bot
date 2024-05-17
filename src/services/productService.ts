@@ -1,8 +1,9 @@
 import { At, TimeSpan } from "../entities/at";
 import { GrammarCase } from "../entities/grammar";
 import { ModelCode } from "../entities/model";
+import { Plan } from "../entities/plan";
 import { PlanSettings } from "../entities/planSettings";
-import { Product, ProductCode, PurchasedProduct, bossBundle, creativeBundle, invite2024Bundle, isPurchasedProduct, noviceBundle, premiumSubscription, proBundle, studentBundle, testTinyGpt3Bundle, testTinyGptokenBundle, trialBundle, unlimitedSubscription } from "../entities/product";
+import { Product, ProductCode, PurchasedProduct, bossBundle, creativeBundle, isPurchasedProduct, noviceBundle, premiumSubscription, proBundle, promoBundle, studentBundle, testTinyGpt3Bundle, testTinyGptokenBundle, trialBundle, unlimitedSubscription } from "../entities/product";
 import { capitalize, cleanJoin } from "../lib/common";
 import { uuid } from "../lib/uuid";
 import { addDays, addTerm, formatDate, isExpired } from "./dateService";
@@ -49,7 +50,7 @@ export const gpt3Products = [
 ];
 
 export const gptokenProducts = [
-  invite2024Bundle,
+  promoBundle,
   trialBundle,
   creativeBundle,
   proBundle,
@@ -60,8 +61,12 @@ export const gptokenProducts = [
 export const isProductActive = (product: PurchasedProduct) =>
   !isProductExpired(product) && !isProductExhausted(product);
 
+export function getProductPlan(product: Product): Plan {
+  return getSubscriptionPlan(product);
+}
+
 export function getProductPlanSettings(product: PurchasedProduct): PlanSettings {
-  const plan = getSubscriptionPlan(product);
+  const plan = getProductPlan(product);
   return getPlanSettings(plan);
 }
 

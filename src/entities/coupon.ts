@@ -1,11 +1,13 @@
 import { Id } from "../lib/types";
 import { At } from "./at";
 import { ProductCode } from "./product";
-import { Term, days30, term } from "./term";
+import { Term, days, months } from "./term";
 
 export const couponCodes = [
-  "v0.2-poll-reward",
-  "invite2024"
+  "poll-reward",
+  "invite",
+  "welcome",
+  "fanclub-promo"
 ] as const;
 
 export type CouponCode = typeof couponCodes[number];
@@ -21,14 +23,26 @@ export type Coupon = CouponTemplate & Id & {
   activatedAt?: At;
 };
 
-export const couponV02PollReward: CouponTemplate = {
-  code: "v0.2-poll-reward",
+export const couponPollReward: CouponTemplate = {
+  code: "poll-reward",
   productCode: "bundle-trial-30-days",
-  term: term(3, "month")
+  term: months(3)
 };
 
-export const couponInvite2024: CouponTemplate = {
-  code: "invite2024",
-  productCode: "bundle-invite2024-30-days",
-  term: days30
+export const couponInvite: CouponTemplate = {
+  code: "invite",
+  productCode: "bundle-promo-30-days",
+  term: days(30)
+};
+
+export const couponWelcome: CouponTemplate = {
+  code: "welcome",
+  productCode: "bundle-trial-30-days",
+  term: months(3)
+};
+
+export const couponFanclubPromo: CouponTemplate = {
+  code: "welcome",
+  productCode: "bundle-promo-30-days",
+  term: days(30)
 };

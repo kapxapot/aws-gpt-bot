@@ -160,7 +160,7 @@ export async function generateImageWithGpt(
     await replyWithKeyboard(
       ctx,
       inlineKeyboard(cancelButton),
-      `❌ ${errorMessage}`
+      `${symbols.cross} ${errorMessage}`
     );
   }
 

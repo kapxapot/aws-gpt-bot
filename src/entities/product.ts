@@ -5,7 +5,7 @@ import { GrammarCase, KnownWord } from "./grammar";
 import { ProductUsage } from "./modelUsage";
 import { Money, money, overprice } from "./money";
 import { Plan, defaultPlan } from "./plan";
-import { Term, days1, days30 } from "./term";
+import { Term, days } from "./term";
 
 export type ProductType = "subscription" | "bundle";
 
@@ -32,7 +32,7 @@ export const productCodes = [
   "subscription-unlimited-30-days",
   "bundle-novice-30-days",
   "bundle-student-30-days",
-  "bundle-invite2024-30-days",
+  "bundle-promo-30-days",
   "bundle-trial-30-days",
   "bundle-creative-30-days",
   "bundle-pro-30-days",
@@ -81,7 +81,7 @@ export const premiumSubscription: Product = {
   details: {
     type: "subscription",
     plan: "premium",
-    term: days30
+    term: days(30)
   }
 };
 
@@ -95,7 +95,7 @@ export const unlimitedSubscription: Product = {
   details: {
     type: "subscription",
     plan: "unlimited",
-    term: days30
+    term: days(30)
   }
 };
 
@@ -109,7 +109,7 @@ export const noviceBundle: Product = {
   details: {
     type: "bundle",
     plan: "novice",
-    term: days30
+    term: days(30)
   }
 };
 
@@ -123,21 +123,21 @@ export const studentBundle: Product = {
   details: {
     type: "bundle",
     plan: "student",
-    term: days30
+    term: days(30)
   }
 };
 
-export const invite2024Bundle: Product = {
-  code: "bundle-invite2024-30-days",
-  name: "Invite 2024 Bundle - 30 Days",
-  shortName: "Приглашение 2024",
-  displayName: "Приглашение 2024 на 30 дней",
+export const promoBundle: Product = {
+  code: "bundle-promo-30-days",
+  name: "Promo Bundle - 30 Days",
+  shortName: "Промо",
+  displayName: "Промо на 30 дней",
   icon: symbols.coupon,
   price: overprice,
   details: {
     type: "bundle",
-    plan: "invite2024",
-    term: days30
+    plan: "promo",
+    term: days(30)
   }
 };
 
@@ -151,7 +151,7 @@ export const trialBundle: Product = {
   details: {
     type: "bundle",
     plan: "trial",
-    term: days30
+    term: days(30)
   }
 };
 
@@ -165,7 +165,7 @@ export const creativeBundle: Product = {
   details: {
     type: "bundle",
     plan: "creative",
-    term: days30
+    term: days(30)
   }
 };
 
@@ -179,7 +179,7 @@ export const proBundle: Product = {
   details: {
     type: "bundle",
     plan: "pro",
-    term: days30
+    term: days(30)
   }
 };
 
@@ -193,7 +193,7 @@ export const bossBundle: Product = {
   details: {
     type: "bundle",
     plan: "boss",
-    term: days30
+    term: days(30)
   }
 };
 
@@ -210,7 +210,7 @@ export const testTinyGpt3Bundle: Product = {
   details: {
     type: "bundle",
     plan: "test-tinygpt3",
-    term: days1
+    term: days(1)
   }
 };
 
@@ -227,6 +227,6 @@ export const testTinyGptokenBundle: Product = {
   details: {
     type: "bundle",
     plan: "test-tinygptokens",
-    term: days1
+    term: days(1)
   }
 };

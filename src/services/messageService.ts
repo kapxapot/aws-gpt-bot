@@ -159,7 +159,7 @@ export async function sendMessageToGpt(ctx: BotContext, user: User, question: st
       errorMessage = "Неизвестная ошибка на стороне ChatGPT. Попробуйте повторить запрос.";
     }
 
-    await reply(ctx, `❌ ${errorMessage}`);
+    await reply(ctx, `${symbols.cross} ${errorMessage}`);
   }
 }
 

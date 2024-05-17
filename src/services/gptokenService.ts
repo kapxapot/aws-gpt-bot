@@ -1,9 +1,7 @@
 import { GrammarCase } from "../entities/grammar";
 import { symbols } from "../lib/constants";
-import { getCaseForNumber } from "./grammarService";
+import { formatWordNumber } from "./grammarService";
 
-export function gptokenString(amount: number, targetCase: GrammarCase = "Nominative"): string {
-  const intAmount = Math.floor(amount);
-
-  return `${symbols.gptoken} ${amount} ${getCaseForNumber("гптокен", intAmount, targetCase)}`;
+export function gptokenString(amount: number, targetCase?: GrammarCase): string {
+  return `${symbols.gptoken} ${formatWordNumber("гптокен", amount, targetCase)}`;
 }

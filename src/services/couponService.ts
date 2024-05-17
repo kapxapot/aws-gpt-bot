@@ -1,6 +1,7 @@
 import { TimeSpan, now } from "../entities/at";
-import { Coupon, CouponCode, CouponTemplate, couponInvite2024, couponV02PollReward } from "../entities/coupon";
+import { Coupon, CouponCode, CouponTemplate, couponFanclubPromo, couponInvite, couponPollReward, couponWelcome } from "../entities/coupon";
 import { intervalWords } from "../entities/interval";
+import { PurchasedProduct } from "../entities/product";
 import { User } from "../entities/user";
 import { toText } from "../lib/common";
 import { commands, symbols } from "../lib/constants";
@@ -9,16 +10,22 @@ import { sendTelegramMessage } from "../telegram/bot";
 import { addDays, addTerm, formatDate, isExpired } from "./dateService";
 import { formatWordNumber } from "./grammarService";
 import { putMetric } from "./metricService";
-import { formatProductName, getProductByCode } from "./productService";
-import { addUserCoupon } from "./userService";
+import { formatProductName, getProductByCode, productToPurchasedProduct } from "./productService";
+import { addUserCoupon, addUserProduct, updateUserCoupon } from "./userService";
 
 export function getCouponTemplateByCode(code: CouponCode): CouponTemplate {
   switch (code) {
-    case "v0.2-poll-reward":
-      return couponV02PollReward;
+    case "poll-reward":
+      return couponPollReward;
 
-    case "invite2024":
-      return couponInvite2024;
+    case "invite":
+      return couponInvite;
+
+    case "welcome":
+      return couponWelcome;
+
+    case "fanclub-promo":
+      return couponFanclubPromo;
   }
 }
 
@@ -37,11 +44,30 @@ export async function issueCoupon(user: User, template: CouponTemplate): Promise
     toText(
       `🎉 Вы получили купон на активацию ${formatProductName(product, "Genitive")}.`,
       `${symbols.warning} Внимание! Срок действия купона ограничен, его нужно активировать в течение <b>${formatWordNumber(word, coupon.term.range, "Genitive")}</b>.`,
-      `Активировать: /${commands.coupons}`
+      `🚀 Активировать: /${commands.coupons}`
     )
   );
 
   return coupon;
+}
+
+export async function activateCoupon(user: User, coupon: Coupon): Promise<PurchasedProduct> {
+  const product = getProductByCode(coupon.productCode);
+
+  if (!product) {
+    throw new Error(`Продукт ${coupon.productCode} не найден.`)
+  }
+
+  const then = now();
+  coupon.activatedAt = then;
+  await updateUserCoupon(user, coupon);
+
+  await putMetric("CouponActivated");
+
+  const purchasedProduct = productToPurchasedProduct(product, then)
+  await addUserProduct(user, purchasedProduct);
+
+  return purchasedProduct;
 }
 
 export const isCouponActive = (coupon: Coupon) =>

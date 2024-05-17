@@ -64,9 +64,9 @@ export async function processTelegramRequest(tgRequest: TelegramRequest) {
 
       await reply(
         ctx,
-        `Привет, <b>${userName(ctx.from)}</b>! 🤖 Я — <b>GPToid</b>, бот, созданный помогать вам в работе с <b>ChatGPT</b>!`,
+        `Привет, <b>${userName(ctx.from)}</b>! 🤖 Я — <b>GPToid</b>, бот, созданный помогать вам в работе с <b>ChatGPT</b> и <b>DALL-E</b>!`,
         toCompactText(
-          "Здесь вы можете работать с моделями <b>GPT-3.5 Turbo</b>, <b>GPT-4 Turbo</b> и <b>DALL-E 3</b>.",
+          "Здесь вы можете работать с моделями <b>GPT-3.5 Turbo</b>, <b>GPT-4o</b> и <b>DALL-E 3</b>.",
           ...bulletize(
             `Советуем начать с обучения /${commands.tutorial}, если вы новичок в <b>ChatGPT</b> и <b>DALL-E</b>.`,
             `Также у меня есть разные режимы работы: /${commands.mode}`,

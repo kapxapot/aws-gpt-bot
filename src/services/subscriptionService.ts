@@ -39,7 +39,7 @@ const getSubscriptionDisplayName = (subscription: Subscription) =>
 function formatSubscriptionName(
   subscription: Subscription,
   name: string,
-  targetCase: GrammarCase = "Nominative"
+  targetCase?: GrammarCase
 ) {
   const typeDisplayName = productTypeDisplayNames[subscription.details.type];
   const typeCase = getCase(typeDisplayName, targetCase);

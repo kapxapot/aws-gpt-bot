@@ -5,7 +5,7 @@ export type Term = {
   unit: Interval;
 };
 
-export const term = (range: number, unit: Interval): Term => ({ range, unit });
+const term = (range: number, unit: Interval): Term => ({ range, unit });
 
-export const days1 = term(1, "day");
-export const days30 = term(30, "day");
+export const days = (range: number) => term(range, "day");
+export const months = (range: number) => term(range, "month");

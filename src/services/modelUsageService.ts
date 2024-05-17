@@ -1,6 +1,12 @@
 import { TextModelCode, ImageModelCode, ImageSettings } from "../entities/model";
+import { getDefaultImageSettings } from "./imageService";
 import { getTextModelByCode, getImageModelByCode } from "./modelService";
 import { getTextModelPrices, getImageModelPrice } from "./priceService";
+
+export type UsagePoints = {
+  text: number;
+  image: number;
+};
 
 export function getTextModelUsagePoints(modelCode: TextModelCode): number {
   const model = getTextModelByCode(modelCode);
@@ -26,3 +32,8 @@ export function getImageModelUsagePoints(modelCode: ImageModelCode, imageSetting
       return getImageModelPrice(model, imageSettings).price;
   }
 }
+
+export const getGptokenUsagePoints = (imageSettings?: ImageSettings): UsagePoints => ({
+  text: getTextModelUsagePoints("gptokens"),
+  image: getImageModelUsagePoints("gptokens", imageSettings ?? getDefaultImageSettings())
+});

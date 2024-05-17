@@ -2,7 +2,7 @@ import { at, now } from "../../src/entities/at";
 import { ConsumptionLimit, IntervalConsumptionLimit, IntervalConsumptionLimits } from "../../src/entities/consumption";
 import { ImageSettings, Model, ModelCode, PureModelCode } from "../../src/entities/model";
 import { money } from "../../src/entities/money";
-import { days30 } from "../../src/entities/term";
+import { days } from "../../src/entities/term";
 import { User } from "../../src/entities/user";
 import { startOfDay, startOfMonth, startOfWeek } from "../../src/services/dateService";
 import { getImageModelContexts } from "../../src/services/modelContextService";
@@ -24,7 +24,7 @@ fdescribe("getImageModelContexts", () => {
           code: "bundle-trial-30-days",
           details: {
             plan: "trial",
-            term: days30,
+            term: days(30),
             type: "bundle"
           },
           displayName: "Пробный на 30 дней",

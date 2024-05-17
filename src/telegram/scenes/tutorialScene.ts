@@ -6,9 +6,15 @@ import { commands, scenes, symbols } from "../../lib/constants";
 import { addSceneCommandHandlers, backToChatHandler, dunnoHandler, kickHandler } from "../handlers";
 import { getDefaultImageSettings } from "../../services/imageService";
 import { gptokenString } from "../../services/gptokenService";
-import { defaultImageSize } from "../../entities/model";
+import { getGptokenUsagePoints } from "../../services/modelUsageService";
+import { formatWordNumber } from "../../services/grammarService";
 
-const defaultImageSettings = getDefaultImageSettings();
+const imageSettings = getDefaultImageSettings();
+const usagePoints = getGptokenUsagePoints(imageSettings);
+
+const config = {
+  fanClub: process.env.SUPPORT_GROUP!
+};
 
 const steps = [
   // step 1
@@ -91,18 +97,18 @@ ChatGPT не просто копирует данные из интернета,
 
 Всем пользователям по умолчанию доступен тариф <b>«Бесплатный»</b> с определенными ограничениями на количество запросов. В нем у вас есть доступ к <b>GPT-3.5</b> а также возможность попробовать генерацию картинок с помощью <b>DALL-E</b>.
 
-Если вам необходимо большее количество запросов к <b>GPT-3.5</b> или доступ к <b>GPT-4</b> и <b>DALL-E</b> — приобретите один из пакетов услуг (пункт меню «Пакеты услуг» /${commands.premium})`,
+Если вам необходимо большее количество запросов к <b>GPT-3.5</b> или доступ к <b>GPT-4</b> и <b>DALL-E</b> — приобретите один из пакетов услуг (пункт меню «Пакеты услуг» /${commands.premium}).`,
 
   // step 6
-  `<b>Гптокены, GPT-4 и DALL-E</b>,
+  `<b>Гптокены, GPT-4 и DALL-E</b>
 
 Модель <b>GPT-4</b> является более продвинутой и новой по сравнению с <b>GPT-3.5</b>, она способна обрабатывать большие запросы и выдает более качественные ответы.
 
 Модель <b>DALL-E</b> позволяет генерировать картинки по текстовому запросу.
 
-Обе модели доступны при покупке пакетов (/${commands.premium}) с ${symbols.gptoken} <b>гптокенами</b> — нашей специальной «валютой». На один гптокен можно написать запрос к <b>GPT-4</b>, а на два — создать картинку ${defaultImageSettings.size} в <b>DALL-E 3</b>.
+Обе модели доступны при покупке пакетов (/${commands.premium}) с ${symbols.gptoken} <b>гптокенами</b> — нашей специальной «валютой». На один гптокен можно написать ${formatWordNumber("запрос", 1 / usagePoints.text, "Accusative")} к <b>GPT-4</b>, а на два — создать ${formatWordNumber("картинка", 2 / usagePoints.image, "Accusative")} ${imageSettings.size} в <b>DALL-E 3</b>.
 
-То есть, пакета в ${gptokenString(100)} вам хватит на 100 запросов к <b>GPT-4</b> или генерацию 50 картинок размером ${defaultImageSize}.`,
+То есть, пакета в ${gptokenString(100)} вам хватит на ${formatWordNumber("запрос", 100 / usagePoints.text, "Accusative")} к <b>GPT-4</b> или генерацию ${formatWordNumber("картинка", 100 / usagePoints.image, "Accusative")} размером ${imageSettings.size}.`,
 
   // step 7
   `<b>Фан-клуб GPToid</b>
@@ -111,7 +117,7 @@ ChatGPT не просто копирует данные из интернета,
 
 Бот и обучение поддержат вас в этом процессе.
 
-Если у вас есть вопросы, идеи или вы просто хотите пообщаться, добро пожаловать в наш фан-клуб /${commands.support}`,
+Если у вас есть вопросы, идеи или вы просто хотите пообщаться, добро пожаловать в наш фан-клуб: @${config.fanClub}`,
 
   // step 8
 `<b>Обучение завершено</b>

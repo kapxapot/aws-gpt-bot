@@ -1,6 +1,6 @@
 import { BaseScene } from "telegraf/scenes";
 import { BotContext } from "../botContext";
-import { scenes, settings } from "../../lib/constants";
+import { scenes, settings, symbols } from "../../lib/constants";
 import { ButtonLike, clearAndLeave, clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { backToCustomPrompt, getOrAddUser, newCustomPrompt, setFreeMode, setPrompt } from "../../services/userService";
 import { getModeName, getModes, getPrompts } from "../../entities/prompt";
@@ -194,7 +194,7 @@ scene.on(message("text"), async ctx => {
     const user = await getOrAddUser(ctx.from);
     await newCustomPrompt(user, customPrompt);
 
-    await reply(ctx, "✅ Вы задали новый промт.");
+    await reply(ctx, `${symbols.success} Вы задали новый промт.`);
     await sendMessageToGpt(ctx, user, customPrompt);
 
     return;

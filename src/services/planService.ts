@@ -1,139 +1,129 @@
+import { MoneyLike, overprice, toMoney } from "../entities/money";
 import { Plan } from "../entities/plan";
-import { toCompactText } from "../lib/common";
+import { Term, days } from "../entities/term";
+import { StringLike, toCompactText } from "../lib/common";
 import { bulletize } from "../lib/text";
 import { gptokenString } from "./gptokenService";
+import { formatWordNumber } from "./grammarService";
+import { formatMoney } from "./moneyService";
 import { getPlanSettings } from "./planSettingsService";
+import { formatTerm } from "./termService";
 
 export function isPlanActive(plan: Plan) {
   const planSettings = getPlanSettings(plan);
   return !planSettings.disabled;
 }
 
-type DescriptionMode = "full" | "short" | "shortest";
+type DescriptionMode = "short" | "long";
 
-export function getPlanDescription(plan: Plan, mode: DescriptionMode = "full"): string {
-  const full = mode === "full";
-  const suffix = (text: string, suffix: string) => full ? `${text}${suffix}` : text;
-  const iff = (text: string) => full ? text : null;
-  const price = (text: string) => (full || mode === "short") ? text : null;
+export function getPlanDescription(plan: Plan, mode: DescriptionMode): string {
+  const price = (money: MoneyLike, term?: Term) => {
+    return (mode !== "short")
+      ? `${formatMoney(toMoney(money))} на ${formatTerm(term ?? days(30), "Accusative")}`
+      : null;
+  };
+
+  const gptokenLines = (gptokens: number, money: MoneyLike, term?: Term) => [
+    gptokenString(gptokens),
+    price(money, term)
+  ];
 
   switch (plan) {
     case "free":
-      return toCompactText(
-        "🤑 <b>Тариф «Бесплатный»</b>",
-        ...bulletize(
-          iff("модель <b>GPT-3.5</b>"),
-          "5 запросов в день",
-          "100 запросов в месяц",
-          "3 запроса к <b>DALL-E 3</b> в неделю"
-        )
+      return buildDescription(
+        "🤑",
+        "Тариф «Бесплатный»",
+        `${formatWordNumber("запрос", 5)} в день`,
+        `${formatWordNumber("запрос", 100)} в месяц`,
+        `${formatWordNumber("запрос", 3)} к <b>DALL-E 3</b> в неделю`
       );
 
     case "premium":
-      return toCompactText(
-        "💔 <b>Тариф «Премиум»</b>",
-        ...bulletize(
-          iff("модель <b>GPT-3.5</b>"),
-          "до 100 запросов в день",
-          price("290 рублей на 30 дней")
-        )
+      return buildDescription(
+        "💔",
+        "Тариф «Премиум»",
+        `до ${formatWordNumber("запрос", 100, "Genitive")} в день`,
+        price(290)
       );
 
     case "unlimited":
-      return toCompactText(
-        "💔 <b>Тариф «Безлимит»</b>",
-        ...bulletize(
-          iff("модель <b>GPT-3.5</b>"),
-          "неограниченное количество запросов",
-          price("390 рублей на 30 дней")
-        )
+      return buildDescription(
+        "💔",
+        "Тариф «Безлимит»",
+        "неограниченное количество запросов",
+        price(390)
       );
 
     case "novice":
-      return toCompactText(
-        "👧 <b>Пакет «Новичок»</b>",
-        ...bulletize(
-          suffix("200 запросов", " к модели <b>GPT-3.5</b>"),
-          price("49 рублей на 30 дней")
-        )
+      return buildDescription(
+        "👧",
+        "Пакет «Новичок»",
+        formatWordNumber("запрос", 200),
+        price(49)
       );
 
     case "student":
-      return toCompactText(
-        "👨‍🎓 <b>Пакет «Студент»</b>",
-        ...bulletize(
-          suffix("500 запросов", " к модели <b>GPT-3.5</b>"),
-          price("99 рублей на 30 дней")
-        )
+      return buildDescription(
+        "👨‍🎓",
+        "Пакет «Студент»",
+        formatWordNumber("запрос", 500),
+        price(99)
       );
 
-    case "invite2024":
-      return toCompactText(
-        "🎫 <b>Пакет «Приглашение 2024»</b>",
-        ...bulletize(
-          suffix(gptokenString(10), " = 10 запросов к <b>GPT-4</b>"),
-          iff("или 50 картинок <b>DALL-E 3</b>"),
-          price("9999 рублей на 30 дней")
-        )
+    case "promo":
+      return buildDescription(
+        "🎫",
+        "Пакет «Промо»",
+        ...gptokenLines(10, overprice)
       );
 
     case "trial":
-      return toCompactText(
-        "🧪 <b>Пакет «Пробный»</b>",
-        ...bulletize(
-          suffix(gptokenString(20), " = 20 запросов к <b>GPT-4</b>"),
-          iff("или 10 картинок <b>DALL-E 3</b>"),
-          price("99 рублей на 30 дней")
-        )
+      return buildDescription(
+        "🧪",
+        "Пакет «Пробный»",
+        ...gptokenLines(20, 99)
       );
 
     case "creative":
-      return toCompactText(
-        "👩‍🎨 <b>Пакет «Творческий»</b>",
-        ...bulletize(
-          suffix(gptokenString(50), " = 50 запросов к <b>GPT-4</b>"),
-          iff("или 25 картинок <b>DALL-E 3</b>"),
-          price("199 рублей на 30 дней")
-        )
+      return buildDescription(
+        "👩‍🎨",
+        "Пакет «Творческий»",
+        ...gptokenLines(50, 199)
       );
 
     case "pro":
-      return toCompactText(
-        "😎 <b>Пакет «Профи»</b>",
-        ...bulletize(
-          suffix(gptokenString(150), " = 150 запросов к <b>GPT-4</b>"),
-          iff("или 75 картинок <b>DALL-E 3</b>"),
-          price("449 рублей на 30 дней")
-        )
+      return buildDescription(
+        "😎",
+        "Пакет «Профи»",
+        ...gptokenLines(150, 449)
       );
 
     case "boss":
-      return toCompactText(
-        "🤴 <b>Пакет «Босс»</b>",
-        ...bulletize(
-          suffix(gptokenString(400), " = 400 запросов к <b>GPT-4</b>"),
-          iff("или 200 картинок <b>DALL-E 3</b>"),
-          price("999 рублей на 30 дней")
-        )
+      return buildDescription(
+        "🤴",
+        "Пакет «Босс»",
+        ...gptokenLines(400, 999)
       );
 
     case "test-tinygpt3":
-      return toCompactText(
-        "🛠 <b>Тестовый Пакет «Мелкий GPT-3»</b>",
-        ...bulletize(
-          suffix("2 запроса", " к модели <b>GPT-3.5</b>"),
-          price("9999 рублей на 1 день")
-        )
+      return buildDescription(
+        "🛠",
+        "Тестовый Пакет «Мелкий GPT-3»",
+        formatWordNumber("запрос", 2),
+        price(overprice, days(1))
       );
 
     case "test-tinygptokens":
-      return toCompactText(
-        "🛠 <b>Тестовый Пакет «Мелкий Gptoken»</b>",
-        ...bulletize(
-          suffix(gptokenString(4), " = 4 запроса к <b>GPT-4</b>"),
-          iff("или 2 запроса к <b>DALL-E 3</b>"),
-          price("9999 рублей на 1 день")
-        )
+      return buildDescription(
+        "🛠",
+        "Тестовый Пакет «Мелкий Gptoken»",
+        ...gptokenLines(4, overprice, days(1))
       );
   }
 }
+
+const buildDescription = (icon: string, name: string, ...lines: StringLike[]) =>
+  toCompactText(
+    `${icon} <b>${name}</b>`,
+    ...bulletize(...lines)
+  );

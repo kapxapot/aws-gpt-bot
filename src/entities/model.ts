@@ -9,7 +9,7 @@ export type ImageModelCode = PureImageModelCode | GptokensCode;
 export type PureModelCode = PureTextModelCode | PureImageModelCode;
 export type ModelCode = TextModelCode | ImageModelCode;
 
-export type TextModel = "gpt-3.5-turbo" | "gpt-4-turbo";
+export type TextModel = "gpt-3.5-turbo" | "gpt-4-turbo" | "gpt-4o";
 export type ImageModel = "dall-e-3";
 
 export type Model = TextModel | ImageModel;
@@ -29,7 +29,7 @@ export const defaultImageSize: ImageSize = "1024x1024";
 
 export const textModelMap: Record<PureTextModelCode, TextModel> = {
   "gpt3": "gpt-3.5-turbo",
-  "gpt4": "gpt-4-turbo"
+  "gpt4": "gpt-4o"
 };
 
 export const imageModelMap: Record<PureImageModelCode, ImageModel> = {

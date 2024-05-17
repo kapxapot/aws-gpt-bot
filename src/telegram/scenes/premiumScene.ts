@@ -13,7 +13,7 @@ import { SessionData } from "../session";
 import { isEmpty, orJoin, phoneToItu, toCompactText, toText } from "../../lib/common";
 import { message } from "telegraf/filters";
 import { updateUser } from "../../storage/userStorage";
-import { getProductByCode, gpt3Products, gptokenProducts } from "../../services/productService";
+import { getProductByCode, getProductPlan, gpt3Products, gptokenProducts } from "../../services/productService";
 import { User } from "../../entities/user";
 import { getPlanDescription } from "../../services/planService";
 import { gptokenString } from "../../services/gptokenService";
@@ -22,6 +22,8 @@ import { createPayment } from "../../services/paymentService";
 import { Markup } from "telegraf";
 import { getUserActiveCoupons, getUserActiveProducts } from "../../services/userService";
 import { formatCouponsString } from "../../services/couponService";
+import { getGptokenUsagePoints } from "../../services/modelUsageService";
+import { getDefaultImageSettings } from "../../services/imageService";
 
 type Message = string;
 
@@ -37,6 +39,8 @@ type ProductGroup = {
   marketingMessage: string;
   description: string;
 };
+
+const usagePoints = getGptokenUsagePoints(getDefaultImageSettings());
 
 const productGroups: ProductGroup[] = [
   {
@@ -55,8 +59,8 @@ const productGroups: ProductGroup[] = [
       `Пакеты ${symbols.gptoken} гптокенов для работы с <b>GPT-4</b> и <b>DALL-E</b>`,
       toCompactText(
         ...bulletize(
-          `1 запрос к <b>GPT-4</b> = ${gptokenString(1)}`,
-          `1 картинка <b>DALL-E 3</b> = от ${gptokenString(2, "Genitive")}`
+          `1 запрос к <b>GPT-4</b> = ${gptokenString(usagePoints.text)}`,
+          `1 картинка <b>DALL-E 3</b> = от ${gptokenString(usagePoints.image, "Genitive")}`
         )
       )
     )
@@ -89,7 +93,7 @@ async function mainHandler(ctx: BotContext) {
     "Ваши продукты:",
     ...subscriptions
       .map(subscription => getSubscriptionPlan(subscription))
-      .map(plan => getPlanDescription(plan, "shortest"))
+      .map(plan => getPlanDescription(plan, "short"))
   ];
 
   const coupons = getUserActiveCoupons(user);
@@ -318,9 +322,9 @@ function listProducts(products: Product[]): MessagesAndButtons {
   const buttons: ButtonLike[] = [];
 
   for (const product of products) {
-    const productPlan = getSubscriptionPlan(product);
+    const productPlan = getProductPlan(product);
 
-    messages.push(getPlanDescription(productPlan, "short"));
+    messages.push(getPlanDescription(productPlan, "long"));
     buttons.push(productButton(product));
   }
 

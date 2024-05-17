@@ -53,5 +53,7 @@ export const symbols = {
   bullet: "🔹",
   warning: "⚠",
   coupon: "🎫",
-  stop: "⛔"
+  stop: "⛔",
+  cross: "❌",
+  success: "✅"
 } as const;
