@@ -1,6 +1,7 @@
-import { getItem, putItem, scanItem, scanItems, updateItem } from "../lib/database";
+import { getItem, putItem, scanItems, updateItem } from "../lib/database";
 import { User } from "../entities/user";
 import { User as TelegrafUser } from "telegraf/types";
+import { first } from "../lib/common";
 
 const usersTable = process.env.USERS_TABLE!;
 
@@ -25,13 +26,19 @@ export async function getUser(id: string): Promise<User | null> {
 }
 
 export async function getUserByTelegramId(telegramId: number): Promise<User | null> {
-  return await scanItem<User>(
+  // for some reason the users can get duplicated
+  // that's why we get all users by the telegram id and select the oldest one
+  const users = await scanItems<User>(
     usersTable,
     "telegramId = :tid",
     {
       ":tid": telegramId
     }
   );
+
+  const sortedUsers = users.sort((a, b) => a.createdAt - b.createdAt);
+
+  return first(sortedUsers);
 }
 
 export async function updateUser(user: User, changes: Partial<User>): Promise<User> {
