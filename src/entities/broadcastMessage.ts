@@ -1,8 +1,10 @@
 import { Entity } from "../lib/types";
 import { At } from "./at";
 
+export type BroadcastSuccessStatus = "success" | "test";
+
 type Success = {
-  status: "success" | "test";
+  status: BroadcastSuccessStatus;
 };
 
 type Fail = {

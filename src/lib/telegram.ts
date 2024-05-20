@@ -1,6 +1,6 @@
 import { InlineKeyboardButton, InlineKeyboardMarkup, Message, ReplyKeyboardMarkup, ReplyKeyboardRemove, User as TelegrafUser } from "telegraf/types";
 import { StringLike, last, toText } from "./common";
-import { Markup } from "telegraf";
+import { Markup, TelegramError } from "telegraf";
 import { settings } from "./constants";
 import { BotContext } from "../telegram/botContext";
 
@@ -179,6 +179,10 @@ export function extractArgs(ctx: BotContext): string[] | null {
   const { args } = parseCommandWithArgs(ctx.message.text);
 
   return args;
+}
+
+export function isTelegramError(error: unknown): error is TelegramError {
+  return error instanceof TelegramError;
 }
 
 async function replyWithSlices(ctx: BotContext, slices: string[]): Promise<Message.TextMessage[]> {

@@ -1,6 +1,6 @@
 import { User as TelegrafUser } from "telegraf/types";
 import { Message } from "../entities/message";
-import { User } from "../entities/user";
+import { InactivityRecord, User } from "../entities/user";
 import { getUser, getUserByTelegramId, storeUser, updateUser } from "../storage/userStorage";
 import { Context } from "../entities/context";
 import { Prompt, customPromptCode, noPromptCode } from "../entities/prompt";
@@ -13,7 +13,7 @@ import { PurchasedProduct } from "../entities/product";
 import { isProductActive, productToPurchasedProduct } from "./productService";
 import { Coupon } from "../entities/coupon";
 import { isCouponActive } from "./couponService";
-import { atSort } from "../entities/at";
+import { atSort, now } from "../entities/at";
 import { cipherNumber } from "./cipherService";
 
 type CurrentContext = {
@@ -262,6 +262,34 @@ export function getUserActiveCoupons(user: User): Coupon[] {
 export function getUserInviteLink(user: User): string {
   const cipheredUserId = cipherNumber(user.telegramId);
   return `${config.botUrl}?start=${cipheredUserId}`;
+}
+
+export async function desactivateUser(
+  user: User,
+  inactivityRecord: InactivityRecord
+): Promise<User> {
+  return await updateUser(
+    user,
+    {
+      status: {
+        isActive: false,
+        updatedAt: now(),
+        inactivityRecord
+      }
+    }
+  );
+}
+
+export async function activateUser(user: User): Promise<User> {
+  return await updateUser(
+    user,
+    {
+      status: {
+        isActive: true,
+        updatedAt: now()
+      }
+    }
+  );
 }
 
 async function updateUserContext(user: User, context: Context): Promise<User> {

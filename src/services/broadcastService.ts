@@ -1,8 +1,9 @@
 import { now } from "../entities/at";
-import { BroadcastMessage } from "../entities/broadcastMessage";
+import { BroadcastMessage, BroadcastSuccessStatus } from "../entities/broadcastMessage";
 import { BroadcastRequest } from "../entities/broadcastRequest";
 import { User } from "../entities/user";
 import { isEmpty, isUndefined, toText } from "../lib/common";
+import { isError } from "../lib/error";
 import { findBroadcastMessages, storeBroadcastMessage, updateBroadcastMessage } from "../storage/broadcastMessageStorage";
 import { getBroadcastRequest } from "../storage/broadcastRequestStorage";
 import { getAllUsers } from "../storage/userStorage";
@@ -44,53 +45,57 @@ export async function processBroadcastRequest(request: BroadcastRequest) {
 
 export async function sendBroadcastMessage(broadcastMessage: BroadcastMessage) {
   const userId = broadcastMessage.userId;
+  const user = await getUserById(userId);
 
-  try {
-    const user = await getUserById(userId);
-
-    if (!user) {
-      throw new Error(`User ${userId} not found.`);
-    }
-
-    const isTest = broadcastMessage.isTest;
-
-    if (!isTest) {
-      await sendTelegramMessage(user, broadcastMessage.message);
-    }
-
-    await updateBroadcastMessage(
-      broadcastMessage,
-      {
-        sentAt: now(),
-        sendResult: {
-          status: isTest ? "test" : "success"
-        }
-      }
-    );
-
-    await putMetric("BroadcastMessageSent");
-  } catch (error) {
-    // what happens here is one of:
-    // - user not found
-    // - "Forbidden: bot was blocked by the user"
-    // - "Forbidden: user is deactivated"
-    // the last two can be used to detect that the bot was blocked by the user
-    // currently, it's not used but could be helpful to update the user status
-    console.error(error);
-
-    await updateBroadcastMessage(
-      broadcastMessage,
-      {
-        sentAt: now(),
-        sendResult: {
-          status: "fail",
-          error
-        }
-      }
-    );
-
-    await putMetric("BroadcastMessageFailed");
+  if (!user) {
+    await broadcastFailed(broadcastMessage, `User ${userId} not found.`);
+    return;
   }
+
+  if (broadcastMessage.isTest) {
+    await broadcastSucceeded(broadcastMessage, "test");
+    return;
+  }
+
+  const sendResult = await sendTelegramMessage(user, broadcastMessage.message);
+
+  if (isError(sendResult)) {
+    await broadcastFailed(broadcastMessage, sendResult);
+  } else {
+    await broadcastSucceeded(broadcastMessage, "success");
+  }
+}
+
+async function broadcastSucceeded(
+  broadcastMessage: BroadcastMessage,
+  status: BroadcastSuccessStatus
+) {
+  await updateBroadcastMessage(
+    broadcastMessage,
+    {
+      sentAt: now(),
+      sendResult: {
+        status
+      }
+    }
+  );
+
+  await putMetric("BroadcastMessageSent");
+}
+
+async function broadcastFailed(broadcastMessage: BroadcastMessage, error: unknown) {
+  await updateBroadcastMessage(
+    broadcastMessage,
+    {
+      sentAt: now(),
+      sendResult: {
+        status: "fail",
+        error
+      }
+    }
+  );
+
+  await putMetric("BroadcastMessageFailed");
 }
 
 async function createBroadcastMessages(

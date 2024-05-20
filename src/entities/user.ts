@@ -1,3 +1,4 @@
+import { TelegramError } from "telegraf";
 import { Entity } from "../lib/types";
 import { At } from "./at";
 import { Context } from "./context";
@@ -28,6 +29,17 @@ export type UserSettings = {
   isDebugMode?: boolean;
 };
 
+export type InactivityRecord = {
+  reason: string;
+  error?: TelegramError;
+};
+
+type UserStatus = {
+  isActive: boolean;
+  updatedAt: At;
+  inactivityRecord?: InactivityRecord;
+};
+
 export type User = Entity & {
   telegramId: number;
   firstName?: string;
@@ -47,4 +59,5 @@ export type User = Entity & {
   isTester?: boolean;
   inviteeIds?: string[];
   invitedById?: string;
+  status?: UserStatus;
 }

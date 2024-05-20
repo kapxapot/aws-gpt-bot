@@ -1,8 +1,8 @@
 import { Scenes, Telegraf, session } from "telegraf";
 import { message } from "telegraf/filters";
 import { TelegramRequest } from "../entities/telegramRequest";
-import { clearAndLeave, parseCommandWithArgs, reply, userName } from "../lib/telegram";
-import { getOrAddUser } from "../services/userService";
+import { clearAndLeave, isTelegramError, parseCommandWithArgs, reply, userName } from "../lib/telegram";
+import { activateUser, desactivateUser, getOrAddUser } from "../services/userService";
 import { tutorialScene } from "./scenes/tutorialScene";
 import { BotContext } from "./botContext";
 import { commands, scenes, symbols } from "../lib/constants";
@@ -12,10 +12,10 @@ import { User } from "../entities/user";
 import { inspect } from "util";
 import { notAllowedMessage, sendMessageToGpt, withUser } from "../services/messageService";
 import { modeScene } from "./scenes/modeScene";
-import { getUserByTelegramId, getUsersCount, updateUser } from "../storage/userStorage";
+import { getUserByTelegramId, getUsersCount, storeUser, updateUser } from "../storage/userStorage";
 import { putMetric } from "../services/metricService";
 import { isDebugMode } from "../services/userSettingsService";
-import { Update } from "telegraf/types";
+import { Message, Update } from "telegraf/types";
 import { sessionStore } from "./sessionStore";
 import { imageScene } from "./scenes/imageScene";
 import { gotoPremiumAction, remindAction } from "../lib/dialog";
@@ -25,6 +25,7 @@ import { couponsScene } from "./scenes/couponsScene";
 import { canUseGpt } from "../services/permissionService";
 import { issueCoupon } from "../services/couponService";
 import { decipherNumber } from "../services/cipherService";
+import { Result } from "../lib/error";
 
 const config = {
   botToken: process.env.BOT_TOKEN!,
@@ -50,12 +51,18 @@ export async function processTelegramRequest(tgRequest: TelegramRequest) {
   bot.use(stage.middleware());
 
   bot.start(async ctx => {
-    let user = await getOrAddUser(ctx.from);
-    const newUser = !user.context;
+    let user = await getUserByTelegramId(ctx.from.id)
+    const newUser = user === null;
+
+    if (!user) {
+      user = await storeUser(ctx.from);
+    }
+
+    user = await activateUser(user);
 
     const promoMessages = [
       `Приглашайте друзей и получайте 🎁 подарки: /${commands.invite}`,
-      `Также вы получите 🎁 подарок, вступив в наш фан-клуб: @${config.fanClub}, где также всегда можно задать вопросы и поделиться идеями.`,
+      `Также вы получите 🎁 подарок, вступив в наш фан-клуб: @${config.fanClub}, где всегда можно задать вопросы и поделиться идеями.`,
       `Приобретайте пакеты услуг /${commands.premium} для увеличения числа запросов к <b>GPT-3.5</b> и получения доступа к <b>GPT-4</b> и <b>DALL-E</b>.`
     ];
 
@@ -63,7 +70,9 @@ export async function processTelegramRequest(tgRequest: TelegramRequest) {
       await reply(
         ctx,
         `С возвращением, <b>${userName(ctx.from)}</b>!`,
-        ...bulletize(...promoMessages)
+        toCompactText(
+          ...bulletize(...promoMessages)
+        )
       );
 
       await backToChatHandler(ctx);
@@ -138,16 +147,39 @@ export async function processTelegramRequest(tgRequest: TelegramRequest) {
   await bot.handleUpdate(tgRequest.request as Update);
 }
 
-export async function sendTelegramMessage(user: User, message: string) {
+export async function sendTelegramMessage(
+  user: User,
+  text: string
+): Promise<Result<Message.TextMessage>> {
   const bot = getBot();
 
-  await bot.telegram.sendMessage(
-    user.telegramId,
-    message,
-    {
-      parse_mode: "HTML"
+  try {
+    const message = await bot.telegram.sendMessage(
+      user.telegramId,
+      text,
+      {
+        parse_mode: "HTML"
+      }
+    );
+
+    return message;
+  } catch (error) {
+    console.error(error);
+
+    if (isTelegramError(error)) {
+      await desactivateUser(
+        user,
+        {
+          reason: error.response.description,
+          error
+        }
+      );
+
+      return error;
     }
-  );
+
+    return new Error("Неизвестная ошибка при отправке сообщения в Telegram.");
+  }
 }
 
 function getBot() {
@@ -160,33 +192,46 @@ function getBot() {
 }
 
 async function processStartParam(user: User, startParam: string) {
-  const userChanges: Partial<User> = {};
-
   if (!isNumeric(startParam)) {
-    userChanges.source = startParam;
-  } else {
-    const inviterTelegramId = decipherNumber(startParam);
-    let inviter = await getUserByTelegramId(inviterTelegramId);
-
-    if (inviter) {
-      // inviter is found
-      // link two users and issue a reward for the inviter
-      userChanges.invitedById = inviter.id;
-
-      inviter = await updateUser(
-        inviter,
-        {
-          inviteeIds: [
-            ...inviter.inviteeIds ?? [],
-            user.id
-          ]
-        }
-      );
-
-      await issueCoupon(inviter, "invite");
-      await putMetric("UserRegisteredByInvite");
-    }
+    // generic param - source
+    return await updateUser(
+      user,
+      {
+        source: startParam
+      }
+    );
   }
 
-  return await updateUser(user, userChanges);
+  // numeric param - invite
+  const inviterTelegramId = decipherNumber(startParam);
+  const inviter = await getUserByTelegramId(inviterTelegramId);
+
+  if (inviter) {
+    // inviter is found
+    // link two users and issue a reward for the inviter
+    await updateUser(
+      inviter,
+      {
+        inviteeIds: [
+          ...inviter.inviteeIds ?? [],
+          user.id
+        ]
+      }
+    );
+
+    await sendTelegramMessage(inviter, `🔥 Новый пользователь присоединился по вашей ссылке!`);
+    await issueCoupon(inviter, "invite");
+
+    await putMetric("UserRegisteredByInvite");
+
+    return await updateUser(
+      user,
+      {
+        source: "invite",
+        invitedById: inviter.id
+      }
+    );
+  }
+
+  return user;
 }
