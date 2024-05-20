@@ -4,7 +4,7 @@ import { scenes, settings, symbols } from "../../lib/constants";
 import { addSceneCommandHandlers, backToChatHandler, dunnoHandler, kickHandler } from "../handlers";
 import { message } from "telegraf/filters";
 import { backToStartAction, cancelAction, cancelButton } from "../../lib/dialog";
-import { getUserOrLeave } from "../../services/messageService";
+import { withUser } from "../../services/messageService";
 import { getUserActiveCoupons } from "../../services/userService";
 import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { formatWordNumber } from "../../services/grammarService";
@@ -42,12 +42,13 @@ scene.action(backToStartAction, async ctx => {
 });
 
 scene.on(message("text"), async ctx => {
-  const user = await getUserOrLeave(ctx);
+  await withUser(
+    ctx,
+    async user => await textHandler(ctx, user, ctx.message.text)
+  );
+});
 
-  if (!user) {
-    return;
-  }
-
+async function textHandler(ctx: BotContext, user: User, text: string) {
   await clearInlineKeyboard(ctx);
 
   const { displayCouponData } = buildCouponContext(user);
@@ -55,22 +56,9 @@ scene.on(message("text"), async ctx => {
   for (const couponData of displayCouponData) {
     const { coupon, activateCommand } = couponData;
 
-    if (activateCommand === ctx.message.text) {
+    if (activateCommand === text) {
       try {
-        // activate coupon
-        const product = await activateCoupon(user, coupon);
-
-        // купон активирован
-        await replyWithKeyboard(
-          ctx,
-          inlineKeyboard(
-            ["Активировать еще один", backToStartAction],
-            cancelButton
-          ),
-          `${symbols.success} Вы успешно активировали купон!`,
-          `Вам добавлен ${formatProductName(product)}`
-        );
-
+        await activateUserCoupon(ctx, user, coupon);
         return;
       } catch (error) {
         await reply(ctx, `${symbols.cross} Ошибка активации купона ${coupon.id}. ${error}`);
@@ -79,7 +67,21 @@ scene.on(message("text"), async ctx => {
   }
 
   await backToChatHandler(ctx);
-});
+}
+
+async function activateUserCoupon(ctx: BotContext, user: User, coupon: Coupon) {
+  const product = await activateCoupon(user, coupon);
+
+  await replyWithKeyboard(
+    ctx,
+    inlineKeyboard(
+      ["Активировать еще один", backToStartAction],
+      cancelButton
+    ),
+    `${symbols.success} Вы успешно активировали купон!`,
+    `Вам добавлен ${formatProductName(product)}`
+  );
+}
 
 scene.use(kickHandler);
 scene.use(dunnoHandler);
@@ -87,12 +89,13 @@ scene.use(dunnoHandler);
 export const couponsScene = scene;
 
 async function mainHandler(ctx: BotContext) {
-  const user = await getUserOrLeave(ctx);
+  await withUser(
+    ctx,
+    async user => await displayCoupons(ctx, user)
+  );
+}
 
-  if (!user) {
-    return;
-  }
-
+async function displayCoupons(ctx: BotContext, user: User) {
   const { displayCouponData, totalCount, remainingCount } = buildCouponContext(user);
 
   if (!totalCount) {
@@ -109,23 +112,24 @@ async function mainHandler(ctx: BotContext) {
     ctx,
     inlineKeyboard(cancelButton),
     `У вас ${formatWordNumber("купон", totalCount)} на следующие продукты:`,
-    ...displayCouponData
-      .map(couponData => {
-        const { coupon, activateCommand } = couponData;
-        const product = getProductByCode(coupon.productCode);
-        const plan = getProductPlan(product);
-
-        return toText(
-          toCompactText(
-            getPlanDescription(plan, "short"),
-            bullet(`Купон действует по ${formatCouponExpiration(coupon)}`)
-          ),
-          `🚀 Активировать: ${activateCommand}`
-        );
-      }),
+    ...displayCouponData.map(couponData => couponDescription(couponData)),
     remainingCount
       ? `И еще ${formatWordNumber("купон", remainingCount)}...`
       : null
+  );
+}
+
+function couponDescription(couponData: CouponData): string {
+  const { coupon, activateCommand } = couponData;
+  const product = getProductByCode(coupon.productCode);
+  const plan = getProductPlan(product);
+
+  return toText(
+    toCompactText(
+      getPlanDescription(plan, "short"),
+      bullet(`Купон действует по ${formatCouponExpiration(coupon)}`)
+    ),
+    `🚀 Активировать: ${activateCommand}`
   );
 }
 

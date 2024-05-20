@@ -4,6 +4,7 @@ export type MetricName =
   "MessageSent" |
   "TokensUsed" |
   "UserRegistered" |
+  "UserRegisteredByInvite" |
   "UsersTotal" |
   "BroadcastMessageSent" |
   "BroadcastMessageFailed" |

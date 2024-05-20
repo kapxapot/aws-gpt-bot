@@ -8,7 +8,8 @@ export const commands = {
   temperature: "temp",
   status: "status",
   chat: "chat",
-  coupons: "coupons"
+  coupons: "coupons",
+  invite: "invite"
 } as const;
 
 export const commonMessages = {

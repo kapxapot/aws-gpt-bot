@@ -1,3 +1,5 @@
+import { isNumeric } from "../lib/common";
+
 const config = {
   rotationKey: process.env.ROTATION_KEY!
 };
@@ -45,6 +47,10 @@ export function numberToDigitArray(num: number): number[] {
 }
 
 export function stringToDigitArray(str: string): number[] {
+  if (!isNumeric(str)) {
+    throw new Error(`${str} is not a numeric string.`);
+  }
+
   return [...str].map(ch => Number(ch));
 }
 

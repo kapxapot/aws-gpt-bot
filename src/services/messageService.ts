@@ -194,6 +194,14 @@ export async function showLastHistoryMessage(ctx: BotContext, user: User, fallba
   }
 }
 
+export async function withUser(ctx: BotContext, func: (user: User) => Promise<void>): Promise<void> {
+  const user = await getUserOrLeave(ctx);
+
+  if (user) {
+    await func(user);
+  }
+}
+
 export async function getUserOrLeave(ctx: BotContext): Promise<User | null> {
   if (ctx.from) {
     return await getOrAddUser(ctx.from);
@@ -204,6 +212,7 @@ export async function getUserOrLeave(ctx: BotContext): Promise<User | null> {
   }
 
   console.error(new Error("User not found (empty ctx.from)."));
+
   await putMetric("Error");
   await putMetric("UserNotFoundError");
 

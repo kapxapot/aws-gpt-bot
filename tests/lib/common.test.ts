@@ -1,4 +1,4 @@
-import { andJoin, capitalize, commatize, isNumber, orJoin, phoneToItu, toCleanArray, toCompactText, toText } from "../../src/lib/common";
+import { andJoin, capitalize, commatize, isNumber, isNumeric, orJoin, phoneToItu, toCleanArray, toCompactText, toText } from "../../src/lib/common";
 
 const uglyArray = [
   "",
@@ -48,6 +48,24 @@ describe("phoneToItu", () => {
   test("should return only numbers", () => {
     expect(phoneToItu(" adfg89314958dkafljgalg 89 ")).toBe("8931495889");
   })
+});
+
+describe("isNumeric", () => {
+  test("works for numeric strings", () => {
+    expect(isNumeric("0123")).toBe(true)
+  });
+
+  test("doesn't work for non-numeric strings", () => {
+    expect([
+      isNumeric(""),
+      isNumeric("123234a"),
+      isNumber("abc")
+    ]).toEqual([
+      false,
+      false,
+      false
+    ])
+  });
 });
 
 describe("isNumber", () => {

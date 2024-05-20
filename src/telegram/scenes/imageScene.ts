@@ -7,7 +7,7 @@ import { message } from "telegraf/filters";
 import { generateImageWithGpt } from "../../services/imageService";
 import { ImageStage, SessionData } from "../session";
 import { backToStartAction, cancelAction, cancelButton, gotoPremiumAction, gotoPremiumButton } from "../../lib/dialog";
-import { getUserOrLeave, notAllowedMessage, replyBackToMainDialog } from "../../services/messageService";
+import { notAllowedMessage, replyBackToMainDialog, withUser } from "../../services/messageService";
 import { capitalize, cleanJoin, toCompactText, toText } from "../../lib/common";
 import { gptokenString } from "../../services/gptokenService";
 import { bullet, bulletize } from "../../lib/text";
@@ -31,25 +31,20 @@ scene.on(message("text"), async ctx => {
   if (isStage(ctx.session, "imagePromptInput")) {
     await clearInlineKeyboard(ctx);
 
-    const user = await getUserOrLeave(ctx);
+    await withUser(ctx, async user => {
+      const imageModelContext = await getImageModelContext(ctx, user);
 
-    if (!user) {
-      return;
-    }
+      if (!imageModelContext) {
+        return;
+      }
 
-    const imageModelContext = await getImageModelContext(ctx, user);
+      const imagePrompt = ctx.message.text;
+      const result = await generateImageWithGpt(ctx, imageModelContext, user, imagePrompt);
 
-    if (!imageModelContext) {
-      return;
-    }
-
-    const imagePrompt = ctx.message.text;
-
-    const result = await generateImageWithGpt(ctx, imageModelContext, user, imagePrompt);
-
-    if (result) {
-      setStage(ctx.session, "imageCreated");
-    }
+      if (result) {
+        setStage(ctx.session, "imageCreated");
+      }
+    });
 
     return;
   }
@@ -77,12 +72,13 @@ scene.use(dunnoHandler);
 export const imageScene = scene;
 
 async function mainHandler(ctx: BotContext) {
-  const user = await getUserOrLeave(ctx);
+  await withUser(
+    ctx,
+    async user => await imagePromptInput(ctx, user)
+  );
+}
 
-  if (!user) {
-    return;
-  }
-
+async function imagePromptInput(ctx: BotContext, user: User) {
   if (!canGenerateImages(user)) {
     await replyBackToMainDialog(
       ctx,

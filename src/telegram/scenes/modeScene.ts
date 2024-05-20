@@ -6,7 +6,7 @@ import { backToCustomPrompt, getOrAddUser, newCustomPrompt, setFreeMode, setProm
 import { getModeName, getModes, getPrompts } from "../../entities/prompt";
 import { addSceneCommandHandlers, backToChatHandler, dunnoHandler, kickHandler } from "../handlers";
 import { message } from "telegraf/filters";
-import { getUserOrLeave, replyBackToMainDialog, sendMessageToGpt } from "../../services/messageService";
+import { replyBackToMainDialog, sendMessageToGpt, withUser } from "../../services/messageService";
 import { ModeStage, SessionData } from "../session";
 import { cancelAction, cancelButton } from "../../lib/dialog";
 
@@ -21,30 +21,26 @@ scene.enter(modeSelectionHandler);
 async function modeSelectionHandler(ctx: BotContext) {
   setStage(ctx.session, "modeSelection");
 
-  const user = await getUserOrLeave(ctx);
+  await withUser(ctx, async user => {
+    const messages = [
+      `Текущий режим: <b>${getModeName(user)}</b>`,
+      "Выберите желаемый режим:"
+    ];
 
-  if (!user) {
-    return;
-  }
+    const buttons = [];
 
-  const messages = [
-    `Текущий режим: <b>${getModeName(user)}</b>`,
-    "Выберите желаемый режим:"
-  ];
+    getModes().forEach(mode => {
+      buttons.push([mode.name, mode.code]);
+    })
 
-  const buttons = [];
+    buttons.push(cancelButton);
 
-  getModes().forEach(mode => {
-    buttons.push([mode.name, mode.code]);
-  })
-
-  buttons.push(cancelButton);
-
-  await replyWithKeyboard(
-    ctx,
-    inlineKeyboard(...buttons),
-    ...messages
-  );
+    await replyWithKeyboard(
+      ctx,
+      inlineKeyboard(...buttons),
+      ...messages
+    );
+  });
 }
 
 addSceneCommandHandlers(scene);
@@ -122,37 +118,28 @@ getModes().forEach(mode => {
 });
 
 scene.action(selectFreeModeAction, async ctx => {
-  const user = await getUserOrLeave(ctx);
+  await withUser(ctx, async user => {
+    await setFreeMode(user);
 
-  if (!user) {
-    return;
-  }
-
-  await setFreeMode(user);
-
-  await replyBackToMainDialog(
-    ctx,
-    `Вы перешли в режим <b>«${getModeName(user)}»</b>.`
-  );
+    await replyBackToMainDialog(
+      ctx,
+      `Вы перешли в режим <b>«${getModeName(user)}»</b>.`
+    );
+  });
 });
 
 getPrompts().forEach(prompt => {
   scene.action(prompt.code, async ctx => {
     if (isStage(ctx.session, "roleSelection")) {
-      // set prompt
-      const user = await getUserOrLeave(ctx);
+      await withUser(ctx, async user => {
+        await setPrompt(user, prompt);
 
-      if (!user) {
-        return;
-      }
-
-      await setPrompt(user, prompt);
-
-      await replyBackToMainDialog(
-        ctx,
-        `Вы выбрали роль <b>«${prompt.name}»</b>.`,
-        prompt.intro
-      );
+        await replyBackToMainDialog(
+          ctx,
+          `Вы выбрали роль <b>«${prompt.name}»</b>.`,
+          prompt.intro
+        );
+      });
     }
   });
 });
@@ -170,18 +157,14 @@ scene.action(customPromptAction, async ctx => {
 });
 
 scene.action(backToCustomPromptAction, async ctx => {
-  const user = await getUserOrLeave(ctx);
+  await withUser(ctx, async user => {
+    await backToCustomPrompt(user);
 
-  if (!user) {
-    return;
-  }
-
-  await backToCustomPrompt(user);
-
-  await replyBackToMainDialog(
-    ctx,
-    "Вы вернулись к своему промту."
-  );
+    await replyBackToMainDialog(
+      ctx,
+      "Вы вернулись к своему промту."
+    );
+  });
 });
 
 scene.on(message("text"), async ctx => {

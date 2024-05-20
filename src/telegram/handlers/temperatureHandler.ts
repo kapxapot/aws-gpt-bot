@@ -1,6 +1,6 @@
 import { settings } from "../../lib/constants";
 import { extractArgs, reply } from "../../lib/telegram";
-import { getUserOrLeave } from "../../services/messageService";
+import { withUser } from "../../services/messageService";
 import { getUserTemperature, updateUserSettings } from "../../services/userSettingsService";
 import { BotContext } from "../botContext";
 
@@ -10,27 +10,23 @@ export async function temperatureHandler(ctx: BotContext) {
 
   const badInput = `Укажите желаемую температуру через пробел в виде дробного числа от ${minTemperature} до ${maxTemperature}.`;
 
-  const user = await getUserOrLeave(ctx);
+  await withUser(ctx, async user => {
+    const args = extractArgs(ctx);
 
-  if (!user) {
-    return;
-  }
+    if (!args?.length) {
+      await reply(ctx, `Текущая температура: ${getUserTemperature(user)}`);
+      return;
+    }
 
-  const args = extractArgs(ctx);
+    const temp = parseFloat(args[0].replace(",", "."));
 
-  if (!args?.length) {
-    await reply(ctx, `Текущая температура: ${getUserTemperature(user)}`);
-    return;
-  }
+    if (!Number.isFinite(temp) || temp < minTemperature || temp > maxTemperature) {
+      await reply(ctx, badInput);
+      return;
+    }
 
-  const temp = parseFloat(args[0].replace(",", "."));
+    await updateUserSettings(user, { temperature: temp });
 
-  if (!Number.isFinite(temp) || temp < minTemperature || temp > maxTemperature) {
-    await reply(ctx, badInput);
-    return;
-  }
-
-  await updateUserSettings(user, { temperature: temp });
-
-  reply(ctx, "Температура успешно изменена.");
+    reply(ctx, "Температура успешно изменена.");
+  });
 }

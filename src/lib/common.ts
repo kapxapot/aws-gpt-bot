@@ -47,6 +47,10 @@ export function phoneToItu(phone: string | undefined): string | null {
   return phone.replace(/\D/g, '') || null;
 }
 
+export function isNumeric(str: string): boolean {
+  return /^\d+$/.test(str);
+}
+
 export function isNumber(v: unknown): v is number {
   return typeof v === "number";
 }

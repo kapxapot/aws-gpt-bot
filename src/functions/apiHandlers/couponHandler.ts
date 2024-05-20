@@ -1,5 +1,5 @@
 import { CouponCode } from "../../entities/coupon";
-import { issueCoupon, getCouponTemplateByCode } from "../../services/couponService";
+import { issueCoupon } from "../../services/couponService";
 import { getUserById } from "../../services/userService";
 
 type CouponPayload = {
@@ -41,11 +41,5 @@ export async function couponHandler(payload: CouponPayload) {
     throw new Error("`code` is required.");
   }
 
-  const template = getCouponTemplateByCode(code);
-
-  if (!template) {
-    throw new Error(`Unknown coupon code: ${code} (template not found).`);
-  }
-
-  await issueCoupon(user, template);
+  await issueCoupon(user, code);
 }

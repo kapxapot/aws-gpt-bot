@@ -45,4 +45,6 @@ export type User = Entity & {
   settings?: UserSettings;
   source?: string;
   isTester?: boolean;
+  inviteeIds?: string[];
+  invitedById?: string;
 }

@@ -1,5 +1,5 @@
 import { TimeSpan, now } from "../entities/at";
-import { Coupon, CouponCode, CouponTemplate, couponFanclubPromo, couponInvite, couponPollReward, couponWelcome } from "../entities/coupon";
+import { Coupon, CouponCode, CouponTemplate, couponTemplates } from "../entities/coupon";
 import { intervalWords } from "../entities/interval";
 import { PurchasedProduct } from "../entities/product";
 import { User } from "../entities/user";
@@ -14,22 +14,17 @@ import { formatProductName, getProductByCode, productToPurchasedProduct } from "
 import { addUserCoupon, addUserProduct, updateUserCoupon } from "./userService";
 
 export function getCouponTemplateByCode(code: CouponCode): CouponTemplate {
-  switch (code) {
-    case "poll-reward":
-      return couponPollReward;
+  const template = couponTemplates.find(ct => ct.code === code);
 
-    case "invite":
-      return couponInvite;
-
-    case "welcome":
-      return couponWelcome;
-
-    case "fanclub-promo":
-      return couponFanclubPromo;
+  if (!template) {
+    throw new Error(`Coupon template not found. Unknown coupon code: ${code}.`)
   }
+
+  return template;
 }
 
-export async function issueCoupon(user: User, template: CouponTemplate): Promise<Coupon> {
+export async function issueCoupon(user: User, code: CouponCode): Promise<Coupon> {
+  const template = getCouponTemplateByCode(code);
   const coupon = createCoupon(template);
   await addUserCoupon(user, coupon);
 

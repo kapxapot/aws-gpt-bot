@@ -46,3 +46,10 @@ export const couponFanclubPromo: CouponTemplate = {
   productCode: "bundle-promo-30-days",
   term: days(30)
 };
+
+export const couponTemplates = [
+  couponPollReward,
+  couponWelcome,
+  couponInvite,
+  couponFanclubPromo
+];

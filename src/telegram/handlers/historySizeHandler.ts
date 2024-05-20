@@ -1,6 +1,6 @@
 import { settings } from "../../lib/constants";
 import { extractArgs, reply } from "../../lib/telegram";
-import { getUserOrLeave } from "../../services/messageService";
+import { withUser } from "../../services/messageService";
 import { getUserHistorySize, updateUserSettings } from "../../services/userSettingsService";
 import { BotContext } from "../botContext";
 
@@ -10,27 +10,23 @@ export async function historySizeHandler(ctx: BotContext) {
 
   const badInput = `Укажите желаемый размер истории через пробел в виде целого числа от ${minHistorySize} до ${maxHistorySize}.`;
 
-  const user = await getUserOrLeave(ctx);
+  await withUser(ctx, async user => {
+    const args = extractArgs(ctx);
 
-  if (!user) {
-    return;
-  }
+    if (!args?.length) {
+      await reply(ctx, `Текущий размер истории: ${getUserHistorySize(user)}`);
+      return;
+    }
 
-  const args = extractArgs(ctx);
+    const size = parseInt(args[0]);
 
-  if (!args?.length) {
-    await reply(ctx, `Текущий размер истории: ${getUserHistorySize(user)}`);
-    return;
-  }
+    if (!Number.isFinite(size) || size < minHistorySize || size > maxHistorySize) {
+      await reply(ctx, badInput);
+      return;
+    }
 
-  const size = parseInt(args[0]);
+    await updateUserSettings(user, { historySize: size });
 
-  if (!Number.isFinite(size) || size < minHistorySize || size > maxHistorySize) {
-    await reply(ctx, badInput);
-    return;
-  }
-
-  await updateUserSettings(user, { historySize: size });
-
-  reply(ctx, "Размер истории успешно изменен.");
+    reply(ctx, "Размер истории успешно изменен.");
+  });
 }

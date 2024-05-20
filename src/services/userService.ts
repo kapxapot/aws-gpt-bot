@@ -14,10 +14,15 @@ import { isProductActive, productToPurchasedProduct } from "./productService";
 import { Coupon } from "../entities/coupon";
 import { isCouponActive } from "./couponService";
 import { atSort } from "../entities/at";
+import { cipherNumber } from "./cipherService";
 
 type CurrentContext = {
   prompt: string | null;
   latestMessages: Message[] | null;
+};
+
+const config = {
+  botUrl: process.env.BOT_URL!
 };
 
 export async function getUserById(id: string): Promise<User | null> {
@@ -146,15 +151,6 @@ export function getUserContext(user: User): Context {
   return user.context;
 }
 
-async function updateUserContext(user: User, context: Context): Promise<User> {
-  return await updateUser(
-    user,
-    {
-      context
-    }
-  );
-}
-
 /**
  * Refactor this.
  */
@@ -261,6 +257,20 @@ export function getUserActiveCoupons(user: User): Coupon[] {
   return getUserCoupons(user)
     .filter(coupon => isCouponActive(coupon))
     .sort(atSort(coupon => coupon.issuedAt));
+}
+
+export function getUserInviteLink(user: User): string {
+  const cipheredUserId = cipherNumber(user.telegramId);
+  return `${config.botUrl}?start=${cipheredUserId}`;
+}
+
+async function updateUserContext(user: User, context: Context): Promise<User> {
+  return await updateUser(
+    user,
+    {
+      context
+    }
+  );
 }
 
 /**

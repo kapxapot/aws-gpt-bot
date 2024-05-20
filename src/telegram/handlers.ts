@@ -5,10 +5,12 @@ import { commands, commonMessages, scenes } from "../lib/constants";
 import { clearAndLeave, clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
 import { historySizeHandler } from "./handlers/historySizeHandler";
 import { temperatureHandler } from "./handlers/temperatureHandler";
-import { getStatusMessage, getUserOrLeave, showLastHistoryMessage, showStatus } from "../services/messageService";
+import { getStatusMessage, showLastHistoryMessage, showStatus, withUser } from "../services/messageService";
 import { isDebugMode } from "../services/userSettingsService";
-import { userHasHistoryMessage } from "../services/userService";
+import { getUserInviteLink, userHasHistoryMessage } from "../services/userService";
 import { remindButton } from "../lib/dialog";
+import { getCouponTemplateByCode } from "../services/couponService";
+import { formatProductName, getProductByCode } from "../services/productService";
 
 type Handler = (ctx: BotContext) => Promise<void | unknown>;
 type HandlerTuple = [command: string, handler: Handler];
@@ -36,7 +38,8 @@ export function getCommandHandlers(): HandlerTuple[] {
     [commands.temperature, temperatureHandler],
     [commands.chat, backToChatHandler],
     [commands.support, supportHandler],
-    [commands.status, statusHandler]
+    [commands.status, statusHandler],
+    [commands.invite, inviteHandler],
   ];
 }
 
@@ -54,11 +57,11 @@ export async function kickHandler(ctx: BotContext, next: () => Promise<void>) {
 }
 
 export async function dunnoHandler(ctx: BotContext) {
-  const user = await getUserOrLeave(ctx);
-
-  if (isDebugMode(user)) {
-    console.log(inspect(ctx));
-  }
+  await withUser(ctx, async user => {
+    if (isDebugMode(user)) {
+      console.log(inspect(ctx));
+    }
+  });
 
   await reply(ctx, `Я не понял ваш запрос. ${commonMessages.useTheKeyboard}`);
 }
@@ -71,34 +74,30 @@ export async function dunnoHandler(ctx: BotContext) {
 export async function backToChatHandler(ctx: BotContext) {
   await clearAndLeave(ctx);
 
-  const user = await getUserOrLeave(ctx);
+  await withUser(ctx, async user => {
+    const remindKeyboard = userHasHistoryMessage(user)
+      ? inlineKeyboard(remindButton)
+      : null;
 
-  if (!user) {
-    return;
-  }
-
-  const remindKeyboard = userHasHistoryMessage(user)
-    ? inlineKeyboard(remindButton)
-    : null;
-
-  await replyWithKeyboard(
-    ctx,
-    remindKeyboard,
-    commonMessages.backToChat,
-    getStatusMessage(user)
-  );
+    await replyWithKeyboard(
+      ctx,
+      remindKeyboard,
+      commonMessages.backToChat,
+      getStatusMessage(user)
+    );
+  });
 }
 
 export async function remindHandler(ctx: BotContext) {
   await clearInlineKeyboard(ctx);
 
-  const user = await getUserOrLeave(ctx);
-
-  if (!user) {
-    return;
-  }
-
-  await showLastHistoryMessage(ctx, user, "Похоже, разговор только начался. В истории пусто.");
+  await withUser(ctx, async user => {
+    await showLastHistoryMessage(
+      ctx,
+      user,
+      "Похоже, разговор только начался. В истории пусто."
+    );
+  });
 }
 
 function sceneHandler(scene: string): Handler {
@@ -114,11 +113,20 @@ async function supportHandler(ctx: BotContext) {
 }
 
 async function statusHandler(ctx: BotContext) {
-  const user = await getUserOrLeave(ctx);
+  await withUser(ctx, async user => {
+    await showStatus(ctx, user);
+  });
+}
 
-  if (!user) {
-    return;
-  }
+async function inviteHandler(ctx: BotContext) {
+  await withUser(ctx, async user => {
+    const couponTemplate = getCouponTemplateByCode("invite");
+    const product = getProductByCode(couponTemplate.productCode);
 
-  await showStatus(ctx, user);
+    await reply(
+      ctx,
+      `Пригласите друзей в бот и получите купон на активацию ${formatProductName(product, "Genitive")} в подарок! 🎁`,
+      `Поделитесь с друзьями этой ссылкой: ${getUserInviteLink(user)}`
+    );
+  });
 }

@@ -8,7 +8,7 @@ import { isError } from "../../lib/error";
 import { getSubscriptionFullDisplayName, getSubscriptionPlan, getSubscriptionShortName } from "../../services/subscriptionService";
 import { canMakePurchases, canPurchaseProduct } from "../../services/permissionService";
 import { backToStartAction, cancelAction, cancelButton } from "../../lib/dialog";
-import { getUserOrLeave, notAllowedMessage, replyBackToMainDialog } from "../../services/messageService";
+import { getUserOrLeave, notAllowedMessage, replyBackToMainDialog, withUser } from "../../services/messageService";
 import { SessionData } from "../session";
 import { isEmpty, orJoin, phoneToItu, toCompactText, toText } from "../../lib/common";
 import { message } from "telegraf/filters";
@@ -75,12 +75,13 @@ const scene = new BaseScene<BotContext>(scenes.premium);
 scene.enter(mainHandler);
 
 async function mainHandler(ctx: BotContext) {
-  const user = await getUserOrLeave(ctx);
+  await withUser(
+    ctx,
+    async user => await sceneIndex(ctx, user)
+  );
+}
 
-  if (!user) {
-    return;
-  }
-
+async function sceneIndex(ctx: BotContext, user: User) {
   const validProductGroups = filteredProductGroups(user);
   const productCount = validProductGroups.reduce((sum, group) => sum + group.products.length, 0);
 
@@ -152,44 +153,37 @@ for (const group of productGroups) {
 
 async function groupAction(ctx: BotContext, group: ProductGroup) {
   await clearInlineKeyboard(ctx);
-  const user = await getUserOrLeave(ctx);
 
-  if (!user) {
-    return;
-  }
+  await withUser(ctx, async user => {
+    const filteredGroup = filterProductGroup(user, group);
+    const { messages, buttons } = listProducts(filteredGroup.products);
 
-  const filteredGroup = filterProductGroup(user, group);
-
-  const { messages, buttons } = listProducts(filteredGroup.products);
-
-  await replyWithKeyboard(
-    ctx,
-    inlineKeyboard(
-      ...buttons,
-      ["Назад", backToStartAction],
-      cancelButton
-    ),
-    group.description,
-    ...messages
-  );
+    await replyWithKeyboard(
+      ctx,
+      inlineKeyboard(
+        ...buttons,
+        ["Назад", backToStartAction],
+        cancelButton
+      ),
+      group.description,
+      ...messages
+    );
+  });
 }
 
 async function buyAction(ctx: BotContext, productCode: ProductCode) {
   await clearInlineKeyboard(ctx);
-  const user = await getUserOrLeave(ctx);
 
-  if (!user) {
-    return;
-  }
+  await withUser(ctx, async user => {
+    if (user.phoneNumber) {
+      await buyProduct(ctx, productCode);
+      return;
+    }
 
-  if (user.phoneNumber) {
-    await buyProduct(ctx, productCode);
-    return;
-  }
-
-  // ask for phone number and then buy the product
-  setTargetProductCode(ctx.session, productCode);
-  await askForPhone(ctx);
+    // ask for phone number and then buy the product
+    setTargetProductCode(ctx.session, productCode);
+    await askForPhone(ctx);
+  });
 }
 
 async function askForPhone(ctx: BotContext) {
@@ -253,35 +247,31 @@ scene.on(message("contact"), async ctx => {
 async function buyProduct(ctx: BotContext, productCode: ProductCode) {
   await clearInlineKeyboard(ctx);
 
-  const user = await getUserOrLeave(ctx);
+  await withUser(ctx, async user => {
+    const product = getProductByCode(productCode);
+    const payment = await createPayment(user, product);
 
-  if (!user) {
-    return;
-  }
+    if (isError(payment)) {
+      await replyBackToMainDialog(
+        ctx,
+        "Произошла ошибка, оплата временно недоступна. Приносим извинения."
+      );
 
-  const product = getProductByCode(productCode);
-  const payment = await createPayment(user, product);
+      return;
+    }
 
-  if (isError(payment)) {
-    await replyBackToMainDialog(
+    await replyWithKeyboard(
       ctx,
-      "Произошла ошибка, оплата временно недоступна. Приносим извинения."
+      inlineKeyboard(
+        Markup.button.url("Оплатить", payment.url),
+        ["Купить еще один", backToStartAction],
+        cancelButton
+      ),
+      `💳 Для оплаты ${getSubscriptionFullDisplayName(product, "Genitive")} <a href="${payment.url}">пройдите по ссылке</a>.`,
+      `${symbols.warning} Время действия ссылки ограничено. Если вы не успеете оплатить счет, вы можете получить новую ссылку с помощью команды /${commands.premium}`,
+      "Мы сообщим вам, когда получим оплату."
     );
-
-    return;
-  }
-
-  await replyWithKeyboard(
-    ctx,
-    inlineKeyboard(
-      Markup.button.url("Оплатить", payment.url),
-      ["Купить еще один", backToStartAction],
-      cancelButton
-    ),
-    `💳 Для оплаты ${getSubscriptionFullDisplayName(product, "Genitive")} <a href="${payment.url}">пройдите по ссылке</a>.`,
-    `${symbols.warning} Время действия ссылки ограничено. Если вы не успеете оплатить счет, вы можете получить новую ссылку с помощью команды /${commands.premium}`,
-    "Мы сообщим вам, когда получим оплату."
-  );
+  });
 }
 
 scene.action(backToStartAction, async ctx => {
