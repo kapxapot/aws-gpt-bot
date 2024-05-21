@@ -106,7 +106,7 @@ export function formatProductDescriptions(
   products: Product[],
   descriptionMode?: DescriptionMode
 ): StringLike {
-  if (!isEmpty(products)) {
+  if (isEmpty(products)) {
     return null;
   }
 

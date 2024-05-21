@@ -59,7 +59,7 @@ const productGroups: ProductGroup[] = [
       `Пакеты ${symbols.gptoken} гптокенов для работы с <b>GPT-4</b> и <b>DALL-E</b>`,
       toCompactText(
         ...bulletize(
-          `1 запрос к <b>GPT-4</b> = ${gptokenString(usagePoints.text)}`,
+          `1 запрос (~1000 токенов) к <b>GPT-4</b> = ${gptokenString(usagePoints.text)}`,
           `1 картинка <b>DALL-E 3</b> = от ${gptokenString(usagePoints.image, "Genitive")}`
         )
       )
@@ -262,7 +262,7 @@ async function buyProduct(ctx: BotContext, productCode: ProductCode) {
         ["Купить еще один", backToStartAction],
         cancelButton
       ),
-      `💳 Для оплаты ${getSubscriptionFullDisplayName(product, "Genitive")} <a href="${payment.url}">пройдите по ссылке</a>.`,
+      `${symbols.card} Для оплаты ${getSubscriptionFullDisplayName(product, "Genitive")} <a href="${payment.url}">пройдите по ссылке</a>.`,
       `${symbols.warning} Время действия ссылки ограничено. Если вы не успеете оплатить счет, вы можете получить новую ссылку с помощью команды /${commands.premium}`,
       "Мы сообщим вам, когда получим оплату."
     );

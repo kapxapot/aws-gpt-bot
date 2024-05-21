@@ -1,7 +1,7 @@
 import { inspect } from "util";
 import { Composer } from "telegraf";
 import { BotContext } from "./botContext";
-import { commands, commonMessages, scenes } from "../lib/constants";
+import { commands, commonMessages, scenes, symbols } from "../lib/constants";
 import { clearAndLeave, clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
 import { historySizeHandler } from "./handlers/historySizeHandler";
 import { temperatureHandler } from "./handlers/temperatureHandler";
@@ -141,12 +141,13 @@ async function productsHandler(ctx: BotContext) {
       await reply(
         ctx,
         "У вас нет активных продуктов.",
-        `Приобрести: /${commands.premium}`
+        `${symbols.card} Приобрести: /${commands.premium}`
       );
     } else {
       await reply(
         ctx,
-        formatProductDescriptions(products, "long")
+        formatProductDescriptions(products, "long"),
+        `${symbols.card} Приобрести еще: /${commands.premium}`
       );
     }
   });

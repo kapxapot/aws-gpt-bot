@@ -126,7 +126,7 @@ function couponDescription(couponData: CouponData): string {
 
   return toText(
     toCompactText(
-      getPlanDescription(plan, "short"),
+      getPlanDescription(plan),
       bullet(`Купон действует по ${formatCouponExpiration(coupon)}`)
     ),
     `🚀 Активировать: ${activateCommand}`
