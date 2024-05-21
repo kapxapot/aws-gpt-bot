@@ -7,10 +7,11 @@ import { historySizeHandler } from "./handlers/historySizeHandler";
 import { temperatureHandler } from "./handlers/temperatureHandler";
 import { getStatusMessage, showLastHistoryMessage, showStatus, withUser } from "../services/messageService";
 import { isDebugMode } from "../services/userSettingsService";
-import { getUserInviteLink, userHasHistoryMessage } from "../services/userService";
+import { getUserActiveProducts, getUserInviteLink, userHasHistoryMessage } from "../services/userService";
 import { remindButton } from "../lib/dialog";
 import { getCouponTemplateByCode } from "../services/couponService";
-import { formatActiveProducts, formatProductName, getProductByCode } from "../services/productService";
+import { formatProductDescriptions, formatProductName, getProductByCode } from "../services/productService";
+import { isEmpty } from "../lib/common";
 
 type Handler = (ctx: BotContext) => Promise<void | unknown>;
 type HandlerTuple = [command: string, handler: Handler];
@@ -134,9 +135,19 @@ async function inviteHandler(ctx: BotContext) {
 
 async function productsHandler(ctx: BotContext) {
   await withUser(ctx, async user => {
-    await reply(
-      ctx,
-      formatActiveProducts(user)
-    );
+    const products = getUserActiveProducts(user);
+
+    if (isEmpty(products)) {
+      await reply(
+        ctx,
+        "У вас нет активных продуктов.",
+        `Приобрести: /${commands.premium}`
+      );
+    } else {
+      await reply(
+        ctx,
+        formatProductDescriptions(products, "long")
+      );
+    }
   });
 }

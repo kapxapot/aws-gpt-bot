@@ -9,14 +9,16 @@ import { formatMoney } from "./moneyService";
 import { getPlanSettings } from "./planSettingsService";
 import { formatTerm } from "./termService";
 
+export type DescriptionMode = "short" | "long";
+
 export function isPlanActive(plan: Plan) {
   const planSettings = getPlanSettings(plan);
   return !planSettings.disabled;
 }
 
-type DescriptionMode = "short" | "long";
+export function getPlanDescription(plan: Plan, mode?: DescriptionMode): string {
+  mode = mode || "short";
 
-export function getPlanDescription(plan: Plan, mode: DescriptionMode): string {
   const price = (money: MoneyLike, term?: Term) => {
     return (mode !== "short")
       ? `${formatMoney(toMoney(money))} на ${formatTerm(term ?? days(30), "Accusative")}`

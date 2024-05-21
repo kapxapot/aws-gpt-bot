@@ -13,14 +13,14 @@ import { SessionData } from "../session";
 import { StringLike, isEmpty, orJoin, phoneToItu, toCompactText, toText } from "../../lib/common";
 import { message } from "telegraf/filters";
 import { updateUser } from "../../storage/userStorage";
-import { formatActiveProducts, getProductByCode, getProductPlan, gpt3Products, gptokenProducts } from "../../services/productService";
+import { formatProductDescriptions, getProductByCode, getProductPlan, gpt3Products, gptokenProducts } from "../../services/productService";
 import { User } from "../../entities/user";
 import { getPlanDescription } from "../../services/planService";
 import { gptokenString } from "../../services/gptokenService";
 import { bulletize } from "../../lib/text";
 import { createPayment } from "../../services/paymentService";
 import { Markup } from "telegraf";
-import { getUserActiveCoupons } from "../../services/userService";
+import { getUserActiveCoupons, getUserActiveProducts } from "../../services/userService";
 import { formatCouponsString } from "../../services/couponService";
 import { getGptokenUsagePoints } from "../../services/modelUsageService";
 import { getDefaultImageSettings } from "../../services/imageService";
@@ -85,8 +85,11 @@ async function sceneIndex(ctx: BotContext, user: User) {
   const validProductGroups = filteredProductGroups(user);
   const productCount = validProductGroups.reduce((sum, group) => sum + group.products.length, 0);
 
+  const products = getUserActiveProducts(user);
+
   const messages: StringLike[] = [
-    formatActiveProducts(user)
+    formatProductDescriptions(products),
+    getPlanDescription("free")
   ];
 
   const coupons = getUserActiveCoupons(user);

@@ -3,18 +3,16 @@ import { GrammarCase } from "../entities/grammar";
 import { ModelCode } from "../entities/model";
 import { Plan } from "../entities/plan";
 import { PlanSettings } from "../entities/planSettings";
-import { Product, ProductCode, PurchasedProduct, bossBundle, creativeBundle, freeSubscription, isPurchasedProduct, noviceBundle, premiumSubscription, proBundle, promoBundle, studentBundle, testTinyGpt3Bundle, testTinyGptokenBundle, trialBundle, unlimitedSubscription } from "../entities/product";
-import { User } from "../entities/user";
-import { capitalize, cleanJoin, isEmpty, toText } from "../lib/common";
+import { Product, ProductCode, PurchasedProduct, bossBundle, creativeBundle, isPurchasedProduct, noviceBundle, premiumSubscription, proBundle, promoBundle, studentBundle, testTinyGpt3Bundle, testTinyGptokenBundle, trialBundle, unlimitedSubscription } from "../entities/product";
+import { StringLike, capitalize, cleanJoin, isEmpty, toText } from "../lib/common";
 import { commands, symbols } from "../lib/constants";
 import { uuid } from "../lib/uuid";
 import { addDays, addTerm, formatDate, isExpired } from "./dateService";
 import { formatWordNumber } from "./grammarService";
-import { getPlanDescription } from "./planService";
+import { DescriptionMode, getPlanDescription } from "./planService";
 import { getPlanSettings } from "./planSettingsService";
 import { isProductUsageExceeded } from "./productUsageService";
 import { getSubscriptionFullDisplayName, getSubscriptionPlan } from "./subscriptionService";
-import { getUserActiveProducts } from "./userService";
 
 export function formatProductName(
   product: Product,
@@ -104,17 +102,19 @@ export function formatProductsString(products: PurchasedProduct[]): string | nul
   return `${symbols.product} У вас ${formatWordNumber("продукт", products.length)}: /${commands.products}`;
 }
 
-export function formatActiveProducts(user: User): string {
-  const subscriptions = [
-    ...getUserActiveProducts(user),
-    freeSubscription
-  ];
+export function formatProductDescriptions(
+  products: Product[],
+  descriptionMode?: DescriptionMode
+): StringLike {
+  if (!isEmpty(products)) {
+    return null;
+  }
 
   return toText(
     "Ваши продукты:",
-    ...subscriptions
-      .map(subscription => getSubscriptionPlan(subscription))
-      .map(plan => getPlanDescription(plan, "short"))
+    ...products
+      .map(product => getProductPlan(product))
+      .map(plan => getPlanDescription(plan, descriptionMode))
   );
 }
 
