@@ -6,5 +6,6 @@ This bot uses:
 
 - TypeScript
 - Node.js
-- AWS
+- AWS (Lambda & DynamoDB)
+- Serverless
 - OpenAI API
