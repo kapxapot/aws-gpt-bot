@@ -3,7 +3,7 @@ import { Coupon, CouponCode, CouponTemplate, couponTemplates } from "../entities
 import { intervalWords } from "../entities/interval";
 import { PurchasedProduct } from "../entities/product";
 import { User } from "../entities/user";
-import { toText } from "../lib/common";
+import { isEmpty, toText } from "../lib/common";
 import { commands, symbols } from "../lib/constants";
 import { uuid } from "../lib/uuid";
 import { sendTelegramMessage } from "../telegram/bot";
@@ -76,7 +76,11 @@ export function getCouponSpan(coupon: Coupon): TimeSpan {
   return { start, end };
 }
 
-export function formatCouponsString(coupons: Coupon[]): string {
+export function formatCouponsString(coupons: Coupon[]): string | null {
+  if (isEmpty(coupons)) {
+    return null;
+  }
+
   return `${symbols.coupon} У вас ${formatWordNumber("купон", coupons.length)}: /${commands.coupons}`;
 }
 

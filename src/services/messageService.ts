@@ -2,7 +2,7 @@ import { ts } from "../entities/at";
 import { getModeName } from "../entities/prompt";
 import { User } from "../entities/user";
 import { gptChatCompletion } from "../external/gptChatCompletion";
-import { capitalize, cleanJoin, commatize, isEmpty, toCompactText, toText, truncate } from "../lib/common";
+import { StringLike, capitalize, cleanJoin, commatize, toCompactText, toText, truncate } from "../lib/common";
 import { isSuccess } from "../lib/error";
 import { clearAndLeave, encodeText, inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
@@ -18,7 +18,7 @@ import { happened, timeLeft } from "./dateService";
 import { BotContext } from "../telegram/botContext";
 import { TextModel, TextModelCode } from "../entities/model";
 import { incUsage } from "./usageStatsService";
-import { formatProductName } from "./productService";
+import { formatProductsString } from "./productService";
 import { incProductUsage } from "./productUsageService";
 import { freeSubscription } from "../entities/product";
 import { getIntervalString } from "./intervalService";
@@ -33,6 +33,8 @@ import { getSubscriptionShortDisplayName } from "./subscriptionService";
 import { formatTextConsumptionLimits } from "./consumptionFormatService";
 import { backToChatHandler } from "../telegram/handlers";
 import { formatCouponsString } from "./couponService";
+import { getTextModelPrices } from "./priceService";
+import { gptokenString } from "./gptokenService";
 
 const config = {
   messageInterval: parseInt(process.env.MESSAGE_INTERVAL ?? "15") * 1000, // milliseconds
@@ -108,11 +110,15 @@ export async function sendMessageToGpt(ctx: BotContext, user: User, question: st
         : "Нет ответа от ChatGPT. 😣"
     );
 
+    const actualUsagePoints = modelCode === "gptokens"
+      ? calculateUsagePoints(answer, model)
+      : usagePoints;
+
     if (product) {
       product.usage = incProductUsage(
         product.usage,
         modelCode,
-        usagePoints
+        actualUsagePoints
       );
 
       user = await updateUserProduct(user, product);
@@ -139,7 +145,8 @@ export async function sendMessageToGpt(ctx: BotContext, user: User, question: st
       const debugInfo = buildDebugInfo(
         user,
         isSuccess(answer) ? answer : null,
-        model
+        model,
+        actualUsagePoints
       );
 
       await reply(ctx, debugInfo);
@@ -176,8 +183,8 @@ export function getStatusMessage(user: User): string {
   const coupons = getUserActiveCoupons(user);
 
   return toText(
-    ...products.map(product => formatProductName(product)),
-    isEmpty(coupons) ? null : formatCouponsString(coupons),
+    formatProductsString(products),
+    formatCouponsString(coupons),
     `Режим: <b>${getModeName(user)}</b>`
   );
 }
@@ -219,7 +226,7 @@ export async function getUserOrLeave(ctx: BotContext): Promise<User | null> {
   return null;
 }
 
-export async function replyBackToMainDialog(ctx: BotContext, ...lines: string[]) {
+export async function replyBackToMainDialog(ctx: BotContext, ...lines: StringLike[]) {
   await reply(ctx, ...lines);
   await backToChatHandler(ctx);
 }
@@ -286,7 +293,7 @@ function formatConsumptionLimits(
 }
 
 function formatConsumptionLimit({ limit, remaining }: ConsumptionLimit, what: string): string {
-  return `осталось ${what}: ${remaining}/${formatLimit(limit)}`;
+  return `осталось ${what}: ${remaining.toFixed(1)}/${formatLimit(limit)}`;
 }
 
 function formatIntervalConsumptionLimits(
@@ -299,6 +306,20 @@ function formatIntervalConsumptionLimits(
   const chunks = limits.map(limit => format(limit));
 
   return `осталось ${what} ${commatize(chunks)}`;
+}
+
+function calculateUsagePoints(answer: Completion, model: TextModel): number {
+  const prices = getTextModelPrices(model);
+  const usage = answer.usage;
+
+  if (!usage) {
+    return 0;
+  }
+
+  const inPrice = usage.promptTokens * prices.inputPrice;
+  const outPrice = usage.completionTokens * prices.outputPrice;
+
+  return Math.ceil(inPrice + outPrice) * 0.001;
 }
 
 async function addMessageMetrics(completion: Completion) {
@@ -316,7 +337,8 @@ function formatGptMessage(message: string): string {
 function buildDebugInfo(
   user: User,
   answer: Completion | null,
-  model: TextModel
+  model: TextModel,
+  actualUsagePoints: number
 ): string {
   const chunks: string[] = [];
 
@@ -324,6 +346,8 @@ function buildDebugInfo(
     const usage = answer.usage;
     chunks.push(`токены: ${usage.totalTokens} (${usage.promptTokens} + ${usage.completionTokens})`);
   }
+
+  chunks.push(`стоимость: ${gptokenString(actualUsagePoints)}`);
 
   const context = user.context;
 

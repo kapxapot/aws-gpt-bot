@@ -10,7 +10,7 @@ import { isDebugMode } from "../services/userSettingsService";
 import { getUserInviteLink, userHasHistoryMessage } from "../services/userService";
 import { remindButton } from "../lib/dialog";
 import { getCouponTemplateByCode } from "../services/couponService";
-import { formatProductName, getProductByCode } from "../services/productService";
+import { formatActiveProducts, formatProductName, getProductByCode } from "../services/productService";
 
 type Handler = (ctx: BotContext) => Promise<void | unknown>;
 type HandlerTuple = [command: string, handler: Handler];
@@ -40,6 +40,7 @@ export function getCommandHandlers(): HandlerTuple[] {
     [commands.support, supportHandler],
     [commands.status, statusHandler],
     [commands.invite, inviteHandler],
+    [commands.products, productsHandler]
   ];
 }
 
@@ -127,6 +128,15 @@ async function inviteHandler(ctx: BotContext) {
       ctx,
       `Пригласите друзей в бот и получите купон на активацию ${formatProductName(product, "Genitive")} в подарок! 🎁`,
       `Поделитесь с друзьями этой ссылкой: ${getUserInviteLink(user)}`
+    );
+  });
+}
+
+async function productsHandler(ctx: BotContext) {
+  await withUser(ctx, async user => {
+    await reply(
+      ctx,
+      formatActiveProducts(user)
     );
   });
 }

@@ -47,7 +47,7 @@ function formatConsumptionLimit(
   usagePoints: number,
   word: KnownWord
 ): string {
-  let formatted = `осталось ${what}: ${remaining}/${formatLimit(limit)}`;
+  let formatted = `осталось ${what}: ${remaining.toFixed(1)}/${formatLimit(limit)}`;
 
   if (gptokens) {
     const remainingCount = Math.floor(remaining / usagePoints);

@@ -1,15 +1,23 @@
 import { TextModel, ImageModel, ImageSettings } from "./model";
 
+/**
+ * Prices in gptokens per 1000 tokens. One gptoken = $0.02.
+ */
 type TextPrice = {
   inputPrice: number;
   outputPrice: number;
   avgPrice: number;
 };
 
+/**
+ * Prices in gptokens per 1 image. One gptoken = $0.02.
+ */
 type ImagePrice = {
   settings: ImageSettings;
   price: number;
 }
+
+// const gptokenPrice = money(0.02, "USD");
 
 export const textPrices: Record<TextModel, TextPrice> = {
   "gpt-3.5-turbo": {

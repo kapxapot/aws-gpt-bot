@@ -3,13 +3,18 @@ import { GrammarCase } from "../entities/grammar";
 import { ModelCode } from "../entities/model";
 import { Plan } from "../entities/plan";
 import { PlanSettings } from "../entities/planSettings";
-import { Product, ProductCode, PurchasedProduct, bossBundle, creativeBundle, isPurchasedProduct, noviceBundle, premiumSubscription, proBundle, promoBundle, studentBundle, testTinyGpt3Bundle, testTinyGptokenBundle, trialBundle, unlimitedSubscription } from "../entities/product";
-import { capitalize, cleanJoin } from "../lib/common";
+import { Product, ProductCode, PurchasedProduct, bossBundle, creativeBundle, freeSubscription, isPurchasedProduct, noviceBundle, premiumSubscription, proBundle, promoBundle, studentBundle, testTinyGpt3Bundle, testTinyGptokenBundle, trialBundle, unlimitedSubscription } from "../entities/product";
+import { User } from "../entities/user";
+import { capitalize, cleanJoin, isEmpty, toText } from "../lib/common";
+import { commands, symbols } from "../lib/constants";
 import { uuid } from "../lib/uuid";
 import { addDays, addTerm, formatDate, isExpired } from "./dateService";
+import { formatWordNumber } from "./grammarService";
+import { getPlanDescription } from "./planService";
 import { getPlanSettings } from "./planSettingsService";
 import { isProductUsageExceeded } from "./productUsageService";
 import { getSubscriptionFullDisplayName, getSubscriptionPlan } from "./subscriptionService";
+import { getUserActiveProducts } from "./userService";
 
 export function formatProductName(
   product: Product,
@@ -89,6 +94,28 @@ export function getProductSpan(product: PurchasedProduct): TimeSpan {
   const end = addDays(endOfTerm, 1);
 
   return { start, end };
+}
+
+export function formatProductsString(products: PurchasedProduct[]): string | null {
+  if (isEmpty(products)) {
+    return null;
+  }
+
+  return `${symbols.product} У вас ${formatWordNumber("продукт", products.length)}: /${commands.products}`;
+}
+
+export function formatActiveProducts(user: User): string {
+  const subscriptions = [
+    ...getUserActiveProducts(user),
+    freeSubscription
+  ];
+
+  return toText(
+    "Ваши продукты:",
+    ...subscriptions
+      .map(subscription => getSubscriptionPlan(subscription))
+      .map(plan => getPlanDescription(plan, "short"))
+  );
 }
 
 function formatProductExpiration(product: PurchasedProduct): string {

@@ -3,24 +3,24 @@ import { BotContext } from "../botContext";
 import { commands, scenes, symbols } from "../../lib/constants";
 import { addSceneCommandHandlers, backToChatHandler, dunnoHandler, kickHandler } from "../handlers";
 import { ButtonLike, clearInlineKeyboard, contactKeyboard, contactRequestLabel, emptyKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
-import { Product, ProductCode, freeSubscription, productCodes } from "../../entities/product";
+import { Product, ProductCode, productCodes } from "../../entities/product";
 import { isError } from "../../lib/error";
-import { getSubscriptionFullDisplayName, getSubscriptionPlan, getSubscriptionShortName } from "../../services/subscriptionService";
+import { getSubscriptionFullDisplayName, getSubscriptionShortName } from "../../services/subscriptionService";
 import { canMakePurchases, canPurchaseProduct } from "../../services/permissionService";
 import { backToStartAction, cancelAction, cancelButton } from "../../lib/dialog";
 import { getUserOrLeave, notAllowedMessage, replyBackToMainDialog, withUser } from "../../services/messageService";
 import { SessionData } from "../session";
-import { isEmpty, orJoin, phoneToItu, toCompactText, toText } from "../../lib/common";
+import { StringLike, isEmpty, orJoin, phoneToItu, toCompactText, toText } from "../../lib/common";
 import { message } from "telegraf/filters";
 import { updateUser } from "../../storage/userStorage";
-import { getProductByCode, getProductPlan, gpt3Products, gptokenProducts } from "../../services/productService";
+import { formatActiveProducts, getProductByCode, getProductPlan, gpt3Products, gptokenProducts } from "../../services/productService";
 import { User } from "../../entities/user";
 import { getPlanDescription } from "../../services/planService";
 import { gptokenString } from "../../services/gptokenService";
 import { bulletize } from "../../lib/text";
 import { createPayment } from "../../services/paymentService";
 import { Markup } from "telegraf";
-import { getUserActiveCoupons, getUserActiveProducts } from "../../services/userService";
+import { getUserActiveCoupons } from "../../services/userService";
 import { formatCouponsString } from "../../services/couponService";
 import { getGptokenUsagePoints } from "../../services/modelUsageService";
 import { getDefaultImageSettings } from "../../services/imageService";
@@ -85,16 +85,8 @@ async function sceneIndex(ctx: BotContext, user: User) {
   const validProductGroups = filteredProductGroups(user);
   const productCount = validProductGroups.reduce((sum, group) => sum + group.products.length, 0);
 
-  const subscriptions = [
-    ...getUserActiveProducts(user),
-    freeSubscription
-  ];
-
-  const messages = [
-    "Ваши продукты:",
-    ...subscriptions
-      .map(subscription => getSubscriptionPlan(subscription))
-      .map(plan => getPlanDescription(plan, "short"))
+  const messages: StringLike[] = [
+    formatActiveProducts(user)
   ];
 
   const coupons = getUserActiveCoupons(user);

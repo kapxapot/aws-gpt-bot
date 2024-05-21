@@ -9,7 +9,8 @@ export const commands = {
   status: "status",
   chat: "chat",
   coupons: "coupons",
-  invite: "invite"
+  invite: "invite",
+  products: "products"
 } as const;
 
 export const commonMessages = {
@@ -54,6 +55,7 @@ export const symbols = {
   bullet: "🔹",
   warning: "⚠",
   coupon: "🎫",
+  product: "🛒",
   stop: "⛔",
   cross: "❌",
   success: "✅"
