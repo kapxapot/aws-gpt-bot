@@ -14,13 +14,15 @@ export type ImageModel = "dall-e-3";
 
 export type Model = TextModel | ImageModel;
 
-export type ImageQuality = "hd";
+export type ImageQuality = "standard" | "hd";
 export type ImageSize = "1024x1024" | "1024x1792" | "1792x1024";
+export type ImageStyle = "vivid" | "natural";
 export type ImageResponseFormat = "url";
 
 export type ImageSettings = {
-  size: ImageSize,
-  quality?: ImageQuality
+  size: ImageSize;
+  quality?: ImageQuality;
+  style?: ImageStyle;
 };
 
 export const defaultTextModelCode: TextModelCode = "gpt3";

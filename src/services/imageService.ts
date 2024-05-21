@@ -73,6 +73,7 @@ export async function generateImageWithGpt(
     model,
     size: imageSettings.size,
     quality: imageSettings.quality,
+    style: imageSettings.style,
     prompt,
     responseFormat: "url",
     requestedAt,
