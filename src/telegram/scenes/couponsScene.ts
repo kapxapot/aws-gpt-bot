@@ -8,12 +8,10 @@ import { withUser } from "../../services/messageService";
 import { getUserActiveCoupons } from "../../services/userService";
 import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { formatWordNumber } from "../../services/grammarService";
-import { toCompactText, toText } from "../../lib/common";
-import { formatProductName, getProductByCode, getProductPlan } from "../../services/productService";
+import { formatProductDescription, formatProductName, getProductByCode } from "../../services/productService";
 import { activateCoupon, formatCouponExpiration } from "../../services/couponService";
 import { getIdChunk } from "../../lib/uuid";
-import { getPlanDescription } from "../../services/planService";
-import { bullet } from "../../lib/text";
+import { bullet, toCompactText, toText } from "../../lib/text";
 import { Coupon } from "../../entities/coupon";
 import { User } from "../../entities/user";
 
@@ -122,11 +120,10 @@ async function displayCoupons(ctx: BotContext, user: User) {
 function couponDescription(couponData: CouponData): string {
   const { coupon, activateCommand } = couponData;
   const product = getProductByCode(coupon.productCode);
-  const plan = getProductPlan(product);
 
   return toText(
     toCompactText(
-      getPlanDescription(plan),
+      formatProductDescription(product),
       bullet(`Купон действует по ${formatCouponExpiration(coupon)}`)
     ),
     `🚀 Активировать: ${activateCommand}`

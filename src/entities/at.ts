@@ -20,9 +20,7 @@ export type TimeSpan = {
 
 export type Timestamps = CreatedAt & UpdatedAt;
 
-export function iso(ts: number): string {
-  return new Date(ts).toISOString();
-}
+export const iso = (ts: number) => new Date(ts).toISOString();
 
 /**
  * Returns a timestamp for a date string. In case of `null` string returns the current timestamp.
@@ -32,16 +30,12 @@ export function ts(dateStr?: string): number {
   return date.getTime();
 }
 
-export function at(ts: number): At {
-  return {
-    timestamp: ts,
-    date: iso(ts)
-  };
-}
+export const at = (ts: number) => ({
+  timestamp: ts,
+  date: iso(ts)
+});
 
-export function now(): At {
-  return at(ts());
-}
+export const now = () => at(ts());
 
 export function createdTimestamps(at?: At): CreatedAt {
   at = at ?? now();
@@ -72,4 +66,8 @@ export function timestamps(at?: At): Timestamps {
 
 export function atSort<T>(getAt: (t: T) => At): (a: T, b: T) => number {
   return (a: T, b: T) => getAt(b).timestamp - getAt(a).timestamp;
+}
+
+export function happened(then: number, compareTo?: number): boolean {
+  return then >= (compareTo ?? ts());
 }

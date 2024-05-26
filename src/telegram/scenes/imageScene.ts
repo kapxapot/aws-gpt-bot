@@ -8,14 +8,13 @@ import { generateImageWithGpt } from "../../services/imageService";
 import { ImageStage, SessionData } from "../session";
 import { backToStartAction, cancelAction, cancelButton, gotoPremiumAction, gotoPremiumButton } from "../../lib/dialog";
 import { notAllowedMessage, replyBackToMainDialog, withUser } from "../../services/messageService";
-import { capitalize, cleanJoin, toCompactText, toText } from "../../lib/common";
 import { gptokenString } from "../../services/gptokenService";
-import { bullet, bulletize } from "../../lib/text";
+import { bullet, bulletize, toCompactText, toText } from "../../lib/text";
 import { getImageModelContexts } from "../../services/modelContextService";
 import { freeSubscription } from "../../entities/product";
 import { ImageModelContext } from "../../entities/modelContext";
 import { User } from "../../entities/user";
-import { getSubscriptionShortDisplayName } from "../../services/subscriptionService";
+import { getPrettySubscriptionName } from "../../services/subscriptionService";
 import { formatImageConsumptionLimits } from "../../services/consumptionFormatService";
 import { canGenerateImages } from "../../services/permissionService";
 
@@ -152,14 +151,9 @@ async function getImageModelContext(ctx: BotContext, user: User): Promise<ImageM
 
     const subscription = product ?? freeSubscription;
 
-    const productNameParts = [
-      subscription.icon,
-      capitalize(getSubscriptionShortDisplayName(subscription))
-    ];
-
     messages.push(
       toCompactText(
-        `<b>${cleanJoin(productNameParts)}</b>`,
+        `<b>${getPrettySubscriptionName(subscription)}</b>`,
         bullet(formattedLimits)
       )
     );

@@ -1,7 +1,7 @@
 import { at, ts } from "../../entities/at";
 import { Product } from "../../entities/product";
-import { toText } from "../../lib/common";
 import { symbols } from "../../lib/constants";
+import { toText } from "../../lib/text";
 import { putMetric } from "../../services/metricService";
 import { formatProductName, productToPurchasedProduct } from "../../services/productService";
 import { addUserProduct, getUserById } from "../../services/userService";

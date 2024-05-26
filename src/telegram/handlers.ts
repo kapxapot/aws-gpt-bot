@@ -146,7 +146,13 @@ async function productsHandler(ctx: BotContext) {
     } else {
       await reply(
         ctx,
-        formatProductDescriptions(products, "long"),
+        formatProductDescriptions(
+          products,
+          {
+            showExpiration: true,
+            showConsumption: true
+          }
+        ),
         `${symbols.card} Приобрести еще: /${commands.premium}`
       );
     }

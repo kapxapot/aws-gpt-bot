@@ -5,25 +5,24 @@ import { addSceneCommandHandlers, backToChatHandler, dunnoHandler, kickHandler }
 import { ButtonLike, clearInlineKeyboard, contactKeyboard, contactRequestLabel, emptyKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { Product, ProductCode, productCodes } from "../../entities/product";
 import { isError } from "../../lib/error";
-import { getSubscriptionFullDisplayName, getSubscriptionShortName } from "../../services/subscriptionService";
 import { canMakePurchases, canPurchaseProduct } from "../../services/permissionService";
 import { backToStartAction, cancelAction, cancelButton } from "../../lib/dialog";
 import { getUserOrLeave, notAllowedMessage, replyBackToMainDialog, withUser } from "../../services/messageService";
 import { SessionData } from "../session";
-import { StringLike, isEmpty, orJoin, phoneToItu, toCompactText, toText } from "../../lib/common";
+import { StringLike, isEmpty, phoneToItu } from "../../lib/common";
 import { message } from "telegraf/filters";
 import { updateUser } from "../../storage/userStorage";
-import { formatProductDescriptions, getProductByCode, getProductPlan, gpt3Products, gptokenProducts } from "../../services/productService";
+import { formatProductDescription, formatProductDescriptions, getPrettyProductName, getProductByCode, gpt3Products, gptokenProducts } from "../../services/productService";
 import { User } from "../../entities/user";
-import { getPlanDescription } from "../../services/planService";
 import { gptokenString } from "../../services/gptokenService";
-import { bulletize } from "../../lib/text";
+import { bulletize, orJoin, toCompactText, toText } from "../../lib/text";
 import { createPayment } from "../../services/paymentService";
 import { Markup } from "telegraf";
 import { getUserActiveCoupons, getUserActiveProducts } from "../../services/userService";
 import { formatCouponsString } from "../../services/couponService";
 import { getGptokenUsagePoints } from "../../services/modelUsageService";
 import { getDefaultImageSettings } from "../../services/imageService";
+import { freePlanDescription } from "../../services/planService";
 
 type Message = string;
 
@@ -84,12 +83,17 @@ async function mainHandler(ctx: BotContext) {
 async function sceneIndex(ctx: BotContext, user: User) {
   const validProductGroups = filteredProductGroups(user);
   const productCount = validProductGroups.reduce((sum, group) => sum + group.products.length, 0);
-
   const products = getUserActiveProducts(user);
 
   const messages: StringLike[] = [
-    formatProductDescriptions(products),
-    getPlanDescription("free")
+    formatProductDescriptions(
+      products,
+      {
+        showConsumption: true,
+        showExpiration: true
+      }
+    ),
+    freePlanDescription
   ];
 
   const coupons = getUserActiveCoupons(user);
@@ -255,6 +259,8 @@ async function buyProduct(ctx: BotContext, productCode: ProductCode) {
       return;
     }
 
+    const productName = getPrettyProductName(product, { targetCase: "Genitive" });
+
     await replyWithKeyboard(
       ctx,
       inlineKeyboard(
@@ -262,7 +268,7 @@ async function buyProduct(ctx: BotContext, productCode: ProductCode) {
         ["Купить еще один", backToStartAction],
         cancelButton
       ),
-      `${symbols.card} Для оплаты ${getSubscriptionFullDisplayName(product, "Genitive")} <a href="${payment.url}">пройдите по ссылке</a>.`,
+      `${symbols.card} Для оплаты <b>${productName}</b> <a href="${payment.url}">пройдите по ссылке</a>.`,
       `${symbols.warning} Время действия ссылки ограничено. Если вы не успеете оплатить счет, вы можете получить новую ссылку с помощью команды /${commands.premium}`,
       "Мы сообщим вам, когда получим оплату."
     );
@@ -307,9 +313,7 @@ function listProducts(products: Product[]): MessagesAndButtons {
   const buttons: ButtonLike[] = [];
 
   for (const product of products) {
-    const productPlan = getProductPlan(product);
-
-    messages.push(getPlanDescription(productPlan, "long"));
+    messages.push(formatProductDescription(product, { showPrice: true }));
     buttons.push(productButton(product));
   }
 
@@ -317,7 +321,7 @@ function listProducts(products: Product[]): MessagesAndButtons {
 }
 
 const productButton = (product: Product): ButtonLike => [
-  `Купить ${getSubscriptionShortName(product)}`,
+  getPrettyProductName(product),
   getProductBuyAction(product.code)
 ];
 

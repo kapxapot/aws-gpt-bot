@@ -1,8 +1,8 @@
 import { ConsumptionLimit, ConsumptionLimits, IntervalConsumptionLimits } from "../entities/consumption";
 import { KnownWord } from "../entities/grammar";
 import { ImageModelCode, ModelCode, TextModelCode } from "../entities/model";
-import { capitalize, commatize } from "../lib/common";
 import { symbols } from "../lib/constants";
+import { capitalize, commatize } from "../lib/text";
 import { isConsumptionLimit } from "./consumptionService";
 import { formatWordNumber } from "./grammarService";
 import { getIntervalString } from "./intervalService";

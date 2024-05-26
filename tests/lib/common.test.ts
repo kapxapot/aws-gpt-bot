@@ -1,23 +1,5 @@
-import { andJoin, capitalize, commatize, isNumber, isNumeric, orJoin, phoneToItu, toCleanArray, toCompactText, toText } from "../../src/lib/common";
-
-const uglyArray = [
-  "",
-  "    ",
-  "   one  ",
-  "    two   "
-];
-
-describe("toText", () => {
-  test("should concat strings into text", () => {
-    expect(toText("one", "two")).toBe("one\n\ntwo");
-  });
-});
-
-describe("toCompactText", () => {
-  test("should concat strings into compact text", () => {
-    expect(toCompactText("one", "two")).toBe("one\ntwo");
-  });
-});
+import { isNumber, isNumeric, phoneToItu, toCleanArray } from "../../src/lib/common";
+import { uglyArray } from "../testData";
 
 describe("toCleanArray", () => {
   test("should clean strings", () => {
@@ -26,13 +8,6 @@ describe("toCleanArray", () => {
     expect(array).toHaveLength(2);
     expect(array[0]).toBe("one");
     expect(array[1]).toBe("two");
-  });
-});
-
-describe("commatize", () => {
-  test("should sanitize and commatize strings", () => {
-    expect(commatize(uglyArray))
-      .toBe("one, two");
   });
 });
 
@@ -83,31 +58,5 @@ describe("isNumber", () => {
       false,
       false
     ])
-  });
-});
-
-describe("capitalize", () => {
-  test("should capitalize strings", () => {
-    expect(capitalize("")).toBe("");
-    expect(capitalize("a")).toBe("A");
-    expect(capitalize("ab")).toBe("Ab");
-  });
-});
-
-describe("andJoin", () => {
-  test("should join string with `и`", () => {
-    expect(andJoin()).toBe("");
-    expect(andJoin("a")).toBe("a");
-    expect(andJoin("a", "b")).toBe("a и b");
-    expect(andJoin("a", "b", "c")).toBe("a, b и c");
-  });
-});
-
-describe("orJoin", () => {
-  test("should join string with `или`", () => {
-    expect(orJoin()).toBe("");
-    expect(orJoin("a")).toBe("a");
-    expect(orJoin("a", "b")).toBe("a или b");
-    expect(orJoin("a", "b", "c")).toBe("a, b или c");
   });
 });

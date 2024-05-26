@@ -111,13 +111,13 @@ export function addTerm(dateLike: DateLike, term: Term): number {
 }
 
 /**
- * Checks if the interval has passed since the start.
+ * Checks if the interval has elapsed since the start.
  *
  * @param {number} start The starting timestamp.
  * @param {number} interval The interval to check (in milliseconds).
  * @param {number|undefined} timestamp Optional date that is used instead of current time.
  */
-export function happened(start: number, interval: number, timestamp?: number): boolean {
+export function isIntervalElapsed(start: number, interval: number, timestamp?: number): boolean {
   return timeLeft(start, interval, timestamp) <= 0;
 }
 

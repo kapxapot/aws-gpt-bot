@@ -1,17 +1,32 @@
 import { freeSubscription } from "../../src/entities/product";
 import { getProductByCode } from "../../src/services/productService";
-import { getSubscriptionFullDisplayName } from "../../src/services/subscriptionService";
+import { getPrettySubscriptionName } from "../../src/services/subscriptionService";
 
-describe("getSubscriptionFullDisplayName", () => {
+describe("getPrettySubscriptionName", () => {
   test("should correctly build name", () => {
     expect([
-      getSubscriptionFullDisplayName(freeSubscription, "Genitive"),
-      getSubscriptionFullDisplayName(getProductByCode("subscription-premium-30-days"), "Dative"),
-      getSubscriptionFullDisplayName(getProductByCode("bundle-pro-30-days"), "Instrumental"),
+      getPrettySubscriptionName(
+        freeSubscription,
+        {
+          targetCase: "Genitive"
+        }
+      ),
+      getPrettySubscriptionName(
+        getProductByCode("subscription-premium-30-days"),
+        {
+          targetCase: "Dative"
+        }
+      ),
+      getPrettySubscriptionName(
+        getProductByCode("bundle-pro-30-days"),
+        {
+          targetCase: "Instrumental"
+        }
+      ),
     ]).toEqual([
-      "тарифа <b>«Бесплатный»</b>",
-      "тарифу <b>«Премиум на 30 дней»</b>",
-      "пакетом <b>«Профи на 30 дней»</b>",
+      "🤑 Тарифа «Бесплатный»",
+      "💔 Тарифу «Премиум»",
+      "😎 Пакетом «Профи»"
     ]);
   });
 });

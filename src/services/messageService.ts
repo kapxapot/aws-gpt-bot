@@ -2,7 +2,7 @@ import { ts } from "../entities/at";
 import { getModeName } from "../entities/prompt";
 import { User } from "../entities/user";
 import { gptChatCompletion } from "../external/gptChatCompletion";
-import { StringLike, capitalize, cleanJoin, commatize, toCompactText, toText, truncate } from "../lib/common";
+import { StringLike } from "../lib/common";
 import { isSuccess } from "../lib/error";
 import { clearAndLeave, encodeText, inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
@@ -14,7 +14,7 @@ import { Completion } from "../entities/message";
 import { putMetric } from "./metricService";
 import { isDebugMode } from "./userSettingsService";
 import { gptTimeout } from "./gptService";
-import { happened, timeLeft } from "./dateService";
+import { isIntervalElapsed, timeLeft } from "./dateService";
 import { BotContext } from "../telegram/botContext";
 import { TextModel, TextModelCode } from "../entities/model";
 import { incUsage } from "./usageStatsService";
@@ -27,9 +27,9 @@ import { gotoPremiumButton, remindButton } from "../lib/dialog";
 import { getConsumptionLimits, isConsumptionLimit } from "./consumptionService";
 import { ConsumptionLimit, ConsumptionLimits, IntervalConsumptionLimit, IntervalConsumptionLimits } from "../entities/consumption";
 import { getTextModelContexts } from "./modelContextService";
-import { bullet, bulletize } from "../lib/text";
+import { bullet, bulletize, cleanJoin, commatize, toCompactText, toText, truncate } from "../lib/text";
 import { TextModelContext } from "../entities/modelContext";
-import { getSubscriptionShortDisplayName } from "./subscriptionService";
+import { getPrettySubscriptionName } from "./subscriptionService";
 import { formatTextConsumptionLimits } from "./consumptionFormatService";
 import { backToChatHandler } from "../telegram/handlers";
 import { formatCouponsString } from "./couponService";
@@ -58,7 +58,7 @@ export async function sendMessageToGpt(ctx: BotContext, user: User, question: st
   } = context;
 
   if (user.waitingForGptAnswer) {
-    if (lastUsedAt && happened(lastUsedAt.timestamp, gptTimeout * 1000)) {
+    if (lastUsedAt && isIntervalElapsed(lastUsedAt.timestamp, gptTimeout * 1000)) {
       // we have waited enough for the GPT answer
       await stopWaitingForGptAnswer(user);
     } else {
@@ -233,7 +233,8 @@ export async function replyBackToMainDialog(ctx: BotContext, ...lines: StringLik
 
 export function notAllowedMessage(message: string): string {
   return cleanJoin([
-    `${symbols.stop} ${message}`,
+    symbols.stop,
+    message,
     config.mainBot ? `Используйте основной бот: @${config.mainBot}` : null
   ]);
 }
@@ -257,14 +258,9 @@ async function getTextModelContext(ctx: BotContext, user: User): Promise<TextMod
 
     const subscription = product ?? freeSubscription;
 
-    const productNameParts = [
-      subscription.icon,
-      capitalize(getSubscriptionShortDisplayName(subscription))
-    ];
-
     messages.push(
       toCompactText(
-        `<b>${cleanJoin(productNameParts)}</b>`,
+        `<b>${getPrettySubscriptionName(subscription)}</b>`,
         bullet(formattedLimits)
       )
     );

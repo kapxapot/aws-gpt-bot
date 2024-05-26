@@ -2,8 +2,8 @@ import { DeleteCommand, DynamoDBDocumentClient, GetCommand, PutCommand, QueryCom
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { timestamps, updatedTimestamps } from "../entities/at";
 import { Entity, Unsaved } from "./types";
-import { commatize } from "./common";
 import { uuid } from "./uuid";
+import { commatize } from "./text";
 
 type Attributes = Record<string, unknown>;
 

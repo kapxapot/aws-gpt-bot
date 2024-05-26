@@ -1,5 +1,5 @@
 import { ts } from "../../src/entities/at";
-import { addDays, addHours, addMinutes, formatDate, happened, startOfDay, startOfMonth, startOfWeek, utcStartOfDay } from "../../src/services/dateService";
+import { addDays, addHours, addMinutes, formatDate, isIntervalElapsed, startOfDay, startOfMonth, startOfWeek, utcStartOfDay } from "../../src/services/dateService";
 
 describe("addDays", () => {
   test("should correctly add days", () => {
@@ -142,30 +142,36 @@ describe("formatDate", () => {
   });
 });
 
-describe("happened", () => {
-  test("should be true if the event has happened", () => {
+describe("isIntervalElapsed", () => {
+  test("should be true if an interval has elapsed", () => {
     const now = ts();
     const interval = 5000; // ms
     const elapsed = interval + 1000;
     const start = now - elapsed;
 
-    expect(happened(start, interval, now)).toBe(true);
+    expect(
+      isIntervalElapsed(start, interval, now)
+    ).toBe(true);
   });
 
-  test("should be true if the event has just happened (edge case)", () => {
+  test("should be true if an interval has just elapsed (edge case)", () => {
     const now = ts();
     const interval = 5000; // ms
     const start = now - interval;
 
-    expect(happened(start, interval, now)).toBe(true);
+    expect(
+      isIntervalElapsed(start, interval, now)
+    ).toBe(true);
   });
 
-  test("should be false if the event has not happened yet", () => {
+  test("should be false if an interval has not elapsed yet", () => {
     const now = ts();
     const interval = 5000; // ms
     const elapsed = interval - 1;
     const start = now - elapsed;
 
-    expect(happened(start, interval, now)).toBe(false);
+    expect(
+      isIntervalElapsed(start, interval, now)
+    ).toBe(false);
   });
 });

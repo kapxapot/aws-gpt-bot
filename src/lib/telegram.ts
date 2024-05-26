@@ -1,8 +1,9 @@
 import { InlineKeyboardButton, InlineKeyboardMarkup, Message, ReplyKeyboardMarkup, ReplyKeyboardRemove, User as TelegrafUser } from "telegraf/types";
-import { StringLike, last, toText } from "./common";
+import { StringLike, last } from "./common";
 import { Markup, TelegramError } from "telegraf";
 import { settings } from "./constants";
 import { BotContext } from "../telegram/botContext";
+import { toText } from "./text";
 
 export const contactRequestLabel = "📱 Отправить номер";
 

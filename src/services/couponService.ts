@@ -3,8 +3,9 @@ import { Coupon, CouponCode, CouponTemplate, couponTemplates } from "../entities
 import { intervalWords } from "../entities/interval";
 import { PurchasedProduct } from "../entities/product";
 import { User } from "../entities/user";
-import { isEmpty, toText } from "../lib/common";
+import { isEmpty } from "../lib/common";
 import { commands, symbols } from "../lib/constants";
+import { toText } from "../lib/text";
 import { uuid } from "../lib/uuid";
 import { sendTelegramMessage } from "../telegram/bot";
 import { addDays, addTerm, formatDate, isExpired } from "./dateService";

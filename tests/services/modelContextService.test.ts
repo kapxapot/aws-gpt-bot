@@ -2,10 +2,12 @@ import { at, now } from "../../src/entities/at";
 import { ConsumptionLimit, IntervalConsumptionLimit, IntervalConsumptionLimits } from "../../src/entities/consumption";
 import { ImageSettings, Model, ModelCode, PureModelCode } from "../../src/entities/model";
 import { money } from "../../src/entities/money";
+import { ExpirableProduct } from "../../src/entities/product";
 import { days } from "../../src/entities/term";
 import { User } from "../../src/entities/user";
 import { startOfDay, startOfMonth, startOfWeek } from "../../src/services/dateService";
 import { getImageModelContexts } from "../../src/services/modelContextService";
+import { isProductActive } from "../../src/services/productService";
 
 const then = now();
 const thisDay = at(startOfDay(then));
@@ -14,45 +16,45 @@ const thisMonth = at(startOfMonth(then));
 
 fdescribe("getImageModelContexts", () => {
   test("should return valid contexts", () => {
+    const product: ExpirableProduct = {
+      id: "",
+      code: "bundle-trial-30-days",
+      details: {
+        plan: "trial",
+        term: days(30),
+        type: "bundle"
+      },
+      displayName: "Пробный на 30 дней",
+      name: "Trial Bundle - 30 Days",
+      price: money(99),
+      purchasedAt: thisMonth,
+      shortName: "Пробный",
+      usage: {
+        gptokens: {
+          count: 19,
+          intervalUsages: {
+            day: {
+              count: 7,
+              startedAt: thisDay
+            },
+            week: {
+              count: 13,
+              startedAt: thisWeek
+            },
+            month: {
+              count: 19,
+              startedAt: thisMonth
+            }
+          }
+        }
+      }
+    };
+
     const user: User = {
       id: "",
       createdAt: 0,
       createdAtIso: "",
-      products: [
-        {
-          id: "",
-          code: "bundle-trial-30-days",
-          details: {
-            plan: "trial",
-            term: days(30),
-            type: "bundle"
-          },
-          displayName: "Пробный на 30 дней",
-          name: "Trial Bundle - 30 Days",
-          price: money(99),
-          purchasedAt: thisMonth,
-          shortName: "Пробный",
-          usage: {
-            gptokens: {
-              count: 19,
-              intervalUsages: {
-                day: {
-                  count: 7,
-                  startedAt: thisDay
-                },
-                week: {
-                  count: 13,
-                  startedAt: thisWeek
-                },
-                month: {
-                  count: 19,
-                  startedAt: thisMonth
-                }
-              }
-            }
-          }
-        }
-      ],
+      products: [product],
       telegramId: 0,
       updatedAt: 0,
       updatedAtIso: "",
@@ -95,6 +97,8 @@ fdescribe("getImageModelContexts", () => {
         }
       },
     };
+
+    expect(isProductActive(product)).toBe(true);
 
     const contexts = getImageModelContexts(user);
 

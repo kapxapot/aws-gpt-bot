@@ -1,4 +1,4 @@
-import { toText } from "../lib/common";
+import { toText } from "../lib/text";
 import { getUserContext } from "../services/userService";
 import { User } from "./user";
 

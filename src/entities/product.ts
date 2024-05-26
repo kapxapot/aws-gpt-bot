@@ -47,7 +47,7 @@ export type Product = Subscription & {
   code: ProductCode;
   price: Money;
   details: {
-    term: Term;
+    term?: Term;
   };
 };
 
@@ -57,8 +57,18 @@ export type PurchasedProduct = Product & {
   usage: ProductUsage;
 };
 
+export type ExpirableProduct = PurchasedProduct & {
+  details: {
+    term: Term;
+  }
+};
+
 export function isPurchasedProduct(product: Subscription): product is PurchasedProduct {
   return "purchasedAt" in product;
+}
+
+export function isExpirableProduct(product: Subscription): product is ExpirableProduct {
+  return isPurchasedProduct(product) && !!product.details.term;
 }
 
 export const freeSubscription: Subscription = {

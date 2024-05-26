@@ -2,47 +2,46 @@ import { GrammarCase } from "../entities/grammar";
 import { Subscription, freeSubscription, productTypeDisplayNames } from "../entities/product";
 import { User } from "../entities/user";
 import { first } from "../lib/common";
+import { capitalize, cleanJoin } from "../lib/text";
 import { getCase } from "./grammarService";
 import { getUserActiveProducts } from "./userService";
+
+export type SubscriptionNameOptions = {
+  full?: boolean;
+  targetCase?: GrammarCase;
+};
 
 export const getCurrentSubscription = (user: User) =>
   first(getUserActiveProducts(user)) ?? freeSubscription;
 
 export const getSubscriptionPlan = (subscription: Subscription) => subscription.details.plan;
 
-export const getSubscriptionFullDisplayName = (
+/**
+ * ${icon} ${typeName} ${name}
+ */
+export function getPrettySubscriptionName(
   subscription: Subscription,
-  targetCase?: GrammarCase
-) => formatSubscriptionName(
-  subscription,
-  getSubscriptionDisplayName(subscription),
-  targetCase
-);
+  options: SubscriptionNameOptions = {}
+) {
+  const { full, targetCase } = options;
 
-export const getSubscriptionShortDisplayName = (
-  subscription: Subscription,
-  targetCase?: GrammarCase
-) => formatSubscriptionName(
-  subscription,
-  getSubscriptionShortName(subscription),
-  targetCase
-);
+  const displayName = full
+    ? getSubscriptionDisplayName(subscription)
+    : getSubscriptionShortName(subscription);
 
-export const getSubscriptionShortName = (subscription: Subscription) =>
+  const typeDisplayName = productTypeDisplayNames[subscription.details.type];
+  const typeCase = getCase(typeDisplayName, targetCase);
+
+  return cleanJoin([
+    subscription.icon,
+    `${capitalize(typeCase)} «${displayName}»`
+  ]);
+}
+
+const getSubscriptionShortName = (subscription: Subscription) =>
   subscription.shortName ?? getSubscriptionDisplayName(subscription);
 
 const getSubscriptionDisplayName = (subscription: Subscription) =>
   (subscription.displayNames ? subscription.displayNames["Nominative"] : null)
     ?? subscription.displayName
     ?? subscription.name;
-
-function formatSubscriptionName(
-  subscription: Subscription,
-  name: string,
-  targetCase?: GrammarCase
-) {
-  const typeDisplayName = productTypeDisplayNames[subscription.details.type];
-  const typeCase = getCase(typeDisplayName, targetCase);
-
-  return `${typeCase} <b>«${name}»</b>`;
-}

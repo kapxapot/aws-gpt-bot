@@ -8,16 +8,16 @@ import { isSuccess } from "../lib/error";
 import { inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
 import { storeImageRequest, updateImageRequest } from "../storage/imageRequestStorage";
 import { BotContext } from "../telegram/botContext";
-import { happened, timeLeft } from "./dateService";
+import { isIntervalElapsed, timeLeft } from "./dateService";
 import { gptTimeout } from "./gptService";
 import { putMetric } from "./metricService";
 import { incUsage } from "./usageStatsService";
 import { stopWaitingForGptImageGeneration, updateUserProduct, waitForGptImageGeneration } from "./userService";
 import { incProductUsage } from "./productUsageService";
-import { toText } from "../lib/common";
 import { Markup } from "telegraf";
 import { ImageModelContext } from "../entities/modelContext";
 import { symbols } from "../lib/constants";
+import { toText } from "../lib/text";
 
 const config = {
   imageInterval: parseInt(process.env.IMAGE_INTERVAL ?? "60") * 1000, // milliseconds
@@ -42,7 +42,7 @@ export async function generateImageWithGpt(
   } = imageModelContext;
 
   if (user.waitingForGptImageGeneration) {
-    if (lastUsedAt && happened(lastUsedAt.timestamp, gptTimeout * 1000)) {
+    if (lastUsedAt && isIntervalElapsed(lastUsedAt.timestamp, gptTimeout * 1000)) {
       // we have waited enough for the GPT answer
       await stopWaitingForGptImageGeneration(user);
     } else {
