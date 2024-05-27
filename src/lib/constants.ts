@@ -59,5 +59,6 @@ export const symbols = {
   stop: "⛔",
   cross: "❌",
   success: "✅",
-  card: "💳"
+  card: "💳",
+  picture: "🖼"
 } as const;

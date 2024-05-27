@@ -55,7 +55,7 @@ function getMinimalRemaining(limits: IntervalConsumptionLimits): ConsumptionLimi
   );
 }
 
-function getProductConsumptionLimits(
+export function getProductConsumptionLimits(
   product: PurchasedProduct,
   modelCode: ModelCode
 ): ConsumptionLimits | null {

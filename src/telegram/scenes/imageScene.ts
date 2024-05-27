@@ -1,6 +1,6 @@
 import { BaseScene } from "telegraf/scenes";
 import { BotContext } from "../botContext";
-import { commands, scenes, settings } from "../../lib/constants";
+import { commands, scenes, settings, symbols } from "../../lib/constants";
 import { addSceneCommandHandlers, backToChatHandler, dunnoHandler, kickHandler } from "../handlers";
 import { clearAndLeave, clearInlineKeyboard, inlineKeyboard, replyWithKeyboard } from "../../lib/telegram";
 import { message } from "telegraf/filters";
@@ -123,7 +123,7 @@ async function imagePromptInput(ctx: BotContext, user: User) {
   await replyWithKeyboard(
     ctx,
     inlineKeyboard(cancelButton),
-    `🖼 Генерация картинок с помощью <b>DALL-E</b>`,
+    `${symbols.picture} Генерация картинок с помощью <b>DALL-E</b>`,
     toCompactText(
       ...bulletize(...modelDescription),
     ),

@@ -1,4 +1,4 @@
-import { TextModel, TextModelCode, ImageModel, ImageModelCode, ModelCode, PureTextModelCode, PureImageModelCode, defaultTextModelCode, defaultImageModelCode, textModelMap, imageModelMap } from "../entities/model";
+import { TextModel, TextModelCode, ImageModel, ImageModelCode, ModelCode, PureTextModelCode, PureImageModelCode, defaultTextModelCode, defaultImageModelCode, textModelMap, imageModelMap, modelWordMap } from "../entities/model";
 
 export function isTextModelCode(code: ModelCode): code is TextModelCode {
   return code === "gpt3" || code === "gpt4" || code === "gptokens";
@@ -31,3 +31,5 @@ export function getDefaultTextModel(): TextModel {
 export function getDefaultImageModel(): ImageModel {
   return getImageModelByCode(defaultImageModelCode);
 }
+
+export const getModelWord = (modelCode: ModelCode) => modelWordMap[modelCode];

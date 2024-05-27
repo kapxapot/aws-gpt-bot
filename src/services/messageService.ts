@@ -2,14 +2,14 @@ import { ts } from "../entities/at";
 import { getModeName } from "../entities/prompt";
 import { User } from "../entities/user";
 import { gptChatCompletion } from "../external/gptChatCompletion";
-import { StringLike } from "../lib/common";
+import { StringLike, toFixedOrIntStr } from "../lib/common";
 import { isSuccess } from "../lib/error";
 import { clearAndLeave, encodeText, inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
 import { addMessageToUser, getLastHistoryMessage, getOrAddUser, getUserActiveCoupons, getUserActiveProducts, stopWaitingForGptAnswer, updateUserProduct, waitForGptAnswer } from "./userService";
 import { commands, symbols } from "../lib/constants";
 import { getCurrentHistory } from "./contextService";
-import { formatWordNumber } from "./grammarService";
+import { formatWordNumber, getCase } from "./grammarService";
 import { Completion } from "../entities/message";
 import { putMetric } from "./metricService";
 import { isDebugMode } from "./userSettingsService";
@@ -35,6 +35,7 @@ import { backToChatHandler } from "../telegram/handlers";
 import { formatCouponsString } from "./couponService";
 import { getTextModelPrices } from "./priceService";
 import { gptokenString } from "./gptokenService";
+import { getModelWord } from "./modelService";
 
 const config = {
   messageInterval: parseInt(process.env.MESSAGE_INTERVAL ?? "15") * 1000, // milliseconds
@@ -110,7 +111,7 @@ export async function sendMessageToGpt(ctx: BotContext, user: User, question: st
         : "Нет ответа от ChatGPT. 😣"
     );
 
-    const actualUsagePoints = modelCode === "gptokens"
+    const actualUsagePoints = (modelCode === "gptokens")
       ? calculateUsagePoints(answer, model)
       : usagePoints;
 
@@ -145,6 +146,7 @@ export async function sendMessageToGpt(ctx: BotContext, user: User, question: st
       const debugInfo = buildDebugInfo(
         user,
         isSuccess(answer) ? answer : null,
+        modelCode,
         model,
         actualUsagePoints
       );
@@ -281,15 +283,16 @@ function formatConsumptionLimits(
   limits: ConsumptionLimits,
   modelCode: TextModelCode
 ): string {
-  const what = modelCode === "gptokens" ? "гптокенов" : "запросов";
+  const word = getModelWord(modelCode);
+  const wordCase = getCase(word, "Genitive", "Plural");
 
   return isConsumptionLimit(limits)
-    ? formatConsumptionLimit(limits, what)
-    : formatIntervalConsumptionLimits(limits, what);
+    ? formatConsumptionLimit(limits, wordCase)
+    : formatIntervalConsumptionLimits(limits, wordCase);
 }
 
 function formatConsumptionLimit({ limit, remaining }: ConsumptionLimit, what: string): string {
-  return `осталось ${what}: ${remaining.toFixed(1)}/${formatLimit(limit)}`;
+  return `осталось ${what}: ${toFixedOrIntStr(remaining, 1)}/${formatLimit(limit)}`;
 }
 
 function formatIntervalConsumptionLimits(
@@ -333,6 +336,7 @@ function formatGptMessage(message: string): string {
 function buildDebugInfo(
   user: User,
   answer: Completion | null,
+  modelCode: TextModelCode,
   model: TextModel,
   actualUsagePoints: number
 ): string {
@@ -343,7 +347,11 @@ function buildDebugInfo(
     chunks.push(`токены: ${usage.totalTokens} (${usage.promptTokens} + ${usage.completionTokens})`);
   }
 
-  chunks.push(`стоимость: ${gptokenString(actualUsagePoints)}`);
+  const cost = (modelCode === "gptokens")
+    ? gptokenString(actualUsagePoints)
+    : actualUsagePoints;
+
+  chunks.push(`стоимость: ${cost}`);
 
   const context = user.context;
 

@@ -47,3 +47,31 @@ export function isUndefined(v: unknown): v is undefined {
 }
 
 export const isEmpty = <T>(array?: T[]) => !array || !array.length;
+
+export function toFixedOrIntStr(num: number, digits?: number): string {
+  const fixed = num.toFixed(digits);
+
+  if (!digits || digits === 0) {
+    return fixed;
+  }
+
+  const fixedNum = Number(fixed);
+  const truncated = Math.trunc(fixedNum);
+  const fraction = fixedNum - truncated;
+
+  let epsilon = 1;
+
+  for (let i = 0; i < digits; i++) {
+    epsilon /= 10;
+  }
+
+  console.log([num, digits, fixed, fixedNum, truncated, fraction, epsilon]);
+
+  return (toFixed(fraction, digits) < epsilon)
+    ? String(truncated)
+    : fixed;
+}
+
+export function toFixed(num: number, digits?: number): number {
+  return Number(num.toFixed(digits));
+}

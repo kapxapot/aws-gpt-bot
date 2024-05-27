@@ -3,19 +3,22 @@ import { GrammarCase } from "../entities/grammar";
 import { ModelCode } from "../entities/model";
 import { Plan } from "../entities/plan";
 import { PlanSettings } from "../entities/planSettings";
-import { ExpirableProduct, Product, ProductCode, PurchasedProduct, bossBundle, creativeBundle, isExpirableProduct, noviceBundle, premiumSubscription, proBundle, promoBundle, studentBundle, testTinyGpt3Bundle, testTinyGptokenBundle, trialBundle, unlimitedSubscription } from "../entities/product";
-import { StringLike, isEmpty } from "../lib/common";
+import { ExpirableProduct, Product, ProductCode, PurchasedProduct, bossBundle, creativeBundle, isExpirableProduct, isPurchasedProduct, noviceBundle, premiumSubscription, proBundle, promoBundle, studentBundle, testTinyGpt3Bundle, testTinyGptokenBundle, trialBundle, unlimitedSubscription } from "../entities/product";
+import { StringLike, isEmpty, toFixedOrIntStr } from "../lib/common";
 import { commands, symbols } from "../lib/constants";
 import { bulletize, cleanJoin, toCompactText, toText } from "../lib/text";
 import { uuid } from "../lib/uuid";
+import { getProductConsumptionLimits, isConsumptionLimit } from "./consumptionService";
 import { addDays, addTerm, formatDate } from "./dateService";
-import { gptokenString } from "./gptokenService";
-import { formatWordNumber } from "./grammarService";
+import { formatWordNumber, getCase, getCaseForNumber } from "./grammarService";
+import { getIntervalWord } from "./intervalService";
+import { getModelWord } from "./modelService";
 import { formatMoney } from "./moneyService";
 import { getPlanSettings } from "./planSettingsService";
 import { isProductUsageExceeded } from "./productUsageService";
 import { SubscriptionNameOptions, getPrettySubscriptionName, getSubscriptionPlan } from "./subscriptionService";
 import { formatTerm } from "./termService";
+import { formatLimit } from "./usageLimitService";
 
 export type ProductDescriptionOptions = {
   showPrice?: boolean;
@@ -103,10 +106,7 @@ export function formatProductsString(products: PurchasedProduct[]): string | nul
   return `${symbols.product} У вас ${formatWordNumber("продукт", products.length)}: /${commands.products}`;
 }
 
-export function formatProductDescriptions(
-  products: Product[],
-  options: ProductDescriptionOptions = {}
-): StringLike {
+export function formatProductDescriptions(products: Product[]): StringLike {
   if (isEmpty(products)) {
     return null;
   }
@@ -114,7 +114,13 @@ export function formatProductDescriptions(
   return toText(
     "Ваши продукты:",
     ...products
-      .map(product => formatProductDescription(product, options))
+      .map(product => formatProductDescription(
+        product,
+        {
+          showExpiration: true,
+          showConsumption: true
+        }
+      ))
   );
 }
 
@@ -133,69 +139,69 @@ export function formatProductDescription(
     ? formatProductExpiration(product)
     : null;
 
-  const plan = getProductPlan(product);
-  const prettyName = getPrettyProductName(product);
+  const formattedLimits = formatProductLimits(product, options.showConsumption);
 
-  const buildDescription = (...lines: StringLike[]) =>
-    toCompactText(
-      `<b>${prettyName}</b>`,
-      ...bulletize(...lines, priceLine, expirationLine)
-    );
-
-  const gptokenDescription = (gptokens: number) => buildDescription(
-    gptokenString(gptokens)
+  return toCompactText(
+    `<b>${getPrettyProductName(product)}</b>`,
+    ...bulletize(...formattedLimits, priceLine, expirationLine)
   );
+}
 
-  switch (plan) {
-    case "premium":
-      return buildDescription(
-        `до ${formatWordNumber("запрос", 100, "Genitive")} в день`
-      );
-
-    case "unlimited":
-      return buildDescription(
-        "неограниченное количество запросов"
-      );
-
-    case "novice":
-      return buildDescription(
-        formatWordNumber("запрос", 200)
-      );
-
-    case "student":
-      return buildDescription(
-        formatWordNumber("запрос", 500)
-      );
-
-    case "promo":
-      return gptokenDescription(10);
-
-    case "trial":
-      return gptokenDescription(20);
-
-    case "creative":
-      return gptokenDescription(50);
-
-    case "pro":
-      return gptokenDescription(150);
-
-    case "boss":
-      return gptokenDescription(400);
-
-    case "test-tinygpt3":
-      return buildDescription(
-        formatWordNumber("запрос", 2)
-      );
-
-    case "test-tinygptokens":
-      return gptokenDescription(4);
+function formatProductLimits(product: Product, showConsumption?: boolean): string[] {
+  if (!isPurchasedProduct(product)) {
+    return [];
   }
 
-  return prettyName;
+  const modelCodes = getProductModels(product);
+  const formattedLimits = [];
+
+  for (const modelCode of modelCodes) {
+    const limits = getProductConsumptionLimits(product, modelCode);
+
+    if (!limits) {
+      continue;
+    }
+
+    const word = getModelWord(modelCode);
+    const symbol = (modelCode === "gptokens") ? `${symbols.gptoken} ` : "";
+
+    if (isConsumptionLimit(limits)) {
+      const { consumed, remaining, limit } = limits;
+
+      const reallyShowConsumption = showConsumption && (consumed > 0);
+
+      const prefix = reallyShowConsumption
+        ? `${toFixedOrIntStr(remaining, 1)}/`
+        : "";
+
+      formattedLimits.push(
+        `${symbol}${prefix}${formatLimit(limit)} ${getCaseForNumber(word, reallyShowConsumption ? remaining : limit)}`
+      );
+    } else {
+      for (const intervalLimit of limits) {
+        const { interval, consumed, remaining, limit } = intervalLimit;
+
+        const reallyShowConsumption = showConsumption && (consumed > 0);
+
+        const intervalWord = getIntervalWord(interval);
+        const intervalWordCase = getCase(intervalWord, "Accusative");
+
+        const prefix = reallyShowConsumption
+          ? `${toFixedOrIntStr(remaining, 1)}/`
+          : "";
+
+        formattedLimits.push(
+          `${symbol}${prefix}${formatLimit(limit)} ${getCaseForNumber(word, reallyShowConsumption ? remaining : limit)} в ${intervalWordCase}`
+        );
+      }
+    }
+  }
+
+  return formattedLimits;
 }
 
 const formatProductExpiration = (product: ExpirableProduct) =>
-  `действует по ${getProductExpiration(product)}`;
+  `действует по 🕓 ${getProductExpiration(product)}`;
 
 function getProductExpiration(product: ExpirableProduct): string {
   const end = getProductEnd(product);

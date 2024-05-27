@@ -112,7 +112,7 @@ export async function generateImageWithGpt(
 
     await reply(
       ctx,
-      `🖼 Ваша картинка по запросу <b>«${prompt}»</b> готова. 👇`
+      `${symbols.picture} Ваша картинка по запросу <b>«${prompt}»</b> готова. 👇`
     );
 
     await ctx.replyWithPhoto(url);
@@ -125,7 +125,7 @@ export async function generateImageWithGpt(
       {
         ...inlineKeyboard(
           Markup.button.url("Скачать картинку", url),
-          ["Создать еще одну", backToStartAction],
+          [`Создать еще одну ${symbols.picture}`, backToStartAction],
           cancelButton
         ),
         disable_web_page_preview: true

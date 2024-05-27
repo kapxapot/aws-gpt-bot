@@ -1,4 +1,4 @@
-import { isNumber, isNumeric, phoneToItu, toCleanArray } from "../../src/lib/common";
+import { isNumber, isNumeric, phoneToItu, toCleanArray, toFixedOrIntStr } from "../../src/lib/common";
 import { uglyArray } from "../testData";
 
 describe("toCleanArray", () => {
@@ -57,6 +57,30 @@ describe("isNumber", () => {
       false,
       false,
       false
+    ])
+  });
+});
+
+describe("toFixedOrInt", () => {
+  test("works correctly", () => {
+    expect([
+      toFixedOrIntStr(5),
+      toFixedOrIntStr(10.1),
+      toFixedOrIntStr(10.123),
+      toFixedOrIntStr(10.123, 1),
+      toFixedOrIntStr(10.156, 1),
+      toFixedOrIntStr(9.996),
+      toFixedOrIntStr(9.996, 1),
+      toFixedOrIntStr(10.019, 1),
+    ]).toEqual([
+      "5",
+      "10",
+      "10",
+      "10.1",
+      "10.2",
+      "10",
+      "10",
+      "10"
     ])
   });
 });

@@ -1,6 +1,7 @@
 import { ConsumptionLimit, ConsumptionLimits, IntervalConsumptionLimits } from "../entities/consumption";
 import { KnownWord } from "../entities/grammar";
 import { ImageModelCode, ModelCode, TextModelCode } from "../entities/model";
+import { toFixedOrIntStr } from "../lib/common";
 import { symbols } from "../lib/constants";
 import { capitalize, commatize } from "../lib/text";
 import { isConsumptionLimit } from "./consumptionService";
@@ -47,7 +48,7 @@ function formatConsumptionLimit(
   usagePoints: number,
   word: KnownWord
 ): string {
-  let formatted = `осталось ${what}: ${remaining.toFixed(1)}/${formatLimit(limit)}`;
+  let formatted = `осталось ${what}: ${toFixedOrIntStr(remaining, 1)}/${formatLimit(limit)}`;
 
   if (gptokens) {
     const remainingCount = Math.floor(remaining / usagePoints);

@@ -44,9 +44,7 @@ function buildTextModelContext(
 ): TextModelContext {
   const pureModelCode = purifyTextModelCode(modelCode);
   const model = getTextModelByCode(modelCode);
-
   const lastUsedAt = getLastUsedAt(user.usageStats, pureModelCode);
-
   const limits = getConsumptionLimits(user, product, modelCode, pureModelCode);
 
   const activeLimit = limits
@@ -78,17 +76,14 @@ function buildImageModelContext(
 ): ImageModelContext {
   const pureModelCode = purifyImageModelCode(modelCode);
   const model = getImageModelByCode(modelCode);
-
   const lastUsedAt = getLastUsedAt(user.usageStats, pureModelCode);
-
-  const imageSettings = getDefaultImageSettings();
-
   const limits = getConsumptionLimits(user, product, modelCode, pureModelCode);
 
   const activeLimit = limits
     ? getActiveConsumptionLimit(limits)
     : null;
 
+  const imageSettings = getDefaultImageSettings();
   const usagePoints = getImageModelUsagePoints(modelCode, imageSettings);
 
   const usable = activeLimit !== null

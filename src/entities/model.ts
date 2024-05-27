@@ -1,3 +1,5 @@
+import { KnownWord } from "./grammar";
+
 export type GptokensCode = "gptokens";
 
 export type PureTextModelCode = "gpt3" | "gpt4";
@@ -36,4 +38,11 @@ export const textModelMap: Record<PureTextModelCode, TextModel> = {
 
 export const imageModelMap: Record<PureImageModelCode, ImageModel> = {
   "dalle3": "dall-e-3"
+};
+
+export const modelWordMap: Record<ModelCode, KnownWord> = {
+  "gpt3": "запрос",
+  "gpt4": "запрос",
+  "dalle3": "картинка",
+  "gptokens": "гптокен"
 };

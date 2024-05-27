@@ -21,7 +21,6 @@ import { Markup } from "telegraf";
 import { getUserActiveCoupons, getUserActiveProducts } from "../../services/userService";
 import { formatCouponsString } from "../../services/couponService";
 import { getGptokenUsagePoints } from "../../services/modelUsageService";
-import { getDefaultImageSettings } from "../../services/imageService";
 import { freePlanDescription } from "../../services/planService";
 
 type Message = string;
@@ -39,7 +38,7 @@ type ProductGroup = {
   description: string;
 };
 
-const usagePoints = getGptokenUsagePoints(getDefaultImageSettings());
+const usagePoints = getGptokenUsagePoints();
 
 const productGroups: ProductGroup[] = [
   {
@@ -86,13 +85,7 @@ async function sceneIndex(ctx: BotContext, user: User) {
   const products = getUserActiveProducts(user);
 
   const messages: StringLike[] = [
-    formatProductDescriptions(
-      products,
-      {
-        showConsumption: true,
-        showExpiration: true
-      }
-    ),
+    formatProductDescriptions(products),
     freePlanDescription
   ];
 

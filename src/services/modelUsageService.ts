@@ -21,7 +21,10 @@ export function getTextModelUsagePoints(modelCode: TextModelCode): number {
   }
 }
 
-export function getImageModelUsagePoints(modelCode: ImageModelCode, imageSettings: ImageSettings): number {
+export function getImageModelUsagePoints(
+  modelCode: ImageModelCode,
+  imageSettings?: ImageSettings
+): number {
   const model = getImageModelByCode(modelCode);
 
   switch (modelCode) {
@@ -29,11 +32,12 @@ export function getImageModelUsagePoints(modelCode: ImageModelCode, imageSetting
       return 1;
 
     case "gptokens":
+      imageSettings ??= getDefaultImageSettings();
       return getImageModelPrice(model, imageSettings).price;
   }
 }
 
 export const getGptokenUsagePoints = (imageSettings?: ImageSettings): UsagePoints => ({
   text: getTextModelUsagePoints("gptokens"),
-  image: getImageModelUsagePoints("gptokens", imageSettings ?? getDefaultImageSettings())
+  image: getImageModelUsagePoints("gptokens", imageSettings)
 });
