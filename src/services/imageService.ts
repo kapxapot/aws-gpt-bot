@@ -97,6 +97,8 @@ export async function generateImageWithGpt(
   if (isSuccess(image)) {
     const url = image.url;
 
+    console.log(url); // to debug the broken OpenAI urls
+
     if (!url) {
       console.error("The generated image is missing `url`.");
       await putMetric("Error");

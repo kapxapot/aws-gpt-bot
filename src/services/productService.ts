@@ -132,7 +132,7 @@ export function formatProductDescription(
   const termChunk = term ? `на ${formatTerm(term, "Accusative")}` : "";
 
   const priceLine = options.showPrice
-    ? `${formatMoney(product.price)}${termChunk}`
+    ? `${formatMoney(product.price)} ${termChunk}`
     : null;
 
   const expirationLine = (options.showExpiration && isExpirableProduct(product))
