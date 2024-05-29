@@ -22,6 +22,7 @@ import { getUserActiveCoupons, getUserActiveProducts } from "../../services/user
 import { formatCouponsString } from "../../services/couponService";
 import { getGptokenUsagePoints } from "../../services/modelUsageService";
 import { freePlanDescription } from "../../services/planService";
+import { getModelName } from "../../services/modelService";
 
 type Message = string;
 
@@ -57,8 +58,8 @@ const productGroups: ProductGroup[] = [
       `Пакеты ${symbols.gptoken} гптокенов для работы с <b>GPT-4</b> и <b>DALL-E</b>`,
       toCompactText(
         ...bulletize(
-          `1 запрос (~1000 токенов) к <b>GPT-4</b> = ${gptokenString(usagePoints.text)}`,
-          `1 картинка <b>DALL-E 3</b> = от ${gptokenString(usagePoints.image, "Genitive")}`
+          `1 запрос к <b>${getModelName("gpt4")}</b> (~1000 токенов) = ${gptokenString(usagePoints.text)}`,
+          `1 картинка <b>${getModelName("dalle3")}</b> = от ${gptokenString(usagePoints.image, "Genitive")}`
         )
       )
     )

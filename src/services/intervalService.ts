@@ -11,3 +11,11 @@ export function getIntervalString(
   const word = getIntervalWord(interval);
   return getCase(word, grammarCase);
 }
+
+/**
+ * Formats the interval string in the `Accusative` case.
+ */
+export function formatInterval(interval: Interval): string {
+  const word = getIntervalWord(interval);
+  return `в ${getCase(word, "Accusative")}`;
+}

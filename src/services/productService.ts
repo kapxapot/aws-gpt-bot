@@ -1,4 +1,5 @@
 import { At, happened } from "../entities/at";
+import { ConsumptionLimit, IntervalConsumptionLimit } from "../entities/consumption";
 import { GrammarCase } from "../entities/grammar";
 import { ModelCode } from "../entities/model";
 import { Plan } from "../entities/plan";
@@ -10,9 +11,9 @@ import { bulletize, cleanJoin, toCompactText, toText } from "../lib/text";
 import { uuid } from "../lib/uuid";
 import { getProductConsumptionLimits, isConsumptionLimit } from "./consumptionService";
 import { addDays, addTerm, formatDate } from "./dateService";
-import { formatWordNumber, getCase, getCaseForNumber } from "./grammarService";
-import { getIntervalWord } from "./intervalService";
-import { getModelWord } from "./modelService";
+import { formatWordNumber, getCaseForNumber } from "./grammarService";
+import { formatInterval } from "./intervalService";
+import { formatModelSuffix, getModelSymbol, getModelWord } from "./modelService";
 import { formatMoney } from "./moneyService";
 import { getPlanSettings } from "./planSettingsService";
 import { isProductUsageExceeded } from "./productUsageService";
@@ -139,7 +140,10 @@ export function formatProductDescription(
     ? formatProductExpiration(product)
     : null;
 
-  const formattedLimits = formatProductLimits(product, options.showConsumption);
+  const formattedLimits = formatProductLimits(
+    product,
+    options.showConsumption ?? false
+  );
 
   return toCompactText(
     `<b>${getPrettyProductName(product)}</b>`,
@@ -147,7 +151,7 @@ export function formatProductDescription(
   );
 }
 
-function formatProductLimits(product: Product, showConsumption?: boolean): string[] {
+function formatProductLimits(product: Product, showConsumption: boolean): string[] {
   if (!isPurchasedProduct(product)) {
     return [];
   }
@@ -162,43 +166,62 @@ function formatProductLimits(product: Product, showConsumption?: boolean): strin
       continue;
     }
 
-    const word = getModelWord(modelCode);
-    const symbol = (modelCode === "gptokens") ? `${symbols.gptoken} ` : "";
-
     if (isConsumptionLimit(limits)) {
-      const { consumed, remaining, limit } = limits;
-
-      const reallyShowConsumption = showConsumption && (consumed > 0);
-
-      const prefix = reallyShowConsumption
-        ? `${toFixedOrIntStr(remaining, 1)}/`
-        : "";
-
-      formattedLimits.push(
-        `${symbol}${prefix}${formatLimit(limit)} ${getCaseForNumber(word, reallyShowConsumption ? remaining : limit)}`
+      const formattedLimit = formatProductConsumptionLimit(
+        limits,
+        modelCode,
+        showConsumption
       );
+
+      formattedLimits.push(formattedLimit);
     } else {
-      for (const intervalLimit of limits) {
-        const { interval, consumed, remaining, limit } = intervalLimit;
-
-        const reallyShowConsumption = showConsumption && (consumed > 0);
-
-        const intervalWord = getIntervalWord(interval);
-        const intervalWordCase = getCase(intervalWord, "Accusative");
-
-        const prefix = reallyShowConsumption
-          ? `${toFixedOrIntStr(remaining, 1)}/`
-          : "";
-
-        formattedLimits.push(
-          `${symbol}${prefix}${formatLimit(limit)} ${getCaseForNumber(word, reallyShowConsumption ? remaining : limit)} в ${intervalWordCase}`
+      for (const limit of limits) {
+        const formattedLimit = formatProductIntervalConsumptionLimit(
+          limit,
+          modelCode,
+          showConsumption
         );
+
+        formattedLimits.push(formattedLimit);
       }
     }
   }
 
   return formattedLimits;
 }
+
+function formatProductConsumptionLimit(
+  consumptionLimit: ConsumptionLimit,
+  modelCode: ModelCode,
+  showConsumption: boolean
+): string {
+  const { consumed, remaining, limit } = consumptionLimit;
+
+  showConsumption = showConsumption && (consumed > 0);
+
+  const prefix = showConsumption
+    ? `${toFixedOrIntStr(remaining, 1)}/`
+    : "";
+
+  const word = getModelWord(modelCode);
+  const limitNumber = showConsumption ? remaining : limit;
+
+  return cleanJoin([
+    getModelSymbol(modelCode),
+    `${prefix}${formatLimit(limit)}`,
+    formatModelSuffix(modelCode),
+    getCaseForNumber(word, limitNumber)
+  ]);
+}
+
+const formatProductIntervalConsumptionLimit = (
+  limit: IntervalConsumptionLimit,
+  modelCode: ModelCode,
+  showConsumption: boolean
+) => cleanJoin([
+  formatProductConsumptionLimit(limit, modelCode, showConsumption),
+  formatInterval(limit.interval)
+]);
 
 const formatProductExpiration = (product: ExpirableProduct) =>
   `действует по 🕓 ${getProductExpiration(product)}`;

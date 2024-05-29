@@ -46,3 +46,9 @@ export const modelWordMap: Record<ModelCode, KnownWord> = {
   "dalle3": "картинка",
   "gptokens": "гптокен"
 };
+
+export const modelNameMap: Record<PureModelCode, string> = {
+  "gpt3": "GPT-3.5",
+  "gpt4": "GPT-4",
+  "dalle3": "DALL-E 3"
+};
