@@ -209,8 +209,8 @@ function formatProductConsumptionLimit(
   return cleanJoin([
     getModelSymbol(modelCode),
     `${prefix}${formatLimit(limit)}`,
-    formatModelSuffix(modelCode),
-    getCaseForNumber(word, limitNumber)
+    getCaseForNumber(word, limitNumber),
+    formatModelSuffix(modelCode)
   ]);
 }
 
