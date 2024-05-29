@@ -1,6 +1,6 @@
 {
   "name": "aws-gpt-bot",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "AWS ChatGPT Telegram bot",
   "scripts": {
     "deploy": "sls deploy",
