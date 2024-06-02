@@ -8,8 +8,8 @@ import { StringLike, isEmpty } from "../lib/common";
 import { commands, symbols } from "../lib/constants";
 import { bulletize, sentence, compactText, text } from "../lib/text";
 import { uuid } from "../lib/uuid";
-import { formatConsumptionLimit, formatIntervalConsumptionLimit } from "./consumptionFormatService";
-import { getProductConsumptionLimits, isConsumptionLimit } from "./consumptionService";
+import { formatConsumptionLimits } from "./consumptionFormatService";
+import { getProductConsumptionLimits } from "./consumptionService";
 import { addDays, addTerm, formatDate } from "./dateService";
 import { formatWordNumber } from "./grammarService";
 import { formatMoney } from "./moneyService";
@@ -164,25 +164,7 @@ function formatProductLimits(product: Product, showConsumption: boolean): string
       continue;
     }
 
-    if (isConsumptionLimit(limits)) {
-      const formattedLimit = formatConsumptionLimit(
-        limits,
-        modelCode,
-        showConsumption
-      );
-
-      formattedLimits.push(formattedLimit);
-    } else {
-      for (const limit of limits) {
-        const formattedLimit = formatIntervalConsumptionLimit(
-          limit,
-          modelCode,
-          showConsumption
-        );
-
-        formattedLimits.push(formattedLimit);
-      }
-    }
+    formattedLimits.push(...formatConsumptionLimits(limits, modelCode, showConsumption));
   }
 
   return formattedLimits;

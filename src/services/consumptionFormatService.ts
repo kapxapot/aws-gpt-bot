@@ -1,6 +1,7 @@
 import { ConsumptionLimit, ConsumptionLimits, IntervalConsumptionLimit } from "../entities/consumption";
 import { ModelCode } from "../entities/model";
 import { toFixedOrIntStr } from "../lib/common";
+import { settings } from "../lib/constants";
 import { cleanJoin, commatize, sentence } from "../lib/text";
 import { isConsumptionLimit } from "./consumptionService";
 import { formatWordNumber, getCase, getCaseForNumber } from "./grammarService";
@@ -33,7 +34,37 @@ export function formatRemainingLimits(
   );
 }
 
-export function formatConsumptionLimit(
+export function formatConsumptionLimits(
+  limits: ConsumptionLimits,
+  modelCode: ModelCode,
+  showConsumption: boolean
+): string[] {
+  const formattedLimits = [];
+
+  if (isConsumptionLimit(limits)) {
+    const formattedLimit = formatConsumptionLimit(
+      limits,
+      modelCode,
+      showConsumption
+    );
+
+    formattedLimits.push(formattedLimit);
+  } else {
+    for (const limit of limits) {
+      const formattedLimit = formatIntervalConsumptionLimit(
+        limit,
+        modelCode,
+        showConsumption
+      );
+
+      formattedLimits.push(formattedLimit);
+    }
+  }
+
+  return formattedLimits;
+}
+
+function formatConsumptionLimit(
   limit: ConsumptionLimit,
   modelCode: ModelCode,
   showConsumption: boolean
@@ -51,7 +82,7 @@ export function formatConsumptionLimit(
   );
 }
 
-export const formatIntervalConsumptionLimit = (
+const formatIntervalConsumptionLimit = (
   limit: IntervalConsumptionLimit,
   modelCode: ModelCode,
   showConsumption: boolean
@@ -85,7 +116,7 @@ function formatSpecialLimit(
   modelCode: ModelCode,
   usagePoints?: number
 ): string | null {
-  if (!usagePoints || usagePoints <= 0 || usagePoints === 1) {
+  if (!usagePoints || usagePoints <= 0 || usagePoints === settings.defaultUsagePoints) {
     return null;
   }
 

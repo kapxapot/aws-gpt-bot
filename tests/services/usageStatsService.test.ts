@@ -1,6 +1,7 @@
-import { now } from "../../src/entities/at";
+import { at, now } from "../../src/entities/at";
 import { UsageStats } from "../../src/entities/user";
-import { getLastUsedAt, getModelUsage } from "../../src/services/usageStatsService";
+import { startOfDay, startOfMonth, startOfWeek } from "../../src/services/dateService";
+import { getLastUsedAt, getModelUsage, getUsageCount } from "../../src/services/usageStatsService";
 
 const then = now();
 
@@ -59,5 +60,43 @@ describe("getLastUsedAt", () => {
     expect(
       getLastUsedAt(deprecatedUsageStats, "gpt4")
     ).toBeNull();
+  });
+});
+
+describe("getUsageCount", () => {
+  test("should get correct usage count", () => {
+    const usageStats: UsageStats = {
+      modelUsages: {
+        "gpt3": {
+          intervalUsages: {
+            "day": {
+              count: 3,
+              startedAt: at(startOfDay())
+            },
+            "month": {
+              count: 20,
+              startedAt: at(startOfMonth())
+            },
+            "week": {
+              count: 10,
+              startedAt: at(startOfWeek())
+            }
+          },
+          lastUsedAt: now()
+        },
+      }
+    };
+
+    expect(
+      getUsageCount(usageStats, "gpt3", "day")
+    ).toBe(3);
+
+    expect(
+      getUsageCount(usageStats, "gpt3", "week")
+    ).toBe(10);
+
+    expect(
+      getUsageCount(usageStats, "gpt3", "month")
+    ).toBe(20);
   });
 });

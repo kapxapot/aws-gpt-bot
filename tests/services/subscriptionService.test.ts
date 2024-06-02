@@ -1,6 +1,9 @@
+import { at, now } from "../../src/entities/at";
 import { freeSubscription } from "../../src/entities/product";
+import { UsageStats, User } from "../../src/entities/user";
+import { startOfDay, startOfMonth, startOfWeek } from "../../src/services/dateService";
 import { getProductByCode } from "../../src/services/productService";
-import { getPrettySubscriptionName } from "../../src/services/subscriptionService";
+import { formatSubscriptionDescription, getPrettySubscriptionName } from "../../src/services/subscriptionService";
 
 describe("getPrettySubscriptionName", () => {
   test("should correctly build name", () => {
@@ -28,5 +31,67 @@ describe("getPrettySubscriptionName", () => {
       "💔 Тарифу «Премиум»",
       "😎 Пакетом «Профи»"
     ]);
+  });
+});
+
+describe("formatSubscriptionDescription", () => {
+  test("", () => {
+    const usageStats: UsageStats = {
+      modelUsages: {
+        "gpt3": {
+          intervalUsages: {
+            "day": {
+              count: 3,
+              startedAt: at(startOfDay())
+            },
+            "month": {
+              count: 20,
+              startedAt: at(startOfMonth())
+            },
+            "week": {
+              count: 10,
+              startedAt: at(startOfWeek())
+            }
+          },
+          lastUsedAt: now()
+        },
+        "dalle3": {
+          intervalUsages: {
+            "day": {
+              count: 1,
+              startedAt: at(startOfDay())
+            },
+            "month": {
+              count: 6,
+              startedAt: at(startOfMonth())
+            },
+            "week": {
+              count: 2,
+              startedAt: at(startOfWeek())
+            }
+          },
+          lastUsedAt: now()
+        }
+      }
+    };
+
+    const user: User = {
+      id: "",
+      telegramId: 0,
+      createdAt: 0,
+      createdAtIso: "",
+      updatedAt: 0,
+      updatedAtIso: "",
+      usageStats
+    };
+
+    expect(
+      formatSubscriptionDescription(freeSubscription, user)
+    ).toBe(
+      `<b>🤑 Тариф «Бесплатный»</b>
+🔹 2/5 запроса к <b>GPT-3.5</b> в день
+🔹 80/100 запросов к <b>GPT-3.5</b> в месяц
+🔹 1/3 картинка <b>DALL-E 3</b> в неделю`
+    );
   });
 });
