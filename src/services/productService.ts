@@ -6,7 +6,7 @@ import { ModelLimit, PlanSettings } from "../entities/planSettings";
 import { ExpirableProduct, Product, ProductCode, PurchasedProduct, bossBundle, creativeBundle, isExpirableProduct, isPurchasedProduct, noviceBundle, premiumSubscription, proBundle, promoBundle, studentBundle, testTinyGpt3Bundle, testTinyGptokenBundle, trialBundle, unlimitedSubscription } from "../entities/product";
 import { StringLike, isEmpty } from "../lib/common";
 import { commands, symbols } from "../lib/constants";
-import { bulletize, sentence, compactText, text } from "../lib/text";
+import { bulletize, sentence, compactText, text, capitalize } from "../lib/text";
 import { uuid } from "../lib/uuid";
 import { formatConsumptionLimits } from "./consumptionFormatService";
 import { getProductConsumptionLimits } from "./consumptionService";
@@ -135,7 +135,9 @@ export function formatProductDescription(
     : null;
 
   const expirationLine = (options.showExpiration && isExpirableProduct(product))
-    ? formatProductExpiration(product)
+    ? capitalize(
+        formatProductExpiration(product)
+      )
     : null;
 
   const formattedLimits = formatProductLimits(
