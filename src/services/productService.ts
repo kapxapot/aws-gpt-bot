@@ -1,25 +1,23 @@
 import { At, happened } from "../entities/at";
-import { ConsumptionLimit, IntervalConsumptionLimit } from "../entities/consumption";
 import { GrammarCase } from "../entities/grammar";
 import { ModelCode } from "../entities/model";
 import { Plan } from "../entities/plan";
-import { PlanSettings } from "../entities/planSettings";
+import { ModelLimit, PlanSettings } from "../entities/planSettings";
 import { ExpirableProduct, Product, ProductCode, PurchasedProduct, bossBundle, creativeBundle, isExpirableProduct, isPurchasedProduct, noviceBundle, premiumSubscription, proBundle, promoBundle, studentBundle, testTinyGpt3Bundle, testTinyGptokenBundle, trialBundle, unlimitedSubscription } from "../entities/product";
-import { StringLike, isEmpty, toFixedOrIntStr } from "../lib/common";
+import { StringLike, isEmpty } from "../lib/common";
 import { commands, symbols } from "../lib/constants";
-import { bulletize, cleanJoin, toCompactText, toText } from "../lib/text";
+import { bulletize, sentence, compactText, text } from "../lib/text";
 import { uuid } from "../lib/uuid";
+import { formatConsumptionLimit, formatIntervalConsumptionLimit } from "./consumptionFormatService";
 import { getProductConsumptionLimits, isConsumptionLimit } from "./consumptionService";
 import { addDays, addTerm, formatDate } from "./dateService";
-import { formatWordNumber, getCaseForNumber } from "./grammarService";
-import { formatInterval } from "./intervalService";
-import { formatModelSuffix, getModelSymbol, getModelWord } from "./modelService";
+import { formatWordNumber } from "./grammarService";
 import { formatMoney } from "./moneyService";
+import { getPlanModelLimit, getPlanModels } from "./planService";
 import { getPlanSettings } from "./planSettingsService";
 import { isProductUsageExceeded } from "./productUsageService";
 import { SubscriptionNameOptions, getPrettySubscriptionName, getSubscriptionPlan } from "./subscriptionService";
 import { formatTerm } from "./termService";
-import { formatLimit } from "./usageLimitService";
 
 export type ProductDescriptionOptions = {
   showPrice?: boolean;
@@ -51,12 +49,12 @@ export function formatProductName(
   product: Product,
   targetCase?: GrammarCase
 ): string {
-  return cleanJoin([
+  return sentence(
     `<b>${getPrettyProductName(product, { full: true, targetCase })}</b>`,
     isExpirableProduct(product)
       ? `(${formatProductExpiration(product)})`
       : null
-  ]);
+  );
 }
 
 export function getProductByCode(code: ProductCode): Product {
@@ -112,7 +110,7 @@ export function formatProductDescriptions(products: Product[]): StringLike {
     return null;
   }
 
-  return toText(
+  return text(
     "Ваши продукты:",
     ...products
       .map(product => formatProductDescription(
@@ -145,7 +143,7 @@ export function formatProductDescription(
     options.showConsumption ?? false
   );
 
-  return toCompactText(
+  return compactText(
     `<b>${getPrettyProductName(product)}</b>`,
     ...bulletize(...formattedLimits, priceLine, expirationLine)
   );
@@ -167,7 +165,7 @@ function formatProductLimits(product: Product, showConsumption: boolean): string
     }
 
     if (isConsumptionLimit(limits)) {
-      const formattedLimit = formatProductConsumptionLimit(
+      const formattedLimit = formatConsumptionLimit(
         limits,
         modelCode,
         showConsumption
@@ -176,7 +174,7 @@ function formatProductLimits(product: Product, showConsumption: boolean): string
       formattedLimits.push(formattedLimit);
     } else {
       for (const limit of limits) {
-        const formattedLimit = formatProductIntervalConsumptionLimit(
+        const formattedLimit = formatIntervalConsumptionLimit(
           limit,
           modelCode,
           showConsumption
@@ -189,39 +187,6 @@ function formatProductLimits(product: Product, showConsumption: boolean): string
 
   return formattedLimits;
 }
-
-function formatProductConsumptionLimit(
-  consumptionLimit: ConsumptionLimit,
-  modelCode: ModelCode,
-  showConsumption: boolean
-): string {
-  const { consumed, remaining, limit } = consumptionLimit;
-
-  showConsumption = showConsumption && (consumed > 0);
-
-  const prefix = showConsumption
-    ? `${toFixedOrIntStr(remaining, 1)}/`
-    : "";
-
-  const word = getModelWord(modelCode);
-  const limitNumber = showConsumption ? remaining : limit;
-
-  return cleanJoin([
-    getModelSymbol(modelCode),
-    `${prefix}${formatLimit(limit)}`,
-    getCaseForNumber(word, limitNumber),
-    formatModelSuffix(modelCode)
-  ]);
-}
-
-const formatProductIntervalConsumptionLimit = (
-  limit: IntervalConsumptionLimit,
-  modelCode: ModelCode,
-  showConsumption: boolean
-) => cleanJoin([
-  formatProductConsumptionLimit(limit, modelCode, showConsumption),
-  formatInterval(limit.interval)
-]);
 
 const formatProductExpiration = (product: ExpirableProduct) =>
   `действует по 🕓 ${getProductExpiration(product)}`;
@@ -252,7 +217,12 @@ const isProductExhausted = (product: PurchasedProduct) =>
   getProductModels(product)
     .every(modelCode => isProductUsageExceeded(product, modelCode));
 
-function getProductModels(product: PurchasedProduct): ModelCode[] {
-  const planSettings = getProductPlanSettings(product);
-  return Object.keys(planSettings.limits) as ModelCode[];
+function getProductModels(product: Product): ModelCode[] {
+  const plan = getProductPlan(product);
+  return getPlanModels(plan);
+}
+
+export function getProductModelLimit(product: Product, modelCode: ModelCode): ModelLimit | null {
+  const plan = getProductPlan(product);
+  return getPlanModelLimit(plan, modelCode);
 }

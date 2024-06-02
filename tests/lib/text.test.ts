@@ -1,15 +1,15 @@
-import { andJoin, capitalize, commatize, orJoin, toCompactText, toText } from "../../src/lib/text";
+import { andJoin, capitalize, commatize, orJoin, compactText, text } from "../../src/lib/text";
 import { uglyArray } from "../testData";
 
-describe("toText", () => {
+describe("text", () => {
   test("should concat strings into text", () => {
-    expect(toText("one", "two")).toBe("one\n\ntwo");
+    expect(text("one", "two")).toBe("one\n\ntwo");
   });
 });
 
-describe("toCompactText", () => {
+describe("compactText", () => {
   test("should concat strings into compact text", () => {
-    expect(toCompactText("one", "two")).toBe("one\ntwo");
+    expect(compactText("one", "two")).toBe("one\ntwo");
   });
 });
 

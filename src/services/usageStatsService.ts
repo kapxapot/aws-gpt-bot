@@ -1,13 +1,13 @@
 import { At, at, now } from "../entities/at";
 import { Interval, intervals } from "../entities/interval";
-import { PureModelCode } from "../entities/model";
+import { ModelCode } from "../entities/model";
 import { UserModelUsage } from "../entities/modelUsage";
 import { UsageStats, User } from "../entities/user";
 import { updateUser } from "../storage/userStorage";
 import { startOf } from "./dateService";
 import { buildIntervalUsages, getIntervalUsage, incIntervalUsage } from "./intervalUsageService";
 
-export function getLastUsedAt(usageStats: UsageStats | undefined, modelCode: PureModelCode): At | null {
+export function getLastUsedAt(usageStats: UsageStats | undefined, modelCode: ModelCode): At | null {
   if (!usageStats) {
     return null;
   }
@@ -28,7 +28,7 @@ export function getLastUsedAt(usageStats: UsageStats | undefined, modelCode: Pur
 
 export function getUsageCount(
   usageStats: UsageStats | undefined,
-  modelCode: PureModelCode,
+  modelCode: ModelCode,
   interval: Interval
 ): number {
   if (!usageStats) {
@@ -57,7 +57,7 @@ export function getUsageCount(
   return 0;
 }
 
-export async function incUsage(user: User, modelCode: PureModelCode, usedAt: At): Promise<User> {
+export async function incUsage(user: User, modelCode: ModelCode, usedAt: At): Promise<User> {
   const usageStats = user.usageStats ?? {};
   let modelUsage = getModelUsage(usageStats, modelCode);
   const then = now();
@@ -92,7 +92,7 @@ export async function incUsage(user: User, modelCode: PureModelCode, usedAt: At)
   );
 }
 
-export function getModelUsage(usageStats: UsageStats, modelCode: PureModelCode): UserModelUsage | null {
+export function getModelUsage(usageStats: UsageStats, modelCode: ModelCode): UserModelUsage | null {
   return usageStats.modelUsages
     ? usageStats.modelUsages[modelCode] ?? null
     : null;
@@ -100,7 +100,7 @@ export function getModelUsage(usageStats: UsageStats, modelCode: PureModelCode):
 
 function setModelUsage(
   usageStats: UsageStats,
-  modelCode: PureModelCode,
+  modelCode: ModelCode,
   modelUsage: UserModelUsage
 ): UsageStats {
   return {

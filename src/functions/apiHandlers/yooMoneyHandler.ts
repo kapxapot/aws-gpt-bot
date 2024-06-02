@@ -1,7 +1,7 @@
 import { at, ts } from "../../entities/at";
 import { Product } from "../../entities/product";
 import { symbols } from "../../lib/constants";
-import { toText } from "../../lib/text";
+import { text } from "../../lib/text";
 import { putMetric } from "../../services/metricService";
 import { formatProductName, productToPurchasedProduct } from "../../services/productService";
 import { addUserProduct, getUserById } from "../../services/userService";
@@ -74,11 +74,13 @@ export async function yooMoneyHandler(requestData: YouMoneyRequestData) {
 
     await putMetrics(product);
 
+    const productName = formatProductName(purchasedProduct, "Accusative");
+
     await sendTelegramMessage(
       user,
-      toText(
+      text(
         `${symbols.success} Мы успешно получили ваш платеж.`,
-        `Вы приобрели ${formatProductName(purchasedProduct, "Accusative")}.`,
+        `Вы приобрели ${productName}.`,
         "♥ Благодарим за покупку!"
       )
     );

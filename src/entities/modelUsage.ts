@@ -1,7 +1,7 @@
 import { PartialRecord } from "../lib/types";
 import { At } from "./at";
 import { Interval } from "./interval";
-import { ModelCode, PureModelCode } from "./model";
+import { ModelCode } from "./model";
 
 export type IntervalUsage = {
   startedAt: At;
@@ -18,7 +18,7 @@ export type UserModelUsage = ModelUsage & {
   lastUsedAt: At;
 }
 
-export type UserModelUsages = PartialRecord<PureModelCode, UserModelUsage>;
+export type UserModelUsages = PartialRecord<ModelCode, UserModelUsage>;
 
 export type ProductModelUsage = ModelUsage & {
   count: number;

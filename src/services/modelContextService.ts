@@ -1,40 +1,44 @@
-import { ImageModelCode, ModelCode, TextModelCode, defaultImageModelCode, defaultTextModelCode } from "../entities/model";
+import { ImageModelCode, ModelCode, TextModelCode } from "../entities/model";
 import { ImageModelContext, TextModelContext } from "../entities/modelContext";
+import { defaultPlan } from "../entities/plan";
 import { PurchasedProduct } from "../entities/product";
 import { User } from "../entities/user";
 import { getActiveConsumptionLimit, getConsumptionLimits } from "./consumptionService";
 import { getDefaultImageSettings } from "./imageService";
 import { getImageModelByCode, getTextModelByCode, isImageModelCode, isTextModelCode, purifyImageModelCode, purifyTextModelCode } from "./modelService";
 import { getImageModelUsagePoints, getTextModelUsagePoints } from "./modelUsageService";
+import { getPlanModels } from "./planService";
 import { getProductAvailableModels } from "./productService";
 import { getLastUsedAt } from "./usageStatsService";
 import { getUserActiveProducts } from "./userService";
 
-type ProductModel = {
-  product: PurchasedProduct | null;
+type ContextModel = {
   modelCode: ModelCode;
+  product: PurchasedProduct | null;
 }
 
 export function getTextModelContexts(user: User): TextModelContext[] {
-  const productModels = getProductModels(user)
-    .filter(pm => isTextModelCode(pm.modelCode));
-
-  productModels.push({ product: null, modelCode: defaultTextModelCode });
-
-  return productModels.map(
-    pm => buildTextModelContext(user, pm.product, pm.modelCode as TextModelCode)
-  );
+  return getModels(user)
+    .filter(model => isTextModelCode(model.modelCode))
+    .map(
+      model => buildTextModelContext(user, model.product, model.modelCode as TextModelCode)
+    );
 }
 
 export function getImageModelContexts(user: User): ImageModelContext[] {
-  const productModels = getProductModels(user)
-    .filter(pm => isImageModelCode(pm.modelCode));
+  return getModels(user)
+    .filter(model => isImageModelCode(model.modelCode))
+    .map(
+      model => buildImageModelContext(user, model.product, model.modelCode as ImageModelCode)
+    );
+}
 
-  productModels.push({ product: null, modelCode: defaultImageModelCode });
+function getModels(user: User): ContextModel[] {
+  const defaultPlanModels =
+    getPlanModels(defaultPlan)
+      .map(modelCode => ({ modelCode, product: null } as ContextModel));
 
-  return productModels.map(
-    pm => buildImageModelContext(user, pm.product, pm.modelCode as ImageModelCode)
-  );
+  return getProductModels(user).concat(defaultPlanModels);
 }
 
 function buildTextModelContext(
@@ -103,13 +107,13 @@ function buildImageModelContext(
   };
 }
 
-function getProductModels(user: User): ProductModel[] {
-  const productModels: ProductModel[] = [];
+function getProductModels(user: User): ContextModel[] {
+  const productModels = [];
   const products = getUserActiveProducts(user);
 
   for (const product of products) {
     const modelCodes = getProductAvailableModels(product);
-    productModels.push(...modelCodes.map(modelCode => ({ product, modelCode })));
+    productModels.push(...modelCodes.map(modelCode => ({ modelCode, product })));
   }
 
   return productModels;

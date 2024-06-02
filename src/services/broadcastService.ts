@@ -4,7 +4,7 @@ import { BroadcastRequest } from "../entities/broadcastRequest";
 import { User } from "../entities/user";
 import { isEmpty, isUndefined } from "../lib/common";
 import { isError } from "../lib/error";
-import { toText } from "../lib/text";
+import { text } from "../lib/text";
 import { findBroadcastMessages, storeBroadcastMessage, updateBroadcastMessage } from "../storage/broadcastMessageStorage";
 import { getBroadcastRequest } from "../storage/broadcastRequestStorage";
 import { getAllUsers } from "../storage/userStorage";
@@ -116,7 +116,7 @@ async function createBroadcastMessages(
     await storeBroadcastMessage(
       request,
       user,
-      toText(...request.messages ?? []),
+      text(...request.messages ?? []),
       isUndefined(isTest) ? request.isTest : isTest
     );
 

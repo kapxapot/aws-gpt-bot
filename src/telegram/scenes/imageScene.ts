@@ -9,13 +9,13 @@ import { ImageStage, SessionData } from "../session";
 import { backToStartAction, cancelAction, cancelButton, gotoPremiumAction, gotoPremiumButton } from "../../lib/dialog";
 import { notAllowedMessage, replyBackToMainDialog, withUser } from "../../services/messageService";
 import { gptokenString } from "../../services/gptokenService";
-import { bullet, bulletize, toCompactText, toText } from "../../lib/text";
+import { bullet, bulletize, capitalize, compactText, text } from "../../lib/text";
 import { getImageModelContexts } from "../../services/modelContextService";
 import { freeSubscription } from "../../entities/product";
 import { ImageModelContext } from "../../entities/modelContext";
 import { User } from "../../entities/user";
 import { getPrettySubscriptionName } from "../../services/subscriptionService";
-import { formatImageConsumptionLimits } from "../../services/consumptionFormatService";
+import { formatRemainingLimits } from "../../services/consumptionFormatService";
 import { canGenerateImages } from "../../services/permissionService";
 
 const scene = new BaseScene<BotContext>(scenes.image);
@@ -117,17 +117,17 @@ async function imagePromptInput(ctx: BotContext, user: User) {
   }
 
   const formattedLimits = limits
-    ? formatImageConsumptionLimits(limits, modelCode, usagePoints)
+    ? formatRemainingLimits(limits, modelCode, usagePoints)
     : "";
 
   await replyWithKeyboard(
     ctx,
     inlineKeyboard(cancelButton),
     `${symbols.picture} Генерация картинок с помощью <b>DALL-E</b>`,
-    toCompactText(
+    compactText(
       ...bulletize(...modelDescription),
     ),
-    formattedLimits,
+    capitalize(formattedLimits),
     `Опишите картинку, которую хотите сгенерировать (до ${settings.maxImagePromptLength} символов):`
   );
 }
@@ -145,16 +145,17 @@ async function getImageModelContext(ctx: BotContext, user: User): Promise<ImageM
   for (const context of contexts) {
     const { product, modelCode, limits, usagePoints } = context;
 
-    const formattedLimits = limits
-      ? formatImageConsumptionLimits(limits, modelCode, usagePoints)
-      : "неопределенный лимит";
+    if (!limits) {
+      continue;
+    }
 
     const subscription = product ?? freeSubscription;
+    const formattedLimits = formatRemainingLimits(limits, modelCode, usagePoints);
 
     messages.push(
-      toCompactText(
+      compactText(
         `<b>${getPrettySubscriptionName(subscription)}</b>`,
-        bullet(formattedLimits)
+        bullet(capitalize(formattedLimits))
       )
     );
   }
@@ -162,7 +163,7 @@ async function getImageModelContext(ctx: BotContext, user: User): Promise<ImageM
   await replyWithKeyboard(
     ctx,
     inlineKeyboard(gotoPremiumButton, cancelButton),
-    toText(...messages),
+    text(...messages),
     "⛔ Генерация картинок недоступна.",
     `Подождите или приобретите пакет услуг: /${commands.premium}`
   );

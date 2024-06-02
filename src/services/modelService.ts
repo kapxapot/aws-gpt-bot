@@ -1,4 +1,4 @@
-import { TextModel, TextModelCode, ImageModel, ImageModelCode, ModelCode, PureTextModelCode, PureImageModelCode, defaultTextModelCode, defaultImageModelCode, textModelMap, imageModelMap, modelWordMap, PureModelCode, modelNameMap } from "../entities/model";
+import { TextModel, TextModelCode, ImageModel, ImageModelCode, ModelCode, PureTextModelCode, PureImageModelCode, textModelMap, imageModelMap, modelWordMap, PureModelCode, modelNameMap } from "../entities/model";
 import { symbols } from "../lib/constants";
 
 export function isTextModelCode(code: ModelCode): code is TextModelCode {
@@ -25,14 +25,6 @@ export function getImageModelByCode(code: ImageModelCode): ImageModel {
   return imageModelMap[purifyImageModelCode(code)];
 }
 
-export function getDefaultTextModel(): TextModel {
-  return getTextModelByCode(defaultTextModelCode);
-}
-
-export function getDefaultImageModel(): ImageModel {
-  return getImageModelByCode(defaultImageModelCode);
-}
-
 export const getModelWord = (modelCode: ModelCode) => modelWordMap[modelCode];
 
 export const getModelName = (modelCode: PureModelCode) => modelNameMap[modelCode];
@@ -47,8 +39,10 @@ export function formatModelSuffix(modelCode: ModelCode): string | null {
   switch (modelCode) {
     case "gpt3":
     case "gpt4":
-    case "dalle3":
       return `к <b>${getModelName(modelCode)}</b>`;
+
+    case "dalle3":
+      return `<b>${getModelName(modelCode)}</b>`;
   }
 
   return null;

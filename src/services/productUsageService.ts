@@ -7,13 +7,11 @@ import { isNumber } from "../lib/common";
 import { settings } from "../lib/constants";
 import { startOf } from "./dateService";
 import { buildIntervalUsages, getIntervalUsage, incIntervalUsage } from "./intervalUsageService";
-import { getPlanSettingsModelLimit } from "./planSettingsService";
-import { getProductPlanSettings } from "./productService";
+import { getProductModelLimit } from "./productService";
 
 export function isProductUsageExceeded(product: PurchasedProduct, modelCode: ModelCode): boolean {
   const usage = product.usage;
-  const settings = getProductPlanSettings(product);
-  const limit = getPlanSettingsModelLimit(settings, modelCode);
+  const limit = getProductModelLimit(product, modelCode);
 
   // no model limits defined = it's usage exceeded
   if (!limit) {

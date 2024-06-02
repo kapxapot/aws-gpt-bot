@@ -2,14 +2,14 @@ import { ts } from "../entities/at";
 import { getModeName } from "../entities/prompt";
 import { User } from "../entities/user";
 import { gptChatCompletion } from "../external/gptChatCompletion";
-import { StringLike, toFixedOrIntStr } from "../lib/common";
+import { StringLike } from "../lib/common";
 import { isSuccess } from "../lib/error";
 import { clearAndLeave, encodeText, inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
 import { addMessageToUser, getLastHistoryMessage, getOrAddUser, getUserActiveCoupons, getUserActiveProducts, stopWaitingForGptAnswer, updateUserProduct, waitForGptAnswer } from "./userService";
 import { commands, symbols } from "../lib/constants";
 import { getCurrentHistory } from "./contextService";
-import { formatWordNumber, getCase } from "./grammarService";
+import { formatWordNumber } from "./grammarService";
 import { Completion } from "../entities/message";
 import { putMetric } from "./metricService";
 import { isDebugMode } from "./userSettingsService";
@@ -21,21 +21,17 @@ import { incUsage } from "./usageStatsService";
 import { formatProductsString } from "./productService";
 import { incProductUsage } from "./productUsageService";
 import { freeSubscription } from "../entities/product";
-import { getIntervalString } from "./intervalService";
-import { formatLimit } from "./usageLimitService";
 import { gotoPremiumButton, remindButton } from "../lib/dialog";
-import { getConsumptionLimits, isConsumptionLimit } from "./consumptionService";
-import { ConsumptionLimit, ConsumptionLimits, IntervalConsumptionLimit, IntervalConsumptionLimits } from "../entities/consumption";
+import { getConsumptionLimits } from "./consumptionService";
 import { getTextModelContexts } from "./modelContextService";
-import { bullet, bulletize, cleanJoin, commatize, toCompactText, toText, truncate } from "../lib/text";
+import { bullet, bulletize, commatize, sentence, compactText, text, truncate, capitalize } from "../lib/text";
 import { TextModelContext } from "../entities/modelContext";
 import { getPrettySubscriptionName } from "./subscriptionService";
-import { formatTextConsumptionLimits } from "./consumptionFormatService";
+import { formatRemainingLimits } from "./consumptionFormatService";
 import { backToChatHandler } from "../telegram/handlers";
 import { formatCouponsString } from "./couponService";
 import { getTextModelPrices } from "./priceService";
 import { gptokenString } from "./gptokenService";
-import { getModelWord } from "./modelService";
 
 const config = {
   messageInterval: parseInt(process.env.MESSAGE_INTERVAL ?? "15") * 1000, // milliseconds
@@ -130,7 +126,7 @@ export async function sendMessageToGpt(ctx: BotContext, user: User, question: st
     const newLimits = getConsumptionLimits(user, product, modelCode, pureModelCode);
 
     const formattedLimits = newLimits
-      ? formatConsumptionLimits(newLimits, modelCode)
+      ? formatRemainingLimits(newLimits, modelCode)
       : null;
 
     await reply(
@@ -184,7 +180,7 @@ export function getStatusMessage(user: User): string {
   const products = getUserActiveProducts(user);
   const coupons = getUserActiveCoupons(user);
 
-  return toText(
+  return text(
     formatProductsString(products),
     formatCouponsString(coupons),
     `Режим: <b>${getModeName(user)}</b>`
@@ -234,11 +230,11 @@ export async function replyBackToMainDialog(ctx: BotContext, ...lines: StringLik
 }
 
 export function notAllowedMessage(message: string): string {
-  return cleanJoin([
+  return sentence(
     symbols.stop,
     message,
     config.mainBot ? `Используйте основной бот: @${config.mainBot}` : null
-  ]);
+  );
 }
 
 async function getTextModelContext(ctx: BotContext, user: User): Promise<TextModelContext | null> {
@@ -254,16 +250,17 @@ async function getTextModelContext(ctx: BotContext, user: User): Promise<TextMod
   for (const context of contexts) {
     const { product, modelCode, limits, usagePoints } = context;
 
-    const formattedLimits = limits
-      ? formatTextConsumptionLimits(limits, modelCode, usagePoints)
-      : "неопределенный лимит";
+    if (!limits) {
+      continue;
+    }
 
     const subscription = product ?? freeSubscription;
+    const formattedLimits = formatRemainingLimits(limits, modelCode, usagePoints);
 
     messages.push(
-      toCompactText(
+      compactText(
         `<b>${getPrettySubscriptionName(subscription)}</b>`,
-        bullet(formattedLimits)
+        bullet(capitalize(formattedLimits))
       )
     );
   }
@@ -271,40 +268,12 @@ async function getTextModelContext(ctx: BotContext, user: User): Promise<TextMod
   await replyWithKeyboard(
     ctx,
     inlineKeyboard(gotoPremiumButton),
-    toText(...messages),
+    text(...messages),
     "⛔ Запросы к ChatGPT недоступны.",
     `Подождите или приобретите пакет услуг: /${commands.premium}`
   );
 
   return null;
-}
-
-function formatConsumptionLimits(
-  limits: ConsumptionLimits,
-  modelCode: TextModelCode
-): string {
-  const word = getModelWord(modelCode);
-  const wordCase = getCase(word, "Genitive", "Plural");
-
-  return isConsumptionLimit(limits)
-    ? formatConsumptionLimit(limits, wordCase)
-    : formatIntervalConsumptionLimits(limits, wordCase);
-}
-
-function formatConsumptionLimit({ limit, remaining }: ConsumptionLimit, what: string): string {
-  return `осталось ${what}: ${toFixedOrIntStr(remaining, 1)}/${formatLimit(limit)}`;
-}
-
-function formatIntervalConsumptionLimits(
-  limits: IntervalConsumptionLimits,
-  what: string
-): string {
-  const format = ({ interval, limit, remaining }: IntervalConsumptionLimit) =>
-    `в ${getIntervalString(interval, "Accusative")}: ${remaining}/${formatLimit(limit)}`;
-
-  const chunks = limits.map(limit => format(limit));
-
-  return `осталось ${what} ${commatize(chunks)}`;
 }
 
 function calculateUsagePoints(answer: Completion, model: TextModel): number {
@@ -377,7 +346,7 @@ function buildDebugInfo(
     chunks.push(`модель ответа: ${answer.model}`);
   }
 
-  return toCompactText(
+  return compactText(
     "🛠 Отладка:",
     ...bulletize(...chunks)
   );

@@ -1,82 +1,96 @@
-import { ConsumptionLimit, ConsumptionLimits, IntervalConsumptionLimits } from "../entities/consumption";
-import { KnownWord } from "../entities/grammar";
-import { ImageModelCode, ModelCode, TextModelCode } from "../entities/model";
+import { ConsumptionLimit, ConsumptionLimits, IntervalConsumptionLimit } from "../entities/consumption";
+import { ModelCode } from "../entities/model";
 import { toFixedOrIntStr } from "../lib/common";
-import { symbols } from "../lib/constants";
-import { capitalize, commatize } from "../lib/text";
+import { cleanJoin, commatize, sentence } from "../lib/text";
 import { isConsumptionLimit } from "./consumptionService";
-import { formatWordNumber } from "./grammarService";
-import { getIntervalString } from "./intervalService";
+import { formatWordNumber, getCase, getCaseForNumber } from "./grammarService";
+import { formatInterval } from "./intervalService";
+import { formatModelSuffix, getModelSymbol, getModelWord } from "./modelService";
 import { formatLimit } from "./usageLimitService";
 
-export const formatImageConsumptionLimits = (
-  limits: ConsumptionLimits,
-  modelCode: ImageModelCode,
-  usagePoints: number
-) => formatConsumptionLimits(limits, modelCode, usagePoints, "картинка");
-
-export const formatTextConsumptionLimits = (
-  limits: ConsumptionLimits,
-  modelCode: TextModelCode,
-  usagePoints: number
-) => formatConsumptionLimits(limits, modelCode, usagePoints, "запрос");
-
-function formatConsumptionLimits(
+export function formatRemainingLimits(
   limits: ConsumptionLimits,
   modelCode: ModelCode,
-  usagePoints: number,
-  word: KnownWord
+  usagePoints?: number
 ): string {
-  const gptokens = modelCode === "gptokens";
-  const what = gptokens ? "гптокенов" : "запросов";
-
-  const formattedLimits = isConsumptionLimit(limits)
-    ? formatConsumptionLimit(limits, gptokens, what, usagePoints, word)
-    : formatIntervalConsumptionLimits(limits, gptokens, what, usagePoints, word);
-
-  const capLimits = capitalize(formattedLimits);
-
-  return gptokens
-    ? `${symbols.gptoken} ${capLimits}`
-    : capLimits;
-}
-
-function formatConsumptionLimit(
-  { limit, remaining }: ConsumptionLimit,
-  gptokens: boolean,
-  what: string,
-  usagePoints: number,
-  word: KnownWord
-): string {
-  let formatted = `осталось ${what}: ${toFixedOrIntStr(remaining, 1)}/${formatLimit(limit)}`;
-
-  if (gptokens) {
-    const remainingCount = Math.floor(remaining / usagePoints);
-    formatted += ` = ${formatWordNumber(word, remainingCount)}`;
+  if (isConsumptionLimit(limits)) {
+    return sentence(
+      `${formatLeft(modelCode)}: ${formatRemainingLimit(limits)}`,
+      formatSpecialLimit(limits, modelCode, usagePoints)
+    );
   }
 
-  return formatted;
+  const formattedLimits = limits.map(limit =>
+    sentence(
+      `${formatInterval(limit.interval)}: ${formatRemainingLimit(limit)}`,
+      formatSpecialLimit(limit, modelCode, usagePoints)
+    )
+  );
+
+  return sentence(
+    formatLeft(modelCode),
+    commatize(formattedLimits)
+  );
 }
 
-function formatIntervalConsumptionLimits(
-  limits: IntervalConsumptionLimits,
-  gptokens: boolean,
-  what: string,
-  usagePoints: number,
-  word: KnownWord
+export function formatConsumptionLimit(
+  limit: ConsumptionLimit,
+  modelCode: ModelCode,
+  showConsumption: boolean
 ): string {
-  const chunks: string[] = [];
+  showConsumption = showConsumption && (limit.consumed > 0);
 
-  for (const { interval, limit, remaining } of limits) {
-    let formatted = `в ${getIntervalString(interval, "Accusative")}: ${remaining}/${formatLimit(limit)}`;
+  const word = getModelWord(modelCode);
+  const limitNumber = showConsumption ? limit.remaining : limit.limit;
 
-    if (gptokens) {
-      const remainingCount = Math.floor(remaining / usagePoints);
-      formatted += ` = ${formatWordNumber(word, remainingCount)}`;
-    }
+  return sentence(
+    getModelSymbol(modelCode),
+    formatRemainingLimit(limit, showConsumption),
+    getCaseForNumber(word, limitNumber),
+    formatModelSuffix(modelCode)
+  );
+}
 
-    chunks.push(formatted);
+export const formatIntervalConsumptionLimit = (
+  limit: IntervalConsumptionLimit,
+  modelCode: ModelCode,
+  showConsumption: boolean
+) => sentence(
+  formatConsumptionLimit(limit, modelCode, showConsumption),
+  formatInterval(limit.interval)
+);
+
+function formatLeft(modelCode: ModelCode): string {
+  const word = getModelWord(modelCode);
+
+  return sentence(
+    "осталось",
+    getModelSymbol(modelCode),
+    getCase(word, "Genitive", "Plural")
+  );
+}
+
+function formatRemainingLimit(
+  { remaining, limit }: ConsumptionLimit,
+  showConsumption: boolean = true
+) {
+  return cleanJoin([
+    showConsumption ? toFixedOrIntStr(remaining, 1) : null,
+    formatLimit(limit)
+  ], "/");
+}
+
+function formatSpecialLimit(
+  limit: ConsumptionLimit,
+  modelCode: ModelCode,
+  usagePoints?: number
+): string | null {
+  if (!usagePoints || usagePoints <= 0 || usagePoints === 1) {
+    return null;
   }
 
-  return `осталось ${what} ${commatize(chunks)}`;
+  const word = getModelWord(modelCode);
+  const remainingCount = Math.floor(limit.remaining / usagePoints);
+  
+  return `= ${formatWordNumber(word, remainingCount)}`;
 }

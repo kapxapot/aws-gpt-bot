@@ -27,8 +27,6 @@ export type ImageSettings = {
   style?: ImageStyle;
 };
 
-export const defaultTextModelCode: TextModelCode = "gpt3";
-export const defaultImageModelCode: ImageModelCode = "dalle3";
 export const defaultImageSize: ImageSize = "1024x1024";
 
 export const textModelMap: Record<PureTextModelCode, TextModel> = {

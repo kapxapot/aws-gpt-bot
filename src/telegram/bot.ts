@@ -20,7 +20,7 @@ import { sessionStore } from "./sessionStore";
 import { imageScene } from "./scenes/imageScene";
 import { gotoPremiumAction, remindAction } from "../lib/dialog";
 import { isNumeric } from "../lib/common";
-import { bulletize, toCompactText } from "../lib/text";
+import { bulletize, compactText } from "../lib/text";
 import { couponsScene } from "./scenes/couponsScene";
 import { canUseGpt } from "../services/permissionService";
 import { issueCoupon } from "../services/couponService";
@@ -70,7 +70,7 @@ export async function processTelegramRequest(tgRequest: TelegramRequest) {
       await reply(
         ctx,
         `С возвращением, <b>${userName(ctx.from)}</b>!`,
-        toCompactText(
+        compactText(
           ...bulletize(...promoMessages)
         )
       );
@@ -89,7 +89,7 @@ export async function processTelegramRequest(tgRequest: TelegramRequest) {
     await reply(
       ctx,
       `Привет, <b>${userName(ctx.from)}</b>! 🤖 Я — <b>GPToid</b>, бот, созданный помогать вам в работе с <b>ChatGPT</b> и <b>DALL-E</b>!`,
-      toCompactText(
+      compactText(
         "Здесь вы можете работать с моделями <b>GPT-3.5 Turbo</b>, <b>GPT-4o</b> и <b>DALL-E 3</b>.",
         ...bulletize(
           `Советуем начать с обучения /${commands.tutorial}, если вы новичок в <b>ChatGPT</b> и <b>DALL-E</b>.`,

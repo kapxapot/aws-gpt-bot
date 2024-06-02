@@ -5,7 +5,7 @@ import { PurchasedProduct } from "../entities/product";
 import { User } from "../entities/user";
 import { isEmpty } from "../lib/common";
 import { commands, symbols } from "../lib/constants";
-import { toText } from "../lib/text";
+import { text } from "../lib/text";
 import { uuid } from "../lib/uuid";
 import { sendTelegramMessage } from "../telegram/bot";
 import { addDays, addTerm, formatDate, isExpired } from "./dateService";
@@ -37,7 +37,7 @@ export async function issueCoupon(user: User, code: CouponCode): Promise<Coupon>
 
   await sendTelegramMessage(
     user,
-    toText(
+    text(
       `🎉 Вы получили купон на активацию ${formatProductName(product, "Genitive")}.`,
       `${symbols.warning} Внимание! Срок действия купона ограничен, его нужно активировать в течение <b>${formatWordNumber(word, coupon.term.range, "Genitive")}</b>.`,
       `🚀 Активировать: /${commands.coupons}`

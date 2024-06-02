@@ -11,7 +11,7 @@ import { formatWordNumber } from "../../services/grammarService";
 import { formatProductDescription, formatProductName, getProductByCode } from "../../services/productService";
 import { activateCoupon, formatCouponExpiration } from "../../services/couponService";
 import { getIdChunk } from "../../lib/uuid";
-import { bullet, toCompactText, toText } from "../../lib/text";
+import { bullet, compactText, text } from "../../lib/text";
 import { Coupon } from "../../entities/coupon";
 import { User } from "../../entities/user";
 
@@ -121,8 +121,8 @@ function couponDescription(couponData: CouponData): string {
   const { coupon, activateCommand } = couponData;
   const product = getProductByCode(coupon.productCode);
 
-  return toText(
-    toCompactText(
+  return text(
+    compactText(
       formatProductDescription(product),
       bullet(`Купон действует по 🕓 ${formatCouponExpiration(coupon)}`)
     ),

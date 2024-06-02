@@ -15,13 +15,13 @@ import { updateUser } from "../../storage/userStorage";
 import { formatProductDescription, formatProductDescriptions, getPrettyProductName, getProductByCode, gpt3Products, gptokenProducts } from "../../services/productService";
 import { User } from "../../entities/user";
 import { gptokenString } from "../../services/gptokenService";
-import { bulletize, orJoin, toCompactText, toText } from "../../lib/text";
+import { bulletize, orJoin, compactText, text } from "../../lib/text";
 import { createPayment } from "../../services/paymentService";
 import { Markup } from "telegraf";
 import { getUserActiveCoupons, getUserActiveProducts } from "../../services/userService";
 import { formatCouponsString } from "../../services/couponService";
 import { getGptokenUsagePoints } from "../../services/modelUsageService";
-import { freePlanDescription } from "../../services/planService";
+import { defaultPlanDescription } from "../../services/planService";
 import { getModelName } from "../../services/modelService";
 
 type Message = string;
@@ -54,9 +54,9 @@ const productGroups: ProductGroup[] = [
     name: "GPT-4 / DALL-E",
     products: gptokenProducts,
     marketingMessage: "вы хотите работать с <b>GPT-4</b> и <b>DALL-E</b>",
-    description: toText(
+    description: text(
       `Пакеты ${symbols.gptoken} гптокенов для работы с <b>GPT-4</b> и <b>DALL-E</b>`,
-      toCompactText(
+      compactText(
         ...bulletize(
           `1 запрос к <b>${getModelName("gpt4")}</b> (~1000 токенов) = ${gptokenString(usagePoints.text)}`,
           `1 картинка <b>${getModelName("dalle3")}</b> = от ${gptokenString(usagePoints.image, "Genitive")}`
@@ -87,7 +87,7 @@ async function sceneIndex(ctx: BotContext, user: User) {
 
   const messages: StringLike[] = [
     formatProductDescriptions(products),
-    freePlanDescription
+    defaultPlanDescription(user)
   ];
 
   const coupons = getUserActiveCoupons(user);
@@ -181,7 +181,7 @@ async function buyAction(ctx: BotContext, productCode: ProductCode) {
 
 async function askForPhone(ctx: BotContext) {
   await ctx.reply(
-    toText(
+    text(
       "📱 Пожалуйста, предоставьте номер вашего телефона.",
       "Это нужно для автоматической отправки чеков.",
       `Нажмите кнопку "${contactRequestLabel}" (Telegram отправит его автоматически).`,
@@ -197,7 +197,7 @@ scene.on(message("contact"), async ctx => {
 
   if (!formattedPhone) {
     await ctx.reply(
-      toText(
+      text(
         "📱 Неверный формат телефона. Попробуйте еще раз.",
         "👇"
       ),

@@ -6,8 +6,8 @@ import { IntervalLimits } from "../entities/planSettings";
 import { PurchasedProduct } from "../entities/product";
 import { User } from "../entities/user";
 import { isEmpty, isNumber } from "../lib/common";
-import { getPlanSettings, getPlanSettingsModelLimit } from "./planSettingsService";
-import { getProductPlanSettings } from "./productService";
+import { getPlanModelLimit } from "./planService";
+import { getProductModelLimit } from "./productService";
 import { getProductIntervalUsageCount, getProductUsageCount } from "./productUsageService";
 import { getUsageCount } from "./usageStatsService";
 
@@ -27,11 +27,11 @@ export function getConsumptionLimits(
   user: User,
   product: PurchasedProduct | null,
   modelCode: ModelCode,
-  pureModelCode: PureModelCode
+  pureModelCode?: PureModelCode
 ): ConsumptionLimits | null {
   return product
     ? getProductConsumptionLimits(product, modelCode)
-    : getUserConsumptionLimits(user, pureModelCode);
+    : getUserConsumptionLimits(user, pureModelCode ?? modelCode);
 }
 
 export function getActiveConsumptionLimit(limits: ConsumptionLimits): ConsumptionLimit | null {
@@ -59,9 +59,8 @@ export function getProductConsumptionLimits(
   product: PurchasedProduct,
   modelCode: ModelCode
 ): ConsumptionLimits | null {
-  // get limits for the product's plan
-  const settings = getProductPlanSettings(product);
-  const limit = getPlanSettingsModelLimit(settings, modelCode);
+  // get limits for the product
+  const limit = getProductModelLimit(product, modelCode);
 
   // if the plan doesn't have a limit for the model
   if (!limit) {
@@ -88,14 +87,13 @@ export function getProductConsumptionLimits(
   return isEmpty(intervalLimits) ? null : intervalLimits;
 }
 
-function getUserConsumptionLimits(
+export function getUserConsumptionLimits(
   user: User,
-  modelCode: PureModelCode
+  modelCode: ModelCode
 ): ConsumptionLimits | null {
   // get limits for the default plan
   const plan = defaultPlan;
-  const settings = getPlanSettings(defaultPlan);
-  const limit = getPlanSettingsModelLimit(settings, modelCode);
+  const limit = getPlanModelLimit(plan, modelCode);
 
   // if a limit is not found - it is not defined for the model
   if (!limit) {
@@ -103,7 +101,7 @@ function getUserConsumptionLimits(
   }
 
   if (isNumber(limit)) {
-    throw new Error(`A numeric limit shouldn't be used for plan ${plan}.`);
+    throw new Error(`A numeric limit shouldn't be used for plan "${plan}".`);
   }
 
   // interval limits
@@ -112,7 +110,7 @@ function getUserConsumptionLimits(
     interval => getUsageCount(user.usageStats, modelCode, interval)
   );
 
-  return isEmpty(intervalLimits) ? null : intervalLimits;
+  return !isEmpty(intervalLimits) ? intervalLimits : null;
 }
 
 function getIntervalConsumptionLimits(

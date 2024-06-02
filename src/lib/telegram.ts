@@ -3,7 +3,7 @@ import { StringLike, last } from "./common";
 import { Markup, TelegramError } from "telegraf";
 import { settings } from "./constants";
 import { BotContext } from "../telegram/botContext";
-import { toText } from "./text";
+import { text } from "./text";
 
 export const contactRequestLabel = "📱 Отправить номер";
 
@@ -103,7 +103,7 @@ export async function reply(
   ctx: BotContext,
   ...lines: StringLike[]
 ): Promise<Message.TextMessage[]> {
-  const slices = sliceText(toText(...lines));
+  const slices = sliceText(text(...lines));
   return await replyWithSlices(ctx, slices);
 }
 
@@ -116,7 +116,7 @@ export async function replyWithKeyboard(
     return await reply(ctx, ...lines);
   }
 
-  const slices = sliceText(toText(...lines));
+  const slices = sliceText(text(...lines));
   const lastSlice = last(slices);
 
   if (!lastSlice) {

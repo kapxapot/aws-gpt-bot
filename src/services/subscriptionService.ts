@@ -2,7 +2,7 @@ import { GrammarCase } from "../entities/grammar";
 import { Subscription, freeSubscription, productTypeDisplayNames } from "../entities/product";
 import { User } from "../entities/user";
 import { first } from "../lib/common";
-import { capitalize, cleanJoin } from "../lib/text";
+import { capitalize, sentence } from "../lib/text";
 import { getCase } from "./grammarService";
 import { getUserActiveProducts } from "./userService";
 
@@ -32,10 +32,11 @@ export function getPrettySubscriptionName(
   const typeDisplayName = productTypeDisplayNames[subscription.details.type];
   const typeCase = getCase(typeDisplayName, targetCase);
 
-  return cleanJoin([
+  return sentence(
     subscription.icon,
-    `${capitalize(typeCase)} «${displayName}»`
-  ]);
+    capitalize(typeCase),
+    `«${displayName}»`
+  );
 }
 
 const getSubscriptionShortName = (subscription: Subscription) =>

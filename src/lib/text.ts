@@ -1,12 +1,14 @@
 import { StringLike, clean } from "./common";
 import { symbols } from "./constants";
 
-export const cleanJoin = (lines: StringLike[], delimiter: string = " ") =>
+export const cleanJoin = (lines: StringLike[], delimiter: string = "") =>
   clean(lines).join(delimiter);
 
-export const toText = (...lines: StringLike[]) => cleanJoin(lines, "\n\n");
+export const sentence = (...lines: StringLike[]) => cleanJoin(lines, " ");
 
-export const toCompactText = (...lines: StringLike[]) => cleanJoin(lines, "\n");
+export const text = (...lines: StringLike[]) => cleanJoin(lines, "\n\n");
+
+export const compactText = (...lines: StringLike[]) => cleanJoin(lines, "\n");
 
 /**
  * Sanitizes array and joins it using comma and space.
