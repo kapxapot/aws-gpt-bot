@@ -107,6 +107,14 @@ export async function reply(
   return await replyWithSlices(ctx, slices);
 }
 
+export async function replyWithMarkdown(
+  ctx: BotContext,
+  ...lines: StringLike[]
+): Promise<Message.TextMessage[]> {
+  const slices = sliceText(text(...lines));
+  return await replyWithSlices(ctx, slices, "markdown");
+}
+
 export async function replyWithKeyboard(
   ctx: BotContext,
   keyboard: InlineKeyboard | null,
@@ -133,11 +141,17 @@ export async function replyWithKeyboard(
   return messages;
 }
 
-export function encodeText(text: string): string {
-  return text
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;");
+export function encodeText(text: string, format: "html" | "markdown" = "html"): string {
+  if (format === "html") {
+    return text
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;");
+  }
+
+  const specialChars = ['\\', '_', '*', '[', ']', '(', ')', '~', '`', '>', '<', '&', '#', '+', '-', '=', '|', '{', '}', '.', '!'];
+
+  return specialChars.reduce((prev, cur) => prev.replaceAll(cur, `\\${cur}`), text);
 }
 
 export function sliceText(text: string, limit: number = settings.telegram.maxMessageLength): string[] {
@@ -186,12 +200,14 @@ export function isTelegramError(error: unknown): error is TelegramError {
   return error instanceof TelegramError;
 }
 
-async function replyWithSlices(ctx: BotContext, slices: string[]): Promise<Message.TextMessage[]> {
+async function replyWithSlices(ctx: BotContext, slices: string[], format: "html" | "markdown" = "html"): Promise<Message.TextMessage[]> {
   const messages = [];
 
   for (const slice of slices) {
     messages.push(
-      await ctx.replyWithHTML(slice)
+      format === "html"
+        ? await ctx.replyWithHTML(slice)
+        : await ctx.replyWithMarkdownV2(slice)
     );
   }
 

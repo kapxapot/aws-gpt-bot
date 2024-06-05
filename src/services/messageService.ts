@@ -4,7 +4,7 @@ import { User } from "../entities/user";
 import { gptChatCompletion } from "../external/gptChatCompletion";
 import { StringLike } from "../lib/common";
 import { isSuccess } from "../lib/error";
-import { clearAndLeave, encodeText, inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
+import { clearAndLeave, encodeText, inlineKeyboard, reply, replyWithKeyboard, replyWithMarkdown } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
 import { addMessageToUser, getLastHistoryMessage, getOrAddUser, getUserActiveCoupons, getUserActiveProducts, stopWaitingForGptAnswer, updateUserProduct, waitForGptAnswer } from "./userService";
 import { commands, symbols } from "../lib/constants";
@@ -100,7 +100,7 @@ export async function sendMessageToGpt(ctx: BotContext, user: User, question: st
   if (isSuccess(answer)) {
     await addMessageToUser(user, message);
 
-    await reply(
+    await replyWithMarkdown(
       ctx,
       answer.reply
         ? formatGptMessage(answer.reply)
@@ -190,12 +190,13 @@ export function getStatusMessage(user: User): string {
 export async function showLastHistoryMessage(ctx: BotContext, user: User, fallbackMessage?: string) {
   const historyMessage = getLastHistoryMessage(user);
 
-  const message = historyMessage
-    ? formatGptMessage(historyMessage)
-    : fallbackMessage;
+  if (historyMessage) {
+    await replyWithMarkdown(ctx, formatGptMessage(historyMessage));
+    return;
+  }
 
-  if (message) {
-    await reply(ctx, message);
+  if (fallbackMessage) {
+    await reply(ctx, fallbackMessage);
   }
 }
 
@@ -299,7 +300,7 @@ async function addMessageMetrics(completion: Completion) {
 }
 
 function formatGptMessage(message: string): string {
-    return `🤖 ${encodeText(message)}`;
+    return `🤖 ${encodeText(message, "markdown")}`;
 }
 
 function buildDebugInfo(
@@ -332,7 +333,8 @@ function buildDebugInfo(
 
       chunks.push(
         encodeText(
-          `история: ${commatize(truncatedRequests)}`
+          `история: ${commatize(truncatedRequests)}`,
+          "markdown"
         )
       );
     } else {
