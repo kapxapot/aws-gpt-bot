@@ -152,10 +152,6 @@ export function formatProductDescription(
 }
 
 function formatProductLimits(product: Product, showConsumption: boolean): string[] {
-  if (!isPurchasedProduct(product)) {
-    return [];
-  }
-
   const modelCodes = getProductModels(product);
   const formattedLimits = [];
 

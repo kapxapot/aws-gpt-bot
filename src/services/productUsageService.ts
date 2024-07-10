@@ -69,16 +69,24 @@ export function buildProductModelUsage(now: At, usagePoints: number): ProductMod
   };
 }
 
-export function getProductUsageCount(usage: ProductUsage, modelCode: ModelCode): number {
+export function getProductUsageCount(usage: ProductUsage | null, modelCode: ModelCode): number {
+  if (!usage) {
+    return 0;
+  }
+
   const modelUsage = getProductModelUsage(usage, modelCode);
   return modelUsage?.count ?? 0;
 }
 
 export function getProductIntervalUsageCount(
-  usage: ProductUsage,
+  usage: ProductUsage | null,
   modelCode: ModelCode,
   interval: Interval
 ): number {
+  if (!usage) {
+    return 0;
+  }
+
   const modelUsage = getProductModelUsage(usage, modelCode);
 
   if (!modelUsage) {

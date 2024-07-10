@@ -3,7 +3,7 @@ import { Interval } from "../entities/interval";
 import { ModelCode, PureModelCode } from "../entities/model";
 import { defaultPlan } from "../entities/plan";
 import { IntervalLimits } from "../entities/planSettings";
-import { PurchasedProduct } from "../entities/product";
+import { isPurchasedProduct, Product, PurchasedProduct } from "../entities/product";
 import { User } from "../entities/user";
 import { isEmpty, isNumber } from "../lib/common";
 import { getPlanModelLimit } from "./planService";
@@ -56,7 +56,7 @@ function getMinimalRemaining(limits: IntervalConsumptionLimits): ConsumptionLimi
 }
 
 export function getProductConsumptionLimits(
-  product: PurchasedProduct,
+  product: Product,
   modelCode: ModelCode
 ): ConsumptionLimits | null {
   // get limits for the product
@@ -67,9 +67,13 @@ export function getProductConsumptionLimits(
     return null;
   }
 
+  const usage = isPurchasedProduct(product)
+    ? product.usage
+    : null;
+
   // plain limit
   if (isNumber(limit)) {
-    const usageCount = getProductUsageCount(product.usage, modelCode);
+    const usageCount = getProductUsageCount(usage, modelCode);
 
     return {
       limit,
@@ -81,7 +85,7 @@ export function getProductConsumptionLimits(
   // interval limits
   const intervalLimits = getIntervalConsumptionLimits(
     limit,
-    interval => getProductIntervalUsageCount(product.usage, modelCode, interval)
+    interval => getProductIntervalUsageCount(usage, modelCode, interval)
   );
 
   return isEmpty(intervalLimits) ? null : intervalLimits;
