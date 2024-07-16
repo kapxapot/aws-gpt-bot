@@ -3,7 +3,7 @@ import { GrammarCase } from "../entities/grammar";
 import { ModelCode } from "../entities/model";
 import { Plan } from "../entities/plan";
 import { ModelLimit, PlanSettings } from "../entities/planSettings";
-import { ExpirableProduct, Product, ProductCode, PurchasedProduct, bossBundle, creativeBundle, isExpirableProduct, isPurchasedProduct, noviceBundle, premiumSubscription, proBundle, promoBundle, studentBundle, testTinyGpt3Bundle, testTinyGptokenBundle, trialBundle, unlimitedSubscription } from "../entities/product";
+import { ExpirableProduct, Product, ProductCode, PurchasedProduct, bossBundle, creativeBundle, isExpirableProduct, noviceBundle, premiumSubscription, proBundle, promoBundle, studentBundle, testTinyGpt3Bundle, testTinyGptokenBundle, trialBundle, unlimitedSubscription } from "../entities/product";
 import { StringLike, isEmpty } from "../lib/common";
 import { commands, symbols } from "../lib/constants";
 import { bulletize, sentence, compactText, text, capitalize } from "../lib/text";

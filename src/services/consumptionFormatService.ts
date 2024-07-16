@@ -1,4 +1,5 @@
 import { ConsumptionLimit, ConsumptionLimits, IntervalConsumptionLimit } from "../entities/consumption";
+import { KnownWord } from "../entities/grammar";
 import { ModelCode } from "../entities/model";
 import { toFixedOrIntStr } from "../lib/common";
 import { settings } from "../lib/constants";
@@ -12,25 +13,28 @@ import { formatLimit } from "./usageLimitService";
 export function formatRemainingLimits(
   limits: ConsumptionLimits,
   modelCode: ModelCode,
-  usagePoints?: number
+  usagePoints?: number,
+  targetWord?: KnownWord
 ): string {
+  const word = getModelWord(modelCode);
+
   if (isConsumptionLimit(limits)) {
     return sentence(
       `${formatLeft(modelCode)}: ${formatRemainingLimit(limits)}`,
-      formatSpecialLimit(limits, modelCode, usagePoints)
+      formatTargetLimit(limits, targetWord ?? word, usagePoints)
     );
   }
 
-  const formattedLimits = limits.map(limit =>
+  const formattedIntervalLimits = limits.map(limit =>
     sentence(
       `${formatInterval(limit.interval)}: ${formatRemainingLimit(limit)}`,
-      formatSpecialLimit(limit, modelCode, usagePoints)
+      formatTargetLimit(limit, targetWord ?? word, usagePoints)
     )
   );
 
   return sentence(
     formatLeft(modelCode),
-    commatize(formattedLimits)
+    commatize(formattedIntervalLimits)
   );
 }
 
@@ -111,17 +115,19 @@ function formatRemainingLimit(
   ], "/");
 }
 
-function formatSpecialLimit(
+/**
+ * Formats a limit for a target model / word.
+ */
+function formatTargetLimit(
   limit: ConsumptionLimit,
-  modelCode: ModelCode,
+  targetWord: KnownWord,
   usagePoints?: number
 ): string | null {
   if (!usagePoints || usagePoints <= 0 || usagePoints === settings.defaultUsagePoints) {
     return null;
   }
 
-  const word = getModelWord(modelCode);
   const remainingCount = Math.floor(limit.remaining / usagePoints);
-  
-  return `= ${formatWordNumber(word, remainingCount)}`;
+
+  return `= ${formatWordNumber(targetWord, remainingCount)}`;
 }
