@@ -8,6 +8,7 @@ import { getDefaultImageSettings } from "../../services/imageService";
 import { gptokenString } from "../../services/gptokenService";
 import { getGptokenUsagePoints } from "../../services/modelUsageService";
 import { formatWordNumber } from "../../services/grammarService";
+import { getModelName, gptPremiumModelName } from "../../services/modelService";
 
 const imageSettings = getDefaultImageSettings();
 const usagePoints = getGptokenUsagePoints(imageSettings);
@@ -15,6 +16,8 @@ const usagePoints = getGptokenUsagePoints(imageSettings);
 const config = {
   fanClub: process.env.SUPPORT_GROUP!
 };
+
+const gptDefaultModelName = getModelName("gpt-default");
 
 const steps = [
   // step 1
@@ -95,20 +98,20 @@ ChatGPT не просто копирует данные из интернета,
   // step 5
   `<b>Тарифные планы и пакеты услуг</b>
 
-Всем пользователям по умолчанию доступен тариф <b>«Бесплатный»</b> с определенными ограничениями на количество запросов. В нем у вас есть доступ к <b>GPT-3.5</b>, а также возможность попробовать генерацию картинок с помощью <b>DALL-E</b>.
+Всем пользователям по умолчанию доступен тариф <b>«Бесплатный»</b> с определенными ограничениями на количество запросов. В нем у вас есть доступ к <b>${gptDefaultModelName}</b>, а также возможность попробовать генерацию картинок с помощью <b>DALL-E</b>.
 
-Если вам необходимо большее количество запросов к <b>GPT-3.5</b> или доступ к <b>GPT-4</b> и <b>DALL-E</b> — приобретите один из пакетов услуг (пункт меню «Пакеты услуг» /${commands.premium}).`,
+Если вам необходимо большее количество запросов к <b>${gptDefaultModelName}</b> или доступ к <b>${gptPremiumModelName}</b> и <b>DALL-E</b> — приобретите один из пакетов услуг (пункт меню «Пакеты услуг» /${commands.premium}).`,
 
   // step 6
-  `<b>Гптокены, GPT-4 и DALL-E</b>
+  `<b>Гптокены, ${gptPremiumModelName} и DALL-E</b>
 
-Модель <b>GPT-4</b> является более продвинутой и новой по сравнению с <b>GPT-3.5</b>, она способна обрабатывать большие запросы и выдает более качественные ответы.
+Модель <b>${gptPremiumModelName}</b> является более продвинутой по сравнению с <b>${gptDefaultModelName}</b>, она способна обрабатывать большие запросы и выдает более качественные ответы.
 
 Модель <b>DALL-E</b> позволяет генерировать картинки по текстовому запросу.
 
-Обе модели доступны при покупке пакетов (/${commands.premium}) с ${symbols.gptoken} <b>гптокенами</b> — нашей специальной «валютой». На один гптокен можно написать ${formatWordNumber("запрос", 1 / usagePoints.text, "Accusative")} к <b>GPT-4</b>, а на два — создать ${formatWordNumber("картинка", 2 / usagePoints.image, "Accusative")} ${imageSettings.size} в <b>DALL-E 3</b>.
+Обе модели доступны при покупке пакетов (/${commands.premium}) с ${symbols.gptoken} <b>гптокенами</b> — нашей специальной «валютой». На один гптокен можно написать ${formatWordNumber("запрос", 1 / usagePoints.text, "Accusative")} к <b>${gptPremiumModelName}</b>, а на два — создать ${formatWordNumber("картинка", 2 / usagePoints.image, "Accusative")} ${imageSettings.size} в <b>DALL-E 3</b>.
 
-То есть, пакета в ${gptokenString(100)} вам хватит на ${formatWordNumber("запрос", 100 / usagePoints.text, "Accusative")} к <b>GPT-4</b> или генерацию ${formatWordNumber("картинка", 100 / usagePoints.image, "Accusative")} размером ${imageSettings.size}.`,
+То есть, пакета в ${gptokenString(100)} вам хватит на ${formatWordNumber("запрос", 100 / usagePoints.text, "Accusative")} к <b>${gptPremiumModelName}</b> или генерацию ${formatWordNumber("картинка", 100 / usagePoints.image, "Accusative")} размером ${imageSettings.size}.`,
 
   // step 7
   `<b>Фан-клуб GPToid</b>

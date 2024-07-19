@@ -1,6 +1,6 @@
 type FreePlan = "free";
-type ObsoletePlan = "premium" | "unlimited";
-type ActivePlan = "novice" | "student" | "trial" | "creative" | "pro" | "boss";
+type ObsoletePlan = "premium" | "unlimited" | "novice" | "student";
+type ActivePlan = "novice-mini" | "student-mini" | "trial" | "creative" | "pro" | "boss";
 type PromoPlan = "promo";
 type TestPlan = "test-tinygpt3" | "test-tinygptokens";
 

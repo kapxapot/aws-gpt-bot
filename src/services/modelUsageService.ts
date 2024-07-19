@@ -12,6 +12,7 @@ export function getTextModelUsagePoints(modelCode: TextModelCode): number {
   const model = getTextModelByCode(modelCode);
 
   switch (modelCode) {
+    case "gpt-default":
     case "gpt3":
     case "gpt4":
       return 1;

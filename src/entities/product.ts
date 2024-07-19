@@ -32,6 +32,8 @@ export const productCodes = [
   "subscription-unlimited-30-days",
   "bundle-novice-30-days",
   "bundle-student-30-days",
+  "bundle-novice-mini-30-days",
+  "bundle-student-mini-30-days",
   "bundle-promo-30-days",
   "bundle-trial-30-days",
   "bundle-creative-30-days",
@@ -133,6 +135,34 @@ export const studentBundle: Product = {
   details: {
     type: "bundle",
     plan: "student",
+    term: days(30)
+  }
+};
+
+export const noviceMiniBundle: Product = {
+  code: "bundle-novice-mini-30-days",
+  name: "Novice Mini Bundle - 30 Days",
+  shortName: "Новичок Мини",
+  displayName: "Новичок Мини на 30 дней",
+  icon: "👧",
+  price: money(19),
+  details: {
+    type: "bundle",
+    plan: "novice-mini",
+    term: days(30)
+  }
+};
+
+export const studentMiniBundle: Product = {
+  code: "bundle-student-mini-30-days",
+  name: "Student Mini Bundle - 30 Days",
+  shortName: "Студент Мини",
+  displayName: "Студент Мини на 30 дней",
+  icon: "👨‍🎓",
+  price: money(39),
+  details: {
+    type: "bundle",
+    plan: "student-mini",
     term: days(30)
   }
 };

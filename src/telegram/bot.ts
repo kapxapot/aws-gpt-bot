@@ -26,6 +26,7 @@ import { canUseGpt } from "../services/permissionService";
 import { issueCoupon } from "../services/couponService";
 import { decipherNumber } from "../services/cipherService";
 import { Result } from "../lib/error";
+import { gptDefaultModelName, gptPremiumModelName } from "../services/modelService";
 
 const config = {
   botToken: process.env.BOT_TOKEN!,
@@ -63,7 +64,7 @@ export async function processTelegramRequest(tgRequest: TelegramRequest) {
     const promoMessages = [
       `Приглашайте друзей и получайте 🎁 подарки: /${commands.invite}`,
       `Также вы получите 🎁 подарок, вступив в наш фан-клуб: @${config.fanClub}, где всегда можно задать вопросы и поделиться идеями.`,
-      `Приобретайте пакеты услуг /${commands.premium} для увеличения числа запросов к <b>GPT-3.5</b> и получения доступа к <b>GPT-4</b> и <b>DALL-E</b>.`
+      `Приобретайте пакеты услуг /${commands.premium} для увеличения числа запросов к <b>${gptDefaultModelName}</b> и получения доступа к <b>${gptPremiumModelName}</b> и <b>DALL-E</b>.`
     ];
 
     if (!newUser) {
@@ -90,7 +91,7 @@ export async function processTelegramRequest(tgRequest: TelegramRequest) {
       ctx,
       `Привет, <b>${userName(ctx.from)}</b>! 🤖 Я — <b>GPToid</b>, бот, созданный помогать вам в работе с <b>ChatGPT</b> и <b>DALL-E</b>!`,
       compactText(
-        "Здесь вы можете работать с моделями <b>GPT-3.5 Turbo</b>, <b>GPT-4o</b> и <b>DALL-E 3</b>.",
+        `Здесь вы можете работать с моделями <b>${gptDefaultModelName}</b>, <b>${gptPremiumModelName}</b> и <b>DALL-E 3</b>.`,
         ...bulletize(
           `Советуем начать с обучения /${commands.tutorial}, если вы новичок в <b>ChatGPT</b> и <b>DALL-E</b>.`,
           `Также у меня есть разные режимы работы: /${commands.mode}`,

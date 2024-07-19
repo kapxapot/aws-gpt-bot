@@ -12,7 +12,7 @@ import { SessionData } from "../session";
 import { StringLike, isEmpty, phoneToItu } from "../../lib/common";
 import { message } from "telegraf/filters";
 import { updateUser } from "../../storage/userStorage";
-import { formatProductDescription, formatProductDescriptions, getPrettyProductName, getProductByCode, gpt3Products, gptokenProducts } from "../../services/productService";
+import { formatProductDescription, formatProductDescriptions, getPrettyProductName, getProductByCode, gptokenProducts, gptProducts } from "../../services/productService";
 import { User } from "../../entities/user";
 import { gptokenString } from "../../services/gptokenService";
 import { bulletize, orJoin, compactText, text } from "../../lib/text";
@@ -21,7 +21,7 @@ import { Markup } from "telegraf";
 import { getUserActiveCoupons, getUserActiveProducts } from "../../services/userService";
 import { formatCouponsString } from "../../services/couponService";
 import { getGptokenUsagePoints } from "../../services/modelUsageService";
-import { getModelName } from "../../services/modelService";
+import { getModelName, gptDefaultModelName, gptPremiumModelName } from "../../services/modelService";
 import { formatSubscriptionDescription } from "../../services/subscriptionService";
 
 type Message = string;
@@ -32,7 +32,7 @@ type MessagesAndButtons = {
 };
 
 type ProductGroup = {
-  code: "gpt3" | "gptoken";
+  code: "gptoken" | "gpt-default";
   name: string;
   products: Product[];
   marketingMessage: string;
@@ -43,19 +43,19 @@ const usagePoints = getGptokenUsagePoints();
 
 const productGroups: ProductGroup[] = [
   {
-    code: "gpt3",
-    name: "GPT-3.5",
-    products: gpt3Products,
-    marketingMessage: "вам нужно больше запросов к <b>GPT-3.5</b>",
-    description: "Пакеты запросов к модели <b>GPT-3.5</b>"
+    code: "gpt-default",
+    name: gptDefaultModelName,
+    products: gptProducts,
+    marketingMessage: `вам нужно больше запросов к <b>${gptDefaultModelName}</b>`,
+    description: `Пакеты запросов к модели <b>${gptDefaultModelName}</b>`
   },
   {
     code: "gptoken",
-    name: "GPT-4 / DALL-E",
+    name: `${gptPremiumModelName} / DALL-E`,
     products: gptokenProducts,
-    marketingMessage: "вы хотите работать с <b>GPT-4</b> и <b>DALL-E</b>",
+    marketingMessage: `вы хотите работать с <b>${gptPremiumModelName}</b> и <b>DALL-E</b>`,
     description: text(
-      `Пакеты ${symbols.gptoken} гптокенов для работы с <b>GPT-4</b> и <b>DALL-E</b>`,
+      `Пакеты ${symbols.gptoken} гптокенов для работы с <b>${gptPremiumModelName}</b> и <b>DALL-E</b>`,
       compactText(
         ...bulletize(
           `1 запрос к <b>${getModelName("gpt4")}</b> (~1000 токенов) = ${gptokenString(usagePoints.text)}`,

@@ -2,6 +2,7 @@ import { at, now } from "../../src/entities/at";
 import { freeSubscription } from "../../src/entities/product";
 import { UsageStats, User } from "../../src/entities/user";
 import { startOfDay, startOfMonth, startOfWeek } from "../../src/services/dateService";
+import { gptDefaultModelName } from "../../src/services/modelService";
 import { getProductByCode } from "../../src/services/productService";
 import { formatSubscriptionDescription, getPrettySubscriptionName } from "../../src/services/subscriptionService";
 
@@ -38,7 +39,7 @@ describe("formatSubscriptionDescription", () => {
   test("", () => {
     const usageStats: UsageStats = {
       modelUsages: {
-        "gpt3": {
+        "gpt-default": {
           intervalUsages: {
             "day": {
               count: 3,
@@ -89,8 +90,8 @@ describe("formatSubscriptionDescription", () => {
       formatSubscriptionDescription(freeSubscription, user)
     ).toBe(
       `<b>🤑 Тариф «Бесплатный»</b>
-🔹 2/5 запроса к <b>GPT-3.5</b> в день
-🔹 80/100 запросов к <b>GPT-3.5</b> в месяц
+🔹 7/10 запросов к <b>${gptDefaultModelName}</b> в день
+🔹 130/150 запросов к <b>${gptDefaultModelName}</b> в месяц
 🔹 1/3 картинка <b>DALL-E 3</b> в неделю`
     );
   });

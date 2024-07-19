@@ -16,9 +16,9 @@ export type PlanSettings = {
 export const planSettings: Record<Plan, PlanSettings> = {
   "free": {
     limits: {
-      "gpt3": {
-        "day": 5,
-        "month": 100
+      "gpt-default": {
+        "day": 10,
+        "month": 150
       },
       "dalle3": {
         "week": 3
@@ -42,13 +42,25 @@ export const planSettings: Record<Plan, PlanSettings> = {
     }
   },
   "novice": {
+    disabled: true,
     limits: {
       "gpt3": 200
     }
   },
   "student": {
+    disabled: true,
     limits: {
       "gpt3": 500
+    }
+  },
+  "novice-mini": {
+    limits: {
+      "gpt-default": 200
+    }
+  },
+  "student-mini": {
+    limits: {
+      "gpt-default": 500
     }
   },
   "promo": {
