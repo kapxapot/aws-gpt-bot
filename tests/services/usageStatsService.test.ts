@@ -19,12 +19,6 @@ const fakeUsageStats: UsageStats = {
   }
 };
 
-const deprecatedUsageStats: UsageStats = {
-  startOfDay: then.timestamp,
-  messageCount: 1,
-  lastMessageAt: then
-};
-
 describe("getLastUsedAt", () => {
   test("should return null for empty usage stats", () => {
     expect(
@@ -48,18 +42,6 @@ describe("getLastUsedAt", () => {
     expect(
       getLastUsedAt(fakeUsageStats, "gpt3")
     ).toEqual(getModelUsage(fakeUsageStats, "gpt3")?.lastUsedAt);
-  });
-
-  test("should return a value for legacy gpt-3 usage", () => {
-    expect(
-      getLastUsedAt(deprecatedUsageStats, "gpt3")
-    ).toEqual(deprecatedUsageStats.lastMessageAt);
-  });
-
-  test("should return null for other models for legacy data", () => {
-    expect(
-      getLastUsedAt(deprecatedUsageStats, "gpt4")
-    ).toBeNull();
   });
 });
 

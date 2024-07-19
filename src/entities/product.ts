@@ -1,7 +1,6 @@
 import { symbols } from "../lib/constants";
-import { PartialRecord } from "../lib/types";
 import { At } from "./at";
-import { GrammarCase, KnownWord } from "./grammar";
+import { KnownWord } from "./grammar";
 import { ProductUsage } from "./modelUsage";
 import { Money, money, overprice } from "./money";
 import { Plan, defaultPlan } from "./plan";
@@ -19,8 +18,6 @@ export type Subscription = {
   shortName?: string;
   displayName?: string;
   icon?: string;
-  /** @deprecated Remove in >1 month after 0.2 release */
-  displayNames?: PartialRecord<GrammarCase, string>;
   details: {
     type: ProductType;
     plan: Plan;

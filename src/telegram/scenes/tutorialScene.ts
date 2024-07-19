@@ -109,7 +109,7 @@ ChatGPT не просто копирует данные из интернета,
 
 Модель <b>DALL-E</b> позволяет генерировать картинки по текстовому запросу.
 
-Обе модели доступны при покупке пакетов (/${commands.premium}) с ${symbols.gptoken} <b>гптокенами</b> — нашей специальной «валютой». На один гптокен можно написать ${formatWordNumber("запрос", 1 / usagePoints.text, "Accusative")} к <b>${gptPremiumModelName}</b>, а на два — создать ${formatWordNumber("картинка", 2 / usagePoints.image, "Accusative")} ${imageSettings.size} в <b>DALL-E 3</b>.
+Обе модели доступны при покупке пакетов (/${commands.premium}) с ${symbols.gptoken} <b>гптокенами</b> — нашей специальной «валютой». На один гптокен можно написать ${formatWordNumber("запрос", 1 / usagePoints.text, "Accusative")} к <b>${gptPremiumModelName}</b> (~1000 токенов ChatGPT каждый), а на два — создать ${formatWordNumber("картинка", 2 / usagePoints.image, "Accusative")} ${imageSettings.size} в <b>DALL-E 3</b>.
 
 То есть, пакета в ${gptokenString(100)} вам хватит на ${formatWordNumber("запрос", 100 / usagePoints.text, "Accusative")} к <b>${gptPremiumModelName}</b> или генерацию ${formatWordNumber("картинка", 100 / usagePoints.image, "Accusative")} размером ${imageSettings.size}.`,
 

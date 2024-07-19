@@ -10,7 +10,7 @@ import { isSuccess } from "../lib/error";
 import { getCurrentSubscription, getSubscriptionPlan } from "./subscriptionService";
 import { Plan } from "../entities/plan";
 import { PurchasedProduct } from "../entities/product";
-import { isProductActive, productToPurchasedProduct } from "./productService";
+import { isProductActive } from "./productService";
 import { Coupon } from "../entities/coupon";
 import { isCouponActive } from "./couponService";
 import { atSort, now } from "../entities/at";
@@ -26,18 +26,12 @@ const config = {
 };
 
 export async function getUserById(id: string): Promise<User | null> {
-  const user = await getUser(id);
-
-  return user
-    ? await checkUserIntegrity(user)
-    : null;
+  return await getUser(id);
 }
 
 export async function getOrAddUser(tgUser: TelegrafUser): Promise<User> {
-  const user = await getUserByTelegramId(tgUser.id)
+  return await getUserByTelegramId(tgUser.id)
     ?? await storeUser(tgUser);
-
-  return await checkUserIntegrity(user);
 }
 
 export async function addUserProduct(user: User, product: PurchasedProduct): Promise<User> {
@@ -299,24 +293,4 @@ async function updateUserContext(user: User, context: Context): Promise<User> {
       context
     }
   );
-}
-
-/**
- * Creates products for events if they are not defined.
- */
-async function checkUserIntegrity(user: User): Promise<User> {
-  if (user.products || !user.events) {
-    return user;
-  }
-
-  const products: PurchasedProduct[] = [];
-  
-  for (const event of user.events) {
-    if (event.type === "purchase") {
-      const product = productToPurchasedProduct(event.details, event.at);
-      products.push(product);
-    }
-  }
-
-  return await updateUserProducts(user, products);
 }

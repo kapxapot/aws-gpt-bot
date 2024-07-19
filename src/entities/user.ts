@@ -4,22 +4,9 @@ import { At } from "./at";
 import { Context } from "./context";
 import { Coupon } from "./coupon";
 import { UserModelUsages } from "./modelUsage";
-import { Product, PurchasedProduct } from "./product";
-
-/** @deprecated Remove in >1 month after 0.2 release */
-type UserEvent = {
-  type: "purchase";
-  details: Product;
-  at: At;
-};
+import { PurchasedProduct } from "./product";
 
 export type UsageStats = {
-  /** @deprecated Remove in 0.3.0 */
-  startOfDay?: number;
-  /** @deprecated Remove in 0.3.0 */
-  messageCount?: number;
-  /** @deprecated Remove in 0.3.0 */
-  lastMessageAt?: At;
   modelUsages?: UserModelUsages;
 };
 
@@ -47,8 +34,6 @@ export type User = Entity & {
   username?: string;
   phoneNumber?: string;
   context?: Context;
-  /** @deprecated Remove in >1 month after 0.2 release */
-  events?: UserEvent[];
   products?: PurchasedProduct[];
   coupons?: Coupon[];
   waitingForGptAnswer?: boolean;

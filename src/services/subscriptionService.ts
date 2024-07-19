@@ -68,6 +68,4 @@ const getSubscriptionShortName = (subscription: Subscription) =>
   subscription.shortName ?? getSubscriptionDisplayName(subscription);
 
 const getSubscriptionDisplayName = (subscription: Subscription) =>
-  (subscription.displayNames ? subscription.displayNames["Nominative"] : null)
-    ?? subscription.displayName
-    ?? subscription.name;
+  subscription.displayName ?? subscription.name;

@@ -1,4 +1,4 @@
-import { At, at, now } from "../entities/at";
+import { At, now } from "../entities/at";
 import { Interval, intervals } from "../entities/interval";
 import { ModelCode } from "../entities/model";
 import { UserModelUsage } from "../entities/modelUsage";
@@ -14,16 +14,7 @@ export function getLastUsedAt(usageStats: UsageStats | undefined, modelCode: Mod
 
   const modelUsage = getModelUsage(usageStats, modelCode);
 
-  if (modelUsage) {
-    return modelUsage.lastUsedAt;
-  }
-
-  // backfill for gpt-3
-  if (modelCode === "gpt3" && usageStats.lastMessageAt) {
-    return usageStats.lastMessageAt;
-  }
-
-  return null;
+  return modelUsage?.lastUsedAt ?? null;
 }
 
 export function getUsageCount(
@@ -46,14 +37,6 @@ export function getUsageCount(
     }
   }
 
-  // backfill for gpt-3
-  if (modelCode === "gpt3"
-    && usageStats.messageCount
-    && usageStats.startOfDay === startOf("day", then)
-  ) {
-    return usageStats.messageCount;
-  }
-
   return 0;
 }
 
@@ -72,18 +55,6 @@ export async function incUsage(user: User, modelCode: ModelCode, usedAt: At): Pr
   } else {
     // build fresh model usage
     modelUsage = buildModelUsage(usedAt, then);
-
-    // backfill for gpt-3
-    if (modelCode === "gpt3") {
-      const startOfDay = startOf("day", then);
-
-      if (usageStats.messageCount && usageStats.startOfDay === startOfDay) {
-        modelUsage.intervalUsages["day"] = {
-          startedAt: at(startOfDay),
-          count: usageStats.messageCount + 1
-        };
-      }
-    }
   }
 
   return await updateUsageStats(
