@@ -65,8 +65,6 @@ export function toFixedOrIntStr(num: number, digits?: number): string {
     epsilon /= 10;
   }
 
-  console.log([num, digits, fixed, fixedNum, truncated, fraction, epsilon]);
-
   return (toFixed(fraction, digits) < epsilon)
     ? String(truncated)
     : fixed;

@@ -62,25 +62,21 @@ describe("isNumber", () => {
 });
 
 describe("toFixedOrInt", () => {
-  test("works correctly", () => {
-    expect([
-      toFixedOrIntStr(5),
-      toFixedOrIntStr(10.1),
-      toFixedOrIntStr(10.123),
-      toFixedOrIntStr(10.123, 1),
-      toFixedOrIntStr(10.156, 1),
-      toFixedOrIntStr(9.996),
-      toFixedOrIntStr(9.996, 1),
-      toFixedOrIntStr(10.019, 1),
-    ]).toEqual([
-      "5",
-      "10",
-      "10",
-      "10.1",
-      "10.2",
-      "10",
-      "10",
-      "10"
-    ])
-  });
+  const dataSet = [
+    { input: 5, digits: undefined, output: "5" },
+    { input: 10.1, digits: undefined, output: "10" },
+    { input: 10.123, digits: undefined, output: "10" },
+    { input: 10.123, digits: 1, output: "10.1" },
+    { input: 10.156, digits: 1, output: "10.2" },
+    { input: 9.996, digits: undefined, output: "10" },
+    { input: 9.996, digits: 1, output: "10" },
+    { input: 10.019, digits: 1, output: "10" },
+  ];
+
+  it.each(dataSet)(
+    "works correctly",
+    ({ input, digits, output }) =>
+      expect(toFixedOrIntStr(input, digits))
+        .toEqual(output)
+  );
 });
