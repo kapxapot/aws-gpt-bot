@@ -1,7 +1,7 @@
 import { BaseScene } from "telegraf/scenes";
 import { BotContext } from "../botContext";
 import { scenes, settings, symbols } from "../../lib/constants";
-import { ButtonLike, clearAndLeave, clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
+import { ButtonLike, clearAndLeave, clearInlineKeyboard, encodeText, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { backToCustomPrompt, getOrAddUser, newCustomPrompt, setFreeMode, setPrompt } from "../../services/userService";
 import { getModeName, getModes, getPrompts } from "../../entities/prompt";
 import { addSceneCommandHandlers, backToChatHandler, dunnoHandler, kickHandler } from "../handlers";
@@ -94,7 +94,7 @@ getModes().forEach(mode => {
           if (customPrompt) {
             messages.push(
               "У вас есть свой промт:",
-              `<i>${customPrompt}</i>`,
+              `<i>${encodeText(customPrompt)}</i>`,
               "Вы можете вернуться к своему промту или задать новый."
             );
 
