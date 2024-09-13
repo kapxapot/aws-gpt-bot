@@ -1,4 +1,4 @@
-import { isNumber, isNumeric, phoneToItu, toCleanArray, toFixedOrIntStr } from "../../src/lib/common";
+import { isNumber, isNumeric, phoneToItu, toCleanArray, toFixedOrInt, toFixedOrIntStr } from "../../src/lib/common";
 import { uglyArray } from "../testData";
 
 describe("toCleanArray", () => {
@@ -61,7 +61,7 @@ describe("isNumber", () => {
   });
 });
 
-describe("toFixedOrInt", () => {
+describe("toFixedOrIntStr", () => {
   const dataSet = [
     { input: 5, digits: undefined, output: "5" },
     { input: 10.1, digits: undefined, output: "10" },
@@ -77,6 +77,27 @@ describe("toFixedOrInt", () => {
     "works correctly",
     ({ input, digits, output }) =>
       expect(toFixedOrIntStr(input, digits))
+        .toEqual(output)
+  );
+});
+
+describe("toFixedOrInt", () => {
+  const dataSet = [
+    { input: 5, digits: undefined, output: 5 },
+    { input: 10.1, digits: undefined, output: 10 },
+    { input: 10.123, digits: undefined, output: 10 },
+    { input: 10.123, digits: 1, output: 10.1 },
+    { input: 10.156, digits: 1, output: 10.2 },
+    { input: 9.996, digits: undefined, output: 10 },
+    { input: 9.996, digits: 1, output: 10 },
+    { input: 10.019, digits: 1, output: 10 },
+    { input: 0.08600000000000001, digits: 3, output: 0.086 }
+  ];
+
+  it.each(dataSet)(
+    "works correctly",
+    ({ input, digits, output }) =>
+      expect(toFixedOrInt(input, digits))
         .toEqual(output)
   );
 });

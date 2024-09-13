@@ -2,7 +2,7 @@ import { ts } from "../entities/at";
 import { getModeName } from "../entities/prompt";
 import { User } from "../entities/user";
 import { gptChatCompletion } from "../external/gptChatCompletion";
-import { StringLike } from "../lib/common";
+import { StringLike, toFixedOrInt } from "../lib/common";
 import { isSuccess } from "../lib/error";
 import { clearAndLeave, encodeText, inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
@@ -316,9 +316,11 @@ function buildDebugInfo(
     chunks.push(`токены: ${usage.totalTokens} (${usage.promptTokens} + ${usage.completionTokens})`);
   }
 
+  const formattedPoints = toFixedOrInt(actualUsagePoints, 3);
+
   const cost = (modelCode === "gptokens")
-    ? gptokenString(actualUsagePoints)
-    : actualUsagePoints;
+    ? gptokenString(formattedPoints)
+    : formattedPoints;
 
   chunks.push(`стоимость: ${cost}`);
 

@@ -48,6 +48,10 @@ export function isUndefined(v: unknown): v is undefined {
 
 export const isEmpty = <T>(array?: T[]) => !array || !array.length;
 
+export function toFixedOrInt(num: number, digits?: number): number {
+  return Number(toFixedOrIntStr(num, digits));
+}
+
 export function toFixedOrIntStr(num: number, digits?: number): string {
   const fixed = num.toFixed(digits);
 

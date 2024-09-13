@@ -4,6 +4,7 @@ import { Markup, TelegramError } from "telegraf";
 import { settings } from "./constants";
 import { BotContext } from "../telegram/botContext";
 import { text } from "./text";
+import { parse } from "./parser";
 
 export const contactRequestLabel = "📱 Отправить номер";
 
@@ -134,10 +135,12 @@ export async function replyWithKeyboard(
 }
 
 export function encodeText(text: string): string {
-  return text
+  text = text
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;");
+
+  return parse(text);
 }
 
 export function sliceText(text: string, limit: number = settings.telegram.maxMessageLength): string[] {
