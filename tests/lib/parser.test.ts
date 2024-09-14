@@ -1,4 +1,4 @@
-import { parse } from "../../src/lib/parser";
+import { bullet, parse } from "../../src/lib/parser";
 
 describe("parse", () => {
   test("should parse Telegram code blocks", () => {
@@ -17,14 +17,12 @@ In this example, \`isEven\` takes a number as an argument and returns \`true\` i
 
     expect(text).toBe(`Certainly! Here's a simple JavaScript function that returns a boolean value. This function checks if a given number is even:
 
-<pre><code class="language-javascript">
-function isEven(number) {
+<pre><code class="language-javascript">function isEven(number) {
     return number % 2 === 0;
 }
 // Example usage:
 console.log(isEven(4)); // true
-console.log(isEven(7)); // false
-</code></pre>
+console.log(isEven(7)); // false</code></pre>
 
 In this example, <code>isEven</code> takes a number as an argument and returns <code>true</code> if the number is even, and <code>false</code> otherwise.`);
   });
@@ -34,38 +32,32 @@ In this example, <code>isEven</code> takes a number as an argument and returns <
 
     expect(text).toBe(`To create a regular expression that matches all symbols except the asterisk (<code>*</code>), you can use a negated character class. Here's how you can do it:
 
-<pre><code class="language-regex">
-[^*]
-</code></pre>
+<pre><code class="language-regex">[^*]</code></pre>
 
-### Explanation:
-- <code>[</code> and <code>]</code>: These define a character class.
-- <code>^</code>: When placed at the beginning of a character class, it negates the class, meaning it will match any character that is **not** listed.
-- <code>*</code>: This is the character you want to exclude.
+<b>Explanation:</b>
+${bullet} <code>[</code> and <code>]</code>: These define a character class.
+${bullet} <code>^</code>: When placed at the beginning of a character class, it negates the class, meaning it will match any character that is **not** listed.
+${bullet} <code>*</code>: This is the character you want to exclude.
 
-### Usage in JavaScript:
+<b>Usage in JavaScript:</b>
 You can use this regex in JavaScript to test if a string contains any character except <code>*</code>.
 
-<pre><code class="language-javascript">
-const regex = /[^*]/;
+<pre><code class="language-javascript">const regex = /[^*]/;
 
 // Example usage
 const testString1 = "Hello, World!"; // Contains no '*'
 const testString2 = "Hello*World";    // Contains '*'
 
 console.log(regex.test(testString1)); // true
-console.log(regex.test(testString2)); // false
-</code></pre>
+console.log(regex.test(testString2)); // false</code></pre>
 
-### Note:
+<b>Note:</b>
 If you want to match entire strings that contain any characters except <code>*</code>, you can use the regex in a context like this:
 
-<pre><code class="language-javascript">
-const regex = /^[^*]+$/; // Matches strings that do not contain '*'
+<pre><code class="language-javascript">const regex = /^[^*]+$/; // Matches strings that do not contain '*'
 
 console.log(regex.test("Hello, World!")); // true
-console.log(regex.test("Hello*World"));    // false
-</code></pre>
+console.log(regex.test("Hello*World"));    // false</code></pre>
 
 In this case, <code>^</code> asserts the start of the string, and <code>$</code> asserts the end of the string, ensuring the entire string is checked. The <code>+</code> ensures that there is at least one character that is not <code>*</code>.`);
   });
@@ -96,5 +88,43 @@ In this case, <code>^</code> asserts the start of the string, and <code>$</code>
 // **sdkjsdfkjlf*
 // `
 //     );
-  // });
+//  });
+
+  test("debug 3", () => {
+    const text = parse("```javascript\nconst str = `\n\\`\\`\\`javascript\nconst a = 1;\n\\`\\`\\`\n`;\n\n// Function to display the string\nfunction displayCodeSnippet(codeString) {\n    console.log(\"Here is the code snippet:\");\n    console.log(codeString);\n}\n\n// Call the function with the string\ndisplayCodeSnippet(str);\n```");
+
+    expect(text).toBe("<pre><code class=\"language-javascript\">const str = `\n\\`\\`\\`javascript\nconst a = 1;\n\\`\\`\\`\n`;\n\n// Function to display the string\nfunction displayCodeSnippet(codeString) {\n    console.log(\"Here is the code snippet:\");\n    console.log(codeString);\n}\n\n// Call the function with the string\ndisplayCodeSnippet(str);</code></pre>");
+  });
+
+  test("parses ###", () => {
+    const text = parse(`# abc 123
+## abc 123
+### abc 123
+### abc 123
+#### abc 123
+##### abc 123`);
+
+    expect(text).toBe(`<b>abc 123</b>
+<b>abc 123</b>
+<b>abc 123</b>
+<b>abc 123</b>
+<b>abc 123</b>
+<b>abc 123</b>`);
+  });
+
+  test("parses list items", () => {
+    const text = parse(`- abc 123
+ - abc 123
+  - abc 123
+   - abc 123
+    - abc 123
+     - abc 123`);
+
+    expect(text).toBe(`${bullet} abc 123
+ ${bullet} abc 123
+  ${bullet} abc 123
+   ${bullet} abc 123
+    ${bullet} abc 123
+     ${bullet} abc 123`);
+  });
 });

@@ -108,6 +108,10 @@ export async function sendMessageToGpt(ctx: BotContext, user: User, question: st
 
       try {
         await reply(ctx, parse(formattedReply));
+
+        if (isDebugMode(user)) {
+          await reply(ctx, formattedReply);
+        }
       } catch (error: unknown) {
         console.error(error);
         await reply(ctx, formattedReply);

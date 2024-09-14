@@ -1,8 +1,16 @@
+type Replace = {
+  from: RegExp | string;
+  to?: string;
+};
+
 const delimiter = "\n";
+export const bullet = "▪";
 
 export function parse(text: string): string {
   const lines = text.split(delimiter);
-  return crawlLines(lines).join(delimiter);
+  const rawText = crawlLines(lines).join(delimiter);
+
+  return clean(rawText);
 }
 
 function crawlLines(lines: string[]): string[] {
@@ -38,7 +46,11 @@ function crawlLines(lines: string[]): string[] {
       continue;
     }
 
-    newLines.push(parseLine(line));
+    if (inCodeBlock) {
+      newLines.push(line);
+    } else {
+      newLines.push(parseLine(line));
+    }
   }
 
   // check for unclosed tags such as code block
@@ -50,7 +62,18 @@ function crawlLines(lines: string[]): string[] {
 }
 
 function parseLine(line: string): string {
-  line = parseInlineCodeblocks(line);
+  if (line.startsWith("#")) {
+    return line.replace(/^#+\s+(.+)$/, "<b>$1</b>");
+  }
+
+  // inline code
+  line = line.replace(/(\s*)-(\s+.+)/, `$1${bullet}$2`);
+
+  // bold
+  // line = line.replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
+
+  // inline code
+  line = line.replace(/`([^`]+)`/g, "<code>$1</code>");
 
   return line;
 }
@@ -61,13 +84,22 @@ function codeBlockStart(language: string | null = null): string {
 }
 
 function codeBlockEnd(): string {
-  return `</code></pre>`;
+  return "</code></pre>";
 }
 
-function parseInlineCodeblocks(text: string): string {
-  return text.replace(/`([^`]+)`/g, "<code>$1</code>");
-}
+function clean(text: string): string {
+  const replaces: Replace[] = [
+    {
+      from: /(<pre><code( class="language-.+")?>)\n/g
+    },
+    {
+      from: /\n(<\/code><\/pre>)/g,
+    }
+  ];
 
-// function parseBold(text: string): string {
-//   return text.replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>");
-// }
+  for (const replace of replaces) {
+    text = text.replace(replace.from, replace.to ?? "$1");
+  }
+
+  return text;
+}
