@@ -32,6 +32,7 @@ import { backToChatHandler } from "../telegram/handlers";
 import { formatCouponsString } from "./couponService";
 import { getTextModelPrices } from "./priceService";
 import { gptokenString } from "./gptokenService";
+import { parse } from "../lib/parser";
 
 const config = {
   messageInterval: parseInt(process.env.MESSAGE_INTERVAL ?? "15") * 1000, // milliseconds
@@ -100,12 +101,18 @@ export async function sendMessageToGpt(ctx: BotContext, user: User, question: st
   if (isSuccess(answer)) {
     await addMessageToUser(user, message);
 
-    await reply(
-      ctx,
-      answer.reply
-        ? formatGptMessage(answer.reply)
-        : "Нет ответа от ChatGPT. 😣"
-    );
+    if (!answer.reply) {
+      await reply(ctx, "Нет ответа от ChatGPT. 😣");
+    } else {
+      const formattedReply = formatGptMessage(answer.reply);
+
+      try {
+        await reply(ctx, parse(formattedReply));
+      } catch (error: unknown) {
+        console.error(error);
+        await reply(ctx, formattedReply);
+      }
+    }
 
     const actualUsagePoints = (modelCode === "gptokens")
       ? calculateUsagePoints(answer, model)
@@ -299,7 +306,7 @@ async function addMessageMetrics(completion: Completion) {
 }
 
 function formatGptMessage(message: string): string {
-    return `🤖 ${encodeText(message)}`;
+  return `🤖 ${encodeText(message)}`;
 }
 
 function buildDebugInfo(
