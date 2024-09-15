@@ -104,17 +104,15 @@ export async function sendMessageToGpt(ctx: BotContext, user: User, question: st
     if (!answer.reply) {
       await reply(ctx, "Нет ответа от ChatGPT. 😣");
     } else {
-      const formattedReply = formatGptMessage(answer.reply);
-
       try {
-        await reply(ctx, parse(formattedReply));
+        await reply(ctx, formatBotMessage(parse(answer.reply)));
 
         if (isDebugMode(user)) {
-          await reply(ctx, formattedReply);
+          await reply(ctx, encodeText(answer.reply));
         }
       } catch (error: unknown) {
         console.error(error);
-        await reply(ctx, formattedReply);
+        await reply(ctx, formatBotMessage(encodeText(answer.reply)));
       }
     }
 
@@ -202,7 +200,7 @@ export async function showLastHistoryMessage(ctx: BotContext, user: User, fallba
   const historyMessage = getLastHistoryMessage(user);
 
   const message = historyMessage
-    ? formatGptMessage(historyMessage)
+    ? formatBotMessage(encodeText(historyMessage))
     : fallbackMessage;
 
   if (message) {
@@ -309,8 +307,8 @@ async function addMessageMetrics(completion: Completion) {
   }
 }
 
-function formatGptMessage(message: string): string {
-  return `🤖 ${encodeText(message)}`;
+function formatBotMessage(message: string): string {
+  return `🤖 ${message}`;
 }
 
 function buildDebugInfo(
