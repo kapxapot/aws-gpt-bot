@@ -9,7 +9,7 @@ type Replace = {
 const newLine = "\n";
 
 export const bulletPadding = "   ";
-export const bullets = ["🔹", "🔸", " ◇"] as const;
+export const bullets = ["🔹", "🔸", " ◆"] as const;
 
 export function parse(text: string): string {
   const lines = text.split(newLine);
