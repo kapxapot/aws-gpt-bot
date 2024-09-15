@@ -149,4 +149,16 @@ weird offset</code></pre>
 ${getBullet()} <b>Markdown-It</b>: This library is used to parse Markdown into HTML.
 ${getBullet()} <b>Tag Replacement</b>: Since Telegram supports a limited set of HTML tags, you may need to adjust the output of <code>markdown-it</code> by replacing unsupported tags with supported ones.`);
   });
+
+  test("debug 5", () => {
+    const text = parse("   ```typescript\n   import MarkdownIt from 'markdown-it';\n     html = html.replace(/<h[1-6]>(.*?)<\\/h[1-6]>/g, '<b>$1</b>'); // Convert headers to bold\n     html = html.replace(/<a href=\"([^\"]+)\">([^<]+)<\\/a>/g, '<a href=\"$1\">$2</a>'); // Links are supported\n     html = html.replace(/<em>(.*?)<\\/em>/g, '<i>$1</i>'); // Convert emphasis to italics\n     html = html.replace(/<strong>(.*?)<\\/strong>/g, '<b>$1</b>'); // Convert strong to bold\n   ```\n\n- **HTML Transformation:** Since Telegram only supports a limited set of HTML tags (`<b>`, `<i>`, `<a>`, `<code>`, `<pre>`, `<u>`, `<s>`, `<em>`, `<strong>`), we transform or remove unsupported tags. For example, headers are converted to bold text.");
+
+    expect(text).toBe(`<pre><code class="language-typescript">import MarkdownIt from 'markdown-it';
+  html = html.replace(/&lt;h[1-6]&gt;(.*?)&lt;\\/h[1-6]&gt;/g, '&lt;b&gt;$1&lt;/b&gt;'); // Convert headers to bold
+  html = html.replace(/&lt;a href="([^"]+)"&gt;([^&lt;]+)&lt;\\/a&gt;/g, '&lt;a href="$1"&gt;$2&lt;/a&gt;'); // Links are supported
+  html = html.replace(/&lt;em&gt;(.*?)&lt;\\/em&gt;/g, '&lt;i&gt;$1&lt;/i&gt;'); // Convert emphasis to italics
+  html = html.replace(/&lt;strong&gt;(.*?)&lt;\\/strong&gt;/g, '&lt;b&gt;$1&lt;/b&gt;'); // Convert strong to bold</code></pre>
+
+${getBullet()} <b>HTML Transformation:</b> Since Telegram only supports a limited set of HTML tags (<code>&lt;b&gt;</code>, <code>&lt;i&gt;</code>, <code>&lt;a&gt;</code>, <code>&lt;code&gt;</code>, <code>&lt;pre&gt;</code>, <code>&lt;u&gt;</code>, <code>&lt;s&gt;</code>, <code>&lt;em&gt;</code>, <code>&lt;strong&gt;</code>), we transform or remove unsupported tags. For example, headers are converted to bold text.`);
+  });
 });

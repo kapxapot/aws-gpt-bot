@@ -1,4 +1,5 @@
 import { marked } from "marked";
+import { encodeText } from "./telegram";
 
 type Replace = {
   from: RegExp | string;
@@ -102,7 +103,7 @@ function crawlLines(lines: string[]): string[] {
         }
       }
 
-      newLines.push(line);
+      newLines.push(encodeText(line));
       continue;
     }
 
