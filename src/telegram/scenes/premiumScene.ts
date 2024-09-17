@@ -12,7 +12,7 @@ import { SessionData } from "../session";
 import { StringLike, isEmpty, phoneToItu } from "../../lib/common";
 import { message } from "telegraf/filters";
 import { updateUser } from "../../storage/userStorage";
-import { formatProductDescription, formatProductDescriptions, getPrettyProductName, getProductByCode, gptokenProducts, gptProducts } from "../../services/productService";
+import { formatProductDescription, formatProductDescriptions, getPrettyProductName, getProductByCode } from "../../services/productService";
 import { User } from "../../entities/user";
 import { gptokenString } from "../../services/gptokenService";
 import { bulletize, orJoin, compactText, text } from "../../lib/text";
@@ -23,6 +23,8 @@ import { formatCouponsString } from "../../services/couponService";
 import { getGptokenUsagePoints } from "../../services/modelUsageService";
 import { getModelName, gptDefaultModelName, gptPremiumModelName } from "../../services/modelService";
 import { formatSubscriptionDescription } from "../../services/subscriptionService";
+import { gptProducts } from "../../entities/products/gptProducts";
+import { gptokenProducts } from "../../entities/products/gptokenProducts";
 
 type Message = string;
 

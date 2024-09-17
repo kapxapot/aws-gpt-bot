@@ -1,3 +1,4 @@
+import { isOverprice } from "../entities/money";
 import { ProductCode } from "../entities/product";
 import { User } from "../entities/user";
 import { isProd } from "./envService";
@@ -15,6 +16,11 @@ export function canPurchaseProduct(user: User, productCode: ProductCode) {
   }
 
   const product = getProductByCode(productCode);
+
+  if (isOverprice(product.price)) {
+    return false;
+  }
+
   const plan = getProductPlan(product);
 
   return isPlanActive(plan);

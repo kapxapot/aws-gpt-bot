@@ -3,7 +3,10 @@ import { GrammarCase } from "../entities/grammar";
 import { ModelCode } from "../entities/model";
 import { Plan } from "../entities/plan";
 import { ModelLimit, PlanSettings } from "../entities/planSettings";
-import { ExpirableProduct, Product, ProductCode, PurchasedProduct, bossBundle, creativeBundle, isExpirableProduct, noviceBundle, noviceMiniBundle, premiumSubscription, proBundle, promoBundle, studentBundle, studentMiniBundle, testTinyGpt3Bundle, testTinyGptokenBundle, trialBundle, unlimitedSubscription } from "../entities/product";
+import { ExpirableProduct, Product, ProductCode, PurchasedProduct, isExpirableProduct } from "../entities/product";
+import { gptokenProducts } from "../entities/products/gptokenProducts";
+import { gptProducts } from "../entities/products/gptProducts";
+import { legacyProducts } from "../entities/products/legacyProducts";
 import { StringLike, isEmpty } from "../lib/common";
 import { commands, symbols } from "../lib/constants";
 import { bulletize, sentence, compactText, text, capitalize } from "../lib/text";
@@ -25,31 +28,6 @@ export type ProductDescriptionOptions = {
   showExpiration?: boolean;
 };
 
-/**
- * These are legacy ones and are not active anymore.
- */
-const gpt3Products = [
-  premiumSubscription,
-  unlimitedSubscription,
-  noviceBundle,
-  studentBundle,
-  testTinyGpt3Bundle
-];
-
-export const gptProducts = [
-  noviceMiniBundle,
-  studentMiniBundle
-];
-
-export const gptokenProducts = [
-  promoBundle,
-  trialBundle,
-  creativeBundle,
-  proBundle,
-  bossBundle,
-  testTinyGptokenBundle
-];
-
 export const getPrettyProductName = (product: Product, options?: SubscriptionNameOptions) =>
   getPrettySubscriptionName(product, options);
 
@@ -67,7 +45,7 @@ export function formatProductName(
 
 export function getProductByCode(code: ProductCode): Product {
   const products = [
-    ...gpt3Products,
+    ...legacyProducts,
     ...gptProducts,
     ...gptokenProducts
   ];

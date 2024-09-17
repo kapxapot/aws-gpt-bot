@@ -25,6 +25,49 @@ export const planSettings: Record<Plan, PlanSettings> = {
       }
     }
   },
+  "novice-mini": {
+    limits: {
+      "gpt-default": 200
+    }
+  },
+  "student-mini": {
+    limits: {
+      "gpt-default": 500
+    }
+  },
+  "promo": {
+    limits: {
+      "gptokens": 10
+    }
+  },
+  "trial": {
+    limits: {
+      "gptokens": 20
+    }
+  },
+  "creative": {
+    limits: {
+      "gptokens": 50
+    }
+  },
+  "pro": {
+    limits: {
+      "gptokens": 150
+    }
+  },
+  "boss": {
+    limits: {
+      "gptokens": 400
+    }
+  },
+  // test
+  "test-tinygptokens": {
+    disabled: isProd(),
+    limits: {
+      "gptokens": 4
+    }
+  },
+  // legacy
   "premium": {
     disabled: true,
     limits: {
@@ -53,52 +96,10 @@ export const planSettings: Record<Plan, PlanSettings> = {
       "gpt3": 500
     }
   },
-  "novice-mini": {
-    limits: {
-      "gpt-default": 200
-    }
-  },
-  "student-mini": {
-    limits: {
-      "gpt-default": 500
-    }
-  },
-  "promo": {
+  "test-tinygpt3": {
     disabled: true,
     limits: {
-      "gptokens": 10
-    }
-  },
-  "trial": {
-    limits: {
-      "gptokens": 20
-    }
-  },
-  "creative": {
-    limits: {
-      "gptokens": 50
-    }
-  },
-  "pro": {
-    limits: {
-      "gptokens": 150
-    }
-  },
-  "boss": {
-    limits: {
-      "gptokens": 400
-    }
-  },
-  "test-tinygpt3": {
-    disabled: isProd(),
-    limits: {
       "gpt3": 2
-    }
-  },
-  "test-tinygptokens": {
-    disabled: isProd(),
-    limits: {
-      "gptokens": 4
     }
   }
 };
