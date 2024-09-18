@@ -1,5 +1,4 @@
-import { isOverprice } from "../entities/money";
-import { ProductCode } from "../entities/product";
+import { isPurchasableProduct, ProductCode } from "../entities/product";
 import { User } from "../entities/user";
 import { isProd } from "./envService";
 import { isPlanActive } from "./planService";
@@ -17,7 +16,7 @@ export function canPurchaseProduct(user: User, productCode: ProductCode) {
 
   const product = getProductByCode(productCode);
 
-  if (isOverprice(product.price)) {
+  if (!isPurchasableProduct(product)) {
     return false;
   }
 

@@ -29,12 +29,12 @@ export const productCodes = [
   "subscription-unlimited-30-days",
   "bundle-novice-30-days",
   "bundle-student-30-days",
-  "test-bundle-tiny-gpt3-1-day",
   "bundle-novice-mini-30-days",
   "bundle-student-mini-30-days",
   "bundle-creative-30-days",
   "bundle-pro-30-days",
   "bundle-boss-30-days",
+  "test-bundle-tiny-gpt3-1-day",
   "test-bundle-tiny-gptokens-1-day",
   // coupons
   "bundle-promo-30-days",
@@ -54,10 +54,14 @@ export type ProductCode = typeof productCodes[number];
 
 export type Product = Subscription & {
   code: ProductCode;
-  price: Money;
+  price?: Money;
   details: {
     term?: Term;
   };
+};
+
+export type PurchasableProduct = Product & {
+  price: Money;
 };
 
 export type PurchasedProduct = Product & {
@@ -72,12 +76,19 @@ export type ExpirableProduct = PurchasedProduct & {
   }
 };
 
+export function isPurchasableProduct(product: Product): product is PurchasableProduct {
+  return "price" in product
+    && !!product.price
+    && product.price.amount > 0;
+}
+
 export function isPurchasedProduct(product: Subscription): product is PurchasedProduct {
   return "purchasedAt" in product;
 }
 
 export function isExpirableProduct(product: Subscription): product is ExpirableProduct {
-  return isPurchasedProduct(product) && !!product.details.term;
+  return isPurchasedProduct(product)
+    && !!product.details.term;
 }
 
 export const freeSubscription: Subscription = {

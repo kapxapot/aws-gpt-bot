@@ -3,7 +3,7 @@ import { GrammarCase } from "../entities/grammar";
 import { ModelCode } from "../entities/model";
 import { Plan } from "../entities/plan";
 import { ModelLimit, PlanSettings } from "../entities/planSettings";
-import { ExpirableProduct, Product, ProductCode, PurchasedProduct, isExpirableProduct } from "../entities/product";
+import { ExpirableProduct, Product, ProductCode, PurchasedProduct, isExpirableProduct, isPurchasableProduct } from "../entities/product";
 import { gptokenProducts } from "../entities/products/gptokenProducts";
 import { gptProducts } from "../entities/products/gptProducts";
 import { legacyProducts } from "../entities/products/legacyProducts";
@@ -117,7 +117,7 @@ export function formatProductDescription(
   const term = product.details.term;
   const termChunk = term ? `на ${formatTerm(term, "Accusative")}` : "";
 
-  const priceLine = options.showPrice
+  const priceLine = options.showPrice && isPurchasableProduct(product)
     ? `${formatMoney(product.price)} ${termChunk}`
     : null;
 

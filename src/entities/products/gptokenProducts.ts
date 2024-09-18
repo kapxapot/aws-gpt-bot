@@ -4,13 +4,13 @@ import { Product } from "../product";
 import { days } from "../term";
 
 export const gptokenProducts: Product[] = [
+  // non-purchasable
   {
     code: "bundle-promo-30-days",
     name: "Promo Bundle - 30 Days",
     shortName: "Промо",
     displayName: "Промо на 30 дней",
     icon: symbols.coupon,
-    price: overprice,
     details: {
       type: "bundle",
       plan: "promo",
@@ -23,13 +23,13 @@ export const gptokenProducts: Product[] = [
     shortName: "Пробный",
     displayName: "Пробный на 30 дней",
     icon: "🧪",
-    price: overprice,
     details: {
       type: "bundle",
       plan: "trial",
       term: days(30)
     }
   },
+  // purchasable
   {
     code: "bundle-trial",
     name: "Trial Bundle",
@@ -85,7 +85,7 @@ export const gptokenProducts: Product[] = [
     shortName: "Мелкий Гптокен",
     displayName: "Мелкий Гптокен",
     icon: "🛠",
-    price: overprice,
+    price: overprice, // to prevent buying but to allow test buying
     details: {
       type: "bundle",
       plan: "test-tinygptokens"

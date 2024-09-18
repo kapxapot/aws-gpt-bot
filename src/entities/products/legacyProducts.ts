@@ -1,4 +1,3 @@
-import { money, overprice } from "../money";
 import { Product } from "../product";
 import { days } from "../term";
 
@@ -12,7 +11,7 @@ export const legacyProducts: Product[] = [
     shortName: "Премиум",
     displayName: "Премиум на 30 дней",
     icon: "💔",
-    price: money(290),
+    // price: money(290),
     details: {
       type: "subscription",
       plan: "premium",
@@ -25,7 +24,7 @@ export const legacyProducts: Product[] = [
     shortName: "Безлимит",
     displayName: "Безлимит на 30 дней",
     icon: "💔",
-    price: money(390),
+    // price: money(390),
     details: {
       type: "subscription",
       plan: "unlimited",
@@ -38,7 +37,7 @@ export const legacyProducts: Product[] = [
     shortName: "Новичок",
     displayName: "Новичок на 30 дней",
     icon: "👧",
-    price: money(49),
+    // price: money(49),
     details: {
       type: "bundle",
       plan: "novice",
@@ -51,7 +50,7 @@ export const legacyProducts: Product[] = [
     shortName: "Студент",
     displayName: "Студент на 30 дней",
     icon: "👨‍🎓",
-    price: money(99),
+    // price: money(99),
     details: {
       type: "bundle",
       plan: "student",
@@ -65,7 +64,7 @@ export const legacyProducts: Product[] = [
     shortName: "Мелкий GPT-3",
     displayName: "Мелкий GPT-3 на 1 день",
     icon: "🛠",
-    price: overprice,
+    // price: overprice,
     details: {
       type: "bundle",
       plan: "test-tinygpt3",
@@ -79,7 +78,7 @@ export const legacyProducts: Product[] = [
     shortName: "Новичок Мини",
     displayName: "Новичок Мини на 30 дней",
     icon: "👧",
-    price: money(19),
+    // price: money(19),
     details: {
       type: "bundle",
       plan: "novice-mini",
@@ -92,7 +91,7 @@ export const legacyProducts: Product[] = [
     shortName: "Студент Мини",
     displayName: "Студент Мини на 30 дней",
     icon: "👨‍🎓",
-    price: money(39),
+    // price: money(39),
     details: {
       type: "bundle",
       plan: "student-mini",
@@ -106,7 +105,7 @@ export const legacyProducts: Product[] = [
     shortName: "Творческий",
     displayName: "Творческий на 30 дней",
     icon: "👩‍🎨",
-    price: money(199),
+    // price: money(199),
     details: {
       type: "bundle",
       plan: "creative",
@@ -119,7 +118,7 @@ export const legacyProducts: Product[] = [
     shortName: "Профи",
     displayName: "Профи на 30 дней",
     icon: "😎",
-    price: money(449),
+    // price: money(449),
     details: {
       type: "bundle",
       plan: "pro",
@@ -132,7 +131,7 @@ export const legacyProducts: Product[] = [
     shortName: "Босс",
     displayName: "Босс на 30 дней",
     icon: "🤴",
-    price: money(999),
+    // price: money(999),
     details: {
       type: "bundle",
       plan: "boss",
@@ -146,7 +145,7 @@ export const legacyProducts: Product[] = [
     shortName: "Мелкий Гптокен",
     displayName: "Мелкий Гптокен на 1 день",
     icon: "🛠",
-    price: overprice,
+    // price: overprice,
     details: {
       type: "bundle",
       plan: "test-tinygptokens",

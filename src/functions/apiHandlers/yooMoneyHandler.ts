@@ -1,5 +1,5 @@
 import { at, ts } from "../../entities/at";
-import { Product } from "../../entities/product";
+import { isPurchasableProduct, PurchasableProduct } from "../../entities/product";
 import { symbols } from "../../lib/constants";
 import { text } from "../../lib/text";
 import { putMetric } from "../../services/metricService";
@@ -72,7 +72,9 @@ export async function yooMoneyHandler(requestData: YouMoneyRequestData) {
     const purchasedProduct = productToPurchasedProduct(product, paidAt);
     user = await addUserProduct(user, purchasedProduct);
 
-    await putMetrics(product);
+    if (isPurchasableProduct(product)) {
+      await putMetrics(product);
+    }
 
     const productName = formatProductName(purchasedProduct, "Accusative");
 
@@ -87,7 +89,7 @@ export async function yooMoneyHandler(requestData: YouMoneyRequestData) {
   }
 }
 
-async function putMetrics(product: Product): Promise<void> {
+async function putMetrics(product: PurchasableProduct): Promise<void> {
   await putMetric("PaymentReceived");
 
   const { currency, amount } = product.price;

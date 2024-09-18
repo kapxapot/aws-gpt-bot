@@ -5,6 +5,7 @@ import { startOfDay, startOfMonth, startOfWeek } from "../../src/services/dateSe
 import { gptDefaultModelName } from "../../src/services/modelService";
 import { getProductByCode } from "../../src/services/productService";
 import { formatSubscriptionDescription, getPrettySubscriptionName } from "../../src/services/subscriptionService";
+import { testUser } from "../testData";
 
 describe("getPrettySubscriptionName", () => {
   test("should correctly build name", () => {
@@ -77,12 +78,7 @@ describe("formatSubscriptionDescription", () => {
     };
 
     const user: User = {
-      id: "",
-      telegramId: 0,
-      createdAt: 0,
-      createdAtIso: "",
-      updatedAt: 0,
-      updatedAtIso: "",
+      ...testUser,
       usageStats
     };
 

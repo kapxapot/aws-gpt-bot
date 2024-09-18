@@ -1,12 +1,12 @@
 import { now } from "../entities/at";
 import { Payment, PaymentEvent } from "../entities/payment";
-import { Product } from "../entities/product";
+import { PurchasableProduct } from "../entities/product";
 import { User } from "../entities/user";
 import { yooMoneyPayment } from "../external/yooMoneyPayment";
 import { Result, isError } from "../lib/error";
 import { storePayment } from "../storage/paymentStorage";
 
-export async function createPayment(user: User, product: Product): Promise<Result<Payment>> {
+export async function createPayment(user: User, product: PurchasableProduct): Promise<Result<Payment>> {
   const requestData = {
     user,
     total: product.price,
