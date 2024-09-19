@@ -167,7 +167,7 @@ function getProductExpiration(product: ExpirableProduct): string {
 
 function isProductExpired(product: PurchasedProduct): boolean {
   return isExpirableProduct(product)
-    ? !happened(getProductEnd(product))
+    ? happened(getProductEnd(product))
     : false;
 }
 

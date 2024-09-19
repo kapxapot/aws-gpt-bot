@@ -69,5 +69,5 @@ export function atSort<T>(getAt: (t: T) => At): (a: T, b: T) => number {
 }
 
 export function happened(then: number, compareTo?: number): boolean {
-  return then >= (compareTo ?? ts());
+  return then <= (compareTo ?? ts());
 }
