@@ -26,6 +26,10 @@ export function last<T>(array: T[]): T | null {
   return !isEmpty(array) ? array[array.length - 1] : null;
 }
 
+export function unique<T>(array: T[]): T[] {
+  return [...new Set(array)];
+}
+
 export function phoneToItu(phone: string | undefined): string | null {
   if (!phone) {
     return null;

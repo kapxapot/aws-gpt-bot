@@ -15,9 +15,9 @@ describe("incProductUsage", () => {
     ({ points }) => {
       const usage: ProductUsage = incProductUsage({}, "gptokens", points);
       const modelUsage = usage["gptokens"];
-  
+
       expect(modelUsage).not.toBeNull();
-  
+
       if (modelUsage) {
         expect(modelUsage.count).toBe(points);
         expect(modelUsage.intervalUsages["day"]?.count).toBe(points);
@@ -44,9 +44,9 @@ describe("incProductUsage", () => {
       );
 
       const modelUsage = usage[modelCode];
-  
+
       expect(modelUsage).not.toBeNull();
-  
+
       if (modelUsage) {
         const totalPoints = basePoints + points;
 

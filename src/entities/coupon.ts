@@ -1,3 +1,4 @@
+import { unique } from "../lib/common";
 import { Id } from "../lib/types";
 import { At } from "./at";
 import { ProductCode } from "./product";
@@ -53,3 +54,7 @@ export const couponTemplates = [
   couponInvite,
   couponFanclubPromo
 ];
+
+export const couponProductCodes = unique(
+  couponTemplates.map(ct => ct.productCode)
+);

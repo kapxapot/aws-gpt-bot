@@ -43,11 +43,17 @@ export function formatProductName(
   );
 }
 
+export function getActiveProducts(): Product[] {
+  return [
+    ...gptProducts,
+    ...gptokenProducts
+  ];
+}
+
 export function getProductByCode(code: ProductCode): Product {
   const products = [
     ...legacyProducts,
-    ...gptProducts,
-    ...gptokenProducts
+    ...getActiveProducts()
   ];
 
   const product = products.find(p => p.code === code);
