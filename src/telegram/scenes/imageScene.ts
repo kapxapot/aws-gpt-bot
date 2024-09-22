@@ -10,7 +10,7 @@ import { backToStartAction, cancelAction, cancelButton, gotoPremiumAction, gotoP
 import { notAllowedMessage, replyBackToMainDialog, withUser } from "../../services/messageService";
 import { gptokenString } from "../../services/gptokenService";
 import { bullet, bulletize, capitalize, compactText, text } from "../../lib/text";
-import { getImageModelContexts } from "../../services/modelContextService";
+import { getImageModelContexts, getUsableModelContext } from "../../services/modelContextService";
 import { freeSubscription } from "../../entities/product";
 import { ImageModelContext } from "../../entities/modelContext";
 import { User } from "../../entities/user";
@@ -134,7 +134,7 @@ async function imagePromptInput(ctx: BotContext, user: User) {
 
 async function getImageModelContext(ctx: BotContext, user: User): Promise<ImageModelContext | null> {
   const contexts = getImageModelContexts(user);
-  const usableContext = contexts.find(context => context.usable);
+  const usableContext = getUsableModelContext(contexts);
 
   if (usableContext) {
     return usableContext;

@@ -3,7 +3,7 @@ import { ConsumptionLimit, ConsumptionLimits } from "./consumption";
 import { ImageModel, ImageModelCode, ImageSettings, PureImageModelCode, PureTextModelCode, TextModel, TextModelCode } from "./model";
 import { PurchasedProduct } from "./product";
 
-type ModelContext = {
+export type ModelContext = {
   product: PurchasedProduct | null;
   lastUsedAt: At | null;
   limits: ConsumptionLimits | null;

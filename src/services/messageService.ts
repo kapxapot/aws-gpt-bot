@@ -23,7 +23,7 @@ import { incProductUsage } from "./productUsageService";
 import { freeSubscription } from "../entities/product";
 import { gotoPremiumButton, remindButton } from "../lib/dialog";
 import { getConsumptionLimits } from "./consumptionService";
-import { getTextModelContexts } from "./modelContextService";
+import { getTextModelContexts, getUsableModelContext } from "./modelContextService";
 import { bullet, bulletize, commatize, sentence, compactText, text, truncate, capitalize } from "../lib/text";
 import { TextModelContext } from "../entities/modelContext";
 import { getPrettySubscriptionName } from "./subscriptionService";
@@ -248,7 +248,7 @@ export function notAllowedMessage(message: string): string {
 
 async function getTextModelContext(ctx: BotContext, user: User): Promise<TextModelContext | null> {
   const contexts = getTextModelContexts(user);
-  const usableContext = contexts.find(context => context.usable);
+  const usableContext = getUsableModelContext(contexts);
 
   if (usableContext) {
     return usableContext;

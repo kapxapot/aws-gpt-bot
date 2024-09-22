@@ -1,7 +1,7 @@
 import { ImageModelCode, ModelCode, TextModelCode } from "../entities/model";
-import { ImageModelContext, TextModelContext } from "../entities/modelContext";
+import { ImageModelContext, ModelContext, TextModelContext } from "../entities/modelContext";
 import { defaultPlan } from "../entities/plan";
-import { PurchasedProduct } from "../entities/product";
+import { isExpirableProduct, PurchasedProduct } from "../entities/product";
 import { User } from "../entities/user";
 import { getActiveConsumptionLimit, getConsumptionLimits } from "./consumptionService";
 import { getDefaultImageSettings } from "./imageService";
@@ -15,6 +15,14 @@ import { getUserActiveProducts } from "./userService";
 type ContextModel = {
   modelCode: ModelCode;
   product: PurchasedProduct | null;
+}
+
+export function getUsableModelContext<T extends ModelContext>(contexts: T[]): T | undefined {
+  const expirable = contexts
+    .filter(context => context.product && isExpirableProduct(context.product))
+    .find(context => context.usable);
+
+  return expirable ?? contexts.find(context => context.usable);
 }
 
 export function getTextModelContexts(user: User): TextModelContext[] {
