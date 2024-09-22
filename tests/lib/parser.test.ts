@@ -96,14 +96,16 @@ ${getBullet()} <code>\`</code>: 3`);
 ### abc 123
 ### abc 123
 #### abc 123
-##### abc 123`);
+##### abc 123
+### Using \`Set\``);
 
     expect(text).toBe(`<b>abc 123</b>
 <b>abc 123</b>
 <b>abc 123</b>
 <b>abc 123</b>
 <b>abc 123</b>
-<b>abc 123</b>`);
+<b>abc 123</b>
+<b>Using <code>Set</code></b>`);
   });
 
   test("parses list items", () => {

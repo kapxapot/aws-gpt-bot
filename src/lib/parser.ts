@@ -138,8 +138,11 @@ function crawlLines(lines: string[]): string[] {
 
     resetListState();
 
-    if (line.startsWith("#")) {
-      newLines.push(line.replace(/^#+\s+(.+)$/, "<b>$1</b>"));
+    const headingMatch = /^#+\s+(.+)$/.exec(line);
+
+    if (headingMatch) {
+      const content = headingMatch[1];
+      newLines.push(`<b>${parseLine(content)}</b>`);
       continue;
     }
 
