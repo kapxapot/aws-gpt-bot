@@ -233,7 +233,9 @@ function recordToAttributeValues(record: AnyRecord): Attributes {
 }
 
 function attributesToRemoveExpression(attributes: string[]): string {
-  return `remove ${commatize(attributes)}`;
+  return attributes.length
+    ? `remove ${commatize(attributes)}`
+    : "";
 }
 
 function getDynamoDbClient() {
