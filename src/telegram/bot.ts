@@ -12,7 +12,7 @@ import { User } from "../entities/user";
 import { inspect } from "util";
 import { notAllowedMessage, sendMessageToGpt, withUser } from "../services/messageService";
 import { modeScene } from "./scenes/modeScene";
-import { getUserByTelegramId, getUsersCount, storeUser, updateUser } from "../storage/userStorage";
+import { getUserByTelegramId, getUsersCount, updateUser } from "../storage/userStorage";
 import { putMetric } from "../services/metricService";
 import { isDebugMode } from "../services/userSettingsService";
 import { Message, Update } from "telegraf/types";
@@ -52,14 +52,9 @@ export async function processTelegramRequest(tgRequest: TelegramRequest) {
   bot.use(stage.middleware());
 
   bot.start(async ctx => {
-    let user = await getUserByTelegramId(ctx.from.id)
-    const newUser = user === null;
-
-    if (!user) {
-      user = await storeUser(ctx.from);
-    }
-
-    user = await activateUser(user);
+    const userResult = await getOrAddUser(ctx.from);
+    let user = await activateUser(userResult.user);
+    const newUser = userResult.isNew;
 
     const promoMessages = [
       `Приглашайте друзей и получайте 🎁 подарки: /${commands.invite}`,
@@ -117,7 +112,7 @@ export async function processTelegramRequest(tgRequest: TelegramRequest) {
   });
 
   bot.on(message("text"), async ctx => {
-    const user = await getOrAddUser(ctx.from);
+    const { user } = await getOrAddUser(ctx.from);
 
     if (!canUseGpt(user)) {
       await reply(

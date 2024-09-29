@@ -8,9 +8,10 @@ import { storeTelegramRequest } from "../storage/telegramRequestStorage";
 import { yooMoneyHandler } from "./apiHandlers/yooMoneyHandler";
 import { broadcastHandler } from "./apiHandlers/broadcastHandler";
 import { couponHandler } from "./apiHandlers/couponHandler";
+import { AnyRecord } from "../lib/types";
 
-type ApiRequest = Request<object, unknown, unknown, ParsedQs, Record<string, unknown>>;
-type ApiResponse = Response<unknown, Record<string, unknown>, number>;
+type ApiRequest = Request<object, unknown, unknown, ParsedQs, AnyRecord>;
+type ApiResponse = Response<unknown, AnyRecord, number>;
 type HandlerFunc<T> = (reqBody: T) => Promise<void>;
 
 type ErrorResult = {

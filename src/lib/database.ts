@@ -1,32 +1,12 @@
 import { DeleteCommand, DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand, QueryCommandInput, ScanCommand, ScanCommandInput, ScanCommandOutput, UpdateCommand, UpdateCommandInput } from "@aws-sdk/lib-dynamodb";
 import { DynamoDBClient } from "@aws-sdk/client-dynamodb";
 import { timestamps, updatedTimestamps } from "../entities/at";
-import { Entity, Unsaved } from "./types";
+import { AnyRecord, Entity, Unsaved } from "./types";
 import { uuid } from "./uuid";
-import { commatize } from "./text";
+import { commatize, sentence } from "./text";
+import { extractUndefined } from "./common";
 
-type Attributes = Record<string, unknown>;
-
-export function getDynamoDbClient() {
-  const marshallOptions = {
-    // Whether to automatically convert empty strings, blobs, and sets to `null`.
-    convertEmptyValues: false, // false, by default.
-    // Whether to remove undefined values while marshalling.
-    removeUndefinedValues: true, // false, by default.
-    // Whether to convert typeof object to map attribute.
-    convertClassInstanceToMap: true // false, by default.
-  };
-
-  const unmarshallOptions = {
-    // Whether to return numbers as a string instead of converting them to native JavaScript numbers.
-    wrapNumbers: false // false, by default.
-  };
-
-  const translateConfig = { marshallOptions, unmarshallOptions };
-  const client = new DynamoDBClient({});
-
-  return DynamoDBDocumentClient.from(client, translateConfig);
-}
+type Attributes = AnyRecord;
 
 export async function putItem<T extends Entity>(table: string, item: Unsaved<T>): Promise<T> {
   const params = {
@@ -171,41 +151,28 @@ export async function scanItems<T>(
 
 export async function updateItem<T>(
   table: string,
-  key: Record<string, unknown>,
+  key: AnyRecord,
   attributes: Partial<T>
 ): Promise<T> {
+  const combined = extractUndefined(attributes);
+
   const updatedAttributes = {
-    ...attributes,
+    ...combined.def,
     ...updatedTimestamps()
   };
+
+  const setExpr = recordToSetExpression(updatedAttributes);
+  const removeExpr = attributesToRemoveExpression(combined.undef);
 
   const params: UpdateCommandInput = {
     TableName: table,
     Key: key,
-    UpdateExpression: recordToSetExpression(updatedAttributes),
+    UpdateExpression: sentence(setExpr, removeExpr),
     ReturnValues: "ALL_NEW"
   };
 
   params.ExpressionAttributeNames = recordToAttributeNames(updatedAttributes);
   params.ExpressionAttributeValues = recordToAttributeValues(updatedAttributes);
-
-  const dbClient = getDynamoDbClient();
-  const result = await dbClient.send(new UpdateCommand(params));
-
-  return result.Attributes as T;
-}
-
-export async function removeFromItem<T>(
-  table: string,
-  key: Record<string, unknown>,
-  attributes: string[]
-): Promise<T> {
-  const params: UpdateCommandInput = {
-    TableName: table,
-    Key: key,
-    UpdateExpression: attributesToRemoveExpression(attributes),
-    ReturnValues: "ALL_NEW"
-  };
 
   const dbClient = getDynamoDbClient();
   const result = await dbClient.send(new UpdateCommand(params));
@@ -227,11 +194,11 @@ export async function deleteItem<T>(table: string, id: string): Promise<T> {
   return result.Attributes as T;
 }
 
-function fromItem<T>(item: Record<string, unknown> | undefined): T | null {
+function fromItem<T>(item: AnyRecord | undefined): T | null {
   return item ? item as T : null;
 }
 
-function recordToSetExpression(record: Record<string, unknown>): string {
+function recordToSetExpression(record: AnyRecord): string {
   const chunks = [];
 
   for (const [key] of Object.entries(record)) {
@@ -245,7 +212,7 @@ function recordToSetExpression(record: Record<string, unknown>): string {
   return `set ${commatize(chunks)}`;
 }
 
-function recordToAttributeNames(record: Record<string, unknown>): Record<string, string> {
+function recordToAttributeNames(record: AnyRecord): Record<string, string> {
   const result: Record<string, string> = {};
 
   for (const [key] of Object.entries(record)) {
@@ -255,7 +222,7 @@ function recordToAttributeNames(record: Record<string, unknown>): Record<string,
   return result;
 }
 
-function recordToAttributeValues(record: Record<string, unknown>): Attributes {
+function recordToAttributeValues(record: AnyRecord): Attributes {
   const result: Attributes = {};
 
   for (const [key, value] of Object.entries(record)) {
@@ -267,4 +234,25 @@ function recordToAttributeValues(record: Record<string, unknown>): Attributes {
 
 function attributesToRemoveExpression(attributes: string[]): string {
   return `remove ${commatize(attributes)}`;
+}
+
+function getDynamoDbClient() {
+  const marshallOptions = {
+    // Whether to automatically convert empty strings, blobs, and sets to `null`.
+    convertEmptyValues: false, // false, by default.
+    // Whether to remove undefined values while marshalling.
+    removeUndefinedValues: true, // false, by default.
+    // Whether to convert typeof object to map attribute.
+    convertClassInstanceToMap: true // false, by default.
+  };
+
+  const unmarshallOptions = {
+    // Whether to return numbers as a string instead of converting them to native JavaScript numbers.
+    wrapNumbers: false // false, by default.
+  };
+
+  const translateConfig = { marshallOptions, unmarshallOptions };
+  const client = new DynamoDBClient({});
+
+  return DynamoDBDocumentClient.from(client, translateConfig);
 }

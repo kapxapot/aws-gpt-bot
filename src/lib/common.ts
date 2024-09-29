@@ -1,3 +1,5 @@
+import { AnyRecord, DefinedUndefined } from "./types";
+
 type Like<T> = T | null | undefined;
 export type StringLike = Like<string>;
 
@@ -80,4 +82,36 @@ export function toFixedOrIntStr(num: number, digits?: number): string {
 
 export function toFixed(num: number, digits?: number): number {
   return Number(num.toFixed(digits));
+}
+
+/**
+ * Checks if all entries of `objData` are the same in `obj`.
+ */
+export function dataEquals<T extends AnyRecord>(obj: T, objData: Partial<T>): boolean {
+  const keys = Object.keys(objData);
+
+  for (const key of keys) {
+    if (obj[key] !== objData[key]) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+export function extractUndefined(obj: AnyRecord): DefinedUndefined<AnyRecord> {
+  const def: AnyRecord = {};
+  const undef: string[] = [];
+
+  const keys = Object.keys(obj);
+
+  for (const key of keys) {
+    if (obj[key] === undefined) {
+      undef.push(key);
+    } else {
+      def[key] = obj[key];
+    }
+  }
+
+  return { def, undef };
 }

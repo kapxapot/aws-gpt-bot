@@ -29,6 +29,7 @@ type UserStatus = {
 
 export type User = Entity & {
   telegramId: number;
+  languageCode?: string;
   firstName?: string;
   lastName?: string;
   username?: string;

@@ -12,3 +12,10 @@ export type Unsaved<T extends Entity> = Omit<T, keyof Entity> & Partial<Id>;
 
 export type PartialRecord<TKey extends string | number | symbol, TValue> =
   Partial<Record<TKey, TValue>>;
+
+export type AnyRecord = Record<string, unknown>;
+
+export type DefinedUndefined<T> = {
+  def: Partial<T>;
+  undef: string[];
+};

@@ -1,20 +1,12 @@
 import { getItem, putItem, scanItems, updateItem } from "../lib/database";
 import { User } from "../entities/user";
-import { User as TelegrafUser } from "telegraf/types";
 import { first } from "../lib/common";
+import { Unsaved } from "../lib/types";
 
 const usersTable = process.env.USERS_TABLE!;
 
-export async function storeUser(tgUser: TelegrafUser): Promise<User> {
-  return await putItem<User>(
-    usersTable,
-    {
-      telegramId: tgUser.id,
-      firstName: tgUser.first_name,
-      lastName: tgUser.last_name,
-      username: tgUser.username
-    }
-  );
+export async function storeUser(user: Unsaved<User>): Promise<User> {
+  return await putItem<User>(usersTable, user);
 }
 
 export async function getAllUsers(): Promise<User[]> {

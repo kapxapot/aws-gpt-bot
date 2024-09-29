@@ -104,16 +104,7 @@ export async function sendMessageToGpt(ctx: BotContext, user: User, question: st
     if (!answer.reply) {
       await reply(ctx, "Нет ответа от ChatGPT. 😣");
     } else {
-      try {
-        await reply(ctx, formatBotMessage(parse(answer.reply)));
-
-        if (isDebugMode(user)) {
-          await reply(ctx, encodeText(answer.reply));
-        }
-      } catch (error: unknown) {
-        console.error(error);
-        await reply(ctx, formatBotMessage(encodeText(answer.reply)));
-      }
+      await sendParsedMessage(ctx, user, answer.reply);
     }
 
     const actualUsagePoints = (modelCode === "gptokens")
@@ -199,12 +190,10 @@ export function getStatusMessage(user: User): string {
 export async function showLastHistoryMessage(ctx: BotContext, user: User, fallbackMessage?: string) {
   const historyMessage = getLastHistoryMessage(user);
 
-  const message = historyMessage
-    ? formatBotMessage(encodeText(historyMessage))
-    : fallbackMessage;
-
-  if (message) {
-    await reply(ctx, message);
+  if (historyMessage) {
+    await sendParsedMessage(ctx, user, historyMessage);
+  } else if (fallbackMessage) {
+    await reply(ctx, fallbackMessage);
   }
 }
 
@@ -218,7 +207,8 @@ export async function withUser(ctx: BotContext, func: (user: User) => Promise<vo
 
 export async function getUserOrLeave(ctx: BotContext): Promise<User | null> {
   if (ctx.from) {
-    return await getOrAddUser(ctx.from);
+    const { user } = await getOrAddUser(ctx.from);
+    return user;
   }
 
   if (ctx.scene) {
@@ -244,6 +234,19 @@ export function notAllowedMessage(message: string): string {
     message,
     config.mainBot ? `Используйте основной бот: @${config.mainBot}` : null
   );
+}
+
+async function sendParsedMessage(ctx: BotContext, user: User, message: string) {
+  try {
+    await reply(ctx, formatBotMessage(parse(message)));
+
+    if (isDebugMode(user)) {
+      await reply(ctx, encodeText(message));
+    }
+  } catch (error: unknown) {
+    console.error(error);
+    await reply(ctx, formatBotMessage(encodeText(message)));
+  }
 }
 
 async function getTextModelContext(ctx: BotContext, user: User): Promise<TextModelContext | null> {

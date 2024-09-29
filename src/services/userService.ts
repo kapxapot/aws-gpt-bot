@@ -15,10 +15,17 @@ import { Coupon } from "../entities/coupon";
 import { isCouponActive } from "./couponService";
 import { atSort, now } from "../entities/at";
 import { cipherNumber } from "./cipherService";
+import { Unsaved } from "../lib/types";
+import { dataEquals } from "../lib/common";
 
 type CurrentContext = {
   prompt: string | null;
   latestMessages: Message[] | null;
+};
+
+export type UserResult = {
+  user: User;
+  isNew: boolean;
 };
 
 const config = {
@@ -29,9 +36,21 @@ export async function getUserById(id: string): Promise<User | null> {
   return await getUser(id);
 }
 
-export async function getOrAddUser(tgUser: TelegrafUser): Promise<User> {
-  return await getUserByTelegramId(tgUser.id)
-    ?? await storeUser(tgUser);
+export async function getOrAddUser(tgUser: TelegrafUser): Promise<UserResult> {
+  const userData = telegrafUserToUser(tgUser);
+  let user = await getUserByTelegramId(tgUser.id);
+
+  if (user) {
+    if (!dataEquals(user, userData)) {
+      user = await updateUser(user, userData);
+    }
+
+    return { user, isNew: false };
+  }
+
+  user = await storeUser(userData);
+
+  return { user, isNew: true };
 }
 
 export async function addUserProduct(user: User, product: PurchasedProduct): Promise<User> {
@@ -284,6 +303,16 @@ export async function activateUser(user: User): Promise<User> {
       }
     }
   );
+}
+
+function telegrafUserToUser(tgUser: TelegrafUser): Unsaved<User> {
+  return {
+    telegramId: tgUser.id,
+    languageCode: tgUser.language_code,
+    firstName: tgUser.first_name,
+    lastName: tgUser.last_name,
+    username: tgUser.username
+  };
 }
 
 async function updateUserContext(user: User, context: Context): Promise<User> {

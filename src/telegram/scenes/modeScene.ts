@@ -87,7 +87,7 @@ getModes().forEach(mode => {
           setStage(ctx.session, "promptSelection");
 
           // eslint-disable-next-line no-case-declarations
-          const user = await getOrAddUser(ctx.from);
+          const { user } = await getOrAddUser(ctx.from);
           // eslint-disable-next-line no-case-declarations
           const customPrompt = user.context?.customPrompt;
 
@@ -174,7 +174,7 @@ scene.on(message("text"), async ctx => {
     // switch to new custom prompt
     const customPrompt = ctx.message.text;
 
-    const user = await getOrAddUser(ctx.from);
+    const { user } = await getOrAddUser(ctx.from);
     await newCustomPrompt(user, customPrompt);
 
     await reply(ctx, `${symbols.success} Вы задали новый промт.`);

@@ -1,4 +1,4 @@
-import { isNumber, isNumeric, phoneToItu, toCleanArray, toFixedOrInt, toFixedOrIntStr } from "../../src/lib/common";
+import { dataEquals, extractUndefined, isNumber, isNumeric, phoneToItu, toCleanArray, toFixedOrInt, toFixedOrIntStr } from "../../src/lib/common";
 import { uglyArray } from "../testData";
 
 describe("toCleanArray", () => {
@@ -100,4 +100,60 @@ describe("toFixedOrInt", () => {
       expect(toFixedOrInt(input, digits))
         .toEqual(output)
   );
+});
+
+describe("dataEquals", () => {
+  const dataSet = [
+    {
+      obj: {},
+      objData: {},
+      result: true
+    },
+    {
+      obj: {
+        userId: 1
+      },
+      objData: {
+        userId: 1,
+      },
+      result: true
+    },
+    {
+      obj: {
+        userId: 1
+      },
+      objData: {
+        userId: 1,
+        langCode: "en"
+      },
+      result: false
+    }
+  ];
+
+  it.each(dataSet)(
+    "checks equality as expected",
+    ({ obj, objData, result }) =>
+      expect(dataEquals(obj, objData))
+        .toEqual(result)
+  );
+});
+
+describe("extractUndefined", () => {
+  test("works", () => {
+    expect(extractUndefined({
+      one: 1,
+      two: "2",
+      three: undefined,
+      four: null,
+      five: ""
+    })).toEqual({
+      def: {
+        one: 1,
+        two: "2",
+        four: null,
+        five: ""
+      },
+      undef: ["three"]
+    })
+  });
 });
