@@ -19,3 +19,6 @@ export type DefinedUndefined<T> = {
   def: Partial<T>;
   undef: string[];
 };
+
+// eslint-disable-next-line @typescript-eslint/ban-types
+export type Language = "en" | "ru" | (string & {});

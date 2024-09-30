@@ -46,7 +46,8 @@ export const settings = {
     maxButtonTextLength: 14
   },
   defaultUsagePoints: 1,
-  couponsToShow: 10
+  couponsToShow: 10,
+  defaultLanguage: "ru" // if there is no info on user's language
 } as const;
 
 export const symbols = {

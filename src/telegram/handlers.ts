@@ -12,6 +12,7 @@ import { remindButton } from "../lib/dialog";
 import { getCouponTemplateByCode } from "../services/couponService";
 import { formatProductDescriptions, formatProductName, getProductByCode } from "../services/productService";
 import { isEmpty } from "../lib/common";
+import { formatCommand } from "../lib/commands";
 
 type Handler = (ctx: BotContext) => Promise<void | unknown>;
 type HandlerTuple = [command: string, handler: Handler];
@@ -141,13 +142,13 @@ async function productsHandler(ctx: BotContext) {
       await reply(
         ctx,
         "У вас нет активных продуктов.",
-        `${symbols.card} Приобрести: /${commands.premium}`
+        `${symbols.card} Приобрести: ${formatCommand(commands.premium)}`
       );
     } else {
       await reply(
         ctx,
         formatProductDescriptions(products),
-        `${symbols.card} Приобрести еще: /${commands.premium}`
+        `${symbols.card} Приобрести еще: ${formatCommand(commands.premium)}`
       );
     }
   });

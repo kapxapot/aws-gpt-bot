@@ -17,6 +17,8 @@ import { User } from "../../entities/user";
 import { getPrettySubscriptionName } from "../../services/subscriptionService";
 import { formatRemainingLimits } from "../../services/consumptionFormatService";
 import { canGenerateImages } from "../../services/permissionService";
+import { formatCommand } from "../../lib/commands";
+import { t } from "../../lib/translate";
 
 const scene = new BaseScene<BotContext>(scenes.image);
 
@@ -81,7 +83,7 @@ async function imagePromptInput(ctx: BotContext, user: User) {
   if (!canGenerateImages(user)) {
     await replyBackToMainDialog(
       ctx,
-      notAllowedMessage("Генерация картинок недоступна.")
+      notAllowedMessage(user, t(user, "imageGenerationUnavailable"))
     );
 
     return;
@@ -165,7 +167,7 @@ async function getImageModelContext(ctx: BotContext, user: User): Promise<ImageM
     inlineKeyboard(gotoPremiumButton, cancelButton),
     text(...messages),
     "⛔ Генерация картинок недоступна.",
-    `Подождите или приобретите пакет услуг: /${commands.premium}`
+    `Подождите или приобретите пакет услуг: ${formatCommand(commands.premium)}`
   );
 
   return null;

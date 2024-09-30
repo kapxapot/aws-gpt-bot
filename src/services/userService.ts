@@ -15,8 +15,10 @@ import { Coupon } from "../entities/coupon";
 import { isCouponActive } from "./couponService";
 import { atSort, now } from "../entities/at";
 import { cipherNumber } from "./cipherService";
-import { Unsaved } from "../lib/types";
+import { Language, Unsaved } from "../lib/types";
 import { dataEquals } from "../lib/common";
+import { settings } from "../lib/constants";
+import { t } from "../lib/translate";
 
 type CurrentContext = {
   prompt: string | null;
@@ -277,7 +279,7 @@ export function getUserInviteLink(user: User): string {
   return `${config.botUrl}?start=${cipheredUserId}`;
 }
 
-export async function desactivateUser(
+export async function deactivateUser(
   user: User,
   inactivityRecord: InactivityRecord
 ): Promise<User> {
@@ -303,6 +305,14 @@ export async function activateUser(user: User): Promise<User> {
       }
     }
   );
+}
+
+export function getUserLanguage(user: User): Language {
+  return user.languageCode ?? settings.defaultLanguage;
+}
+
+export function getUserName(user: User) {
+  return user.firstName ?? user.lastName ?? user.username ?? t(user, "anonymous");
 }
 
 function telegrafUserToUser(tgUser: TelegrafUser): Unsaved<User> {

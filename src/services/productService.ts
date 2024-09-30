@@ -7,6 +7,7 @@ import { ExpirableProduct, Product, ProductCode, PurchasedProduct, isExpirablePr
 import { gptokenProducts } from "../entities/products/gptokenProducts";
 import { gptProducts } from "../entities/products/gptProducts";
 import { legacyProducts } from "../entities/products/legacyProducts";
+import { formatCommand } from "../lib/commands";
 import { StringLike, isEmpty } from "../lib/common";
 import { commands, symbols } from "../lib/constants";
 import { bulletize, sentence, compactText, text, capitalize } from "../lib/text";
@@ -95,7 +96,7 @@ export function formatProductsString(products: PurchasedProduct[]): string | nul
     return null;
   }
 
-  return `${symbols.product} У вас ${formatWordNumber("продукт", products.length)}: /${commands.products}`;
+  return `${symbols.product} У вас ${formatWordNumber("продукт", products.length)}: ${formatCommand(commands.products)}`;
 }
 
 export function formatProductDescriptions(products: Product[]): StringLike {

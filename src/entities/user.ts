@@ -1,5 +1,5 @@
 import { TelegramError } from "telegraf";
-import { Entity } from "../lib/types";
+import { Entity, Language } from "../lib/types";
 import { At } from "./at";
 import { Context } from "./context";
 import { Coupon } from "./coupon";
@@ -29,7 +29,7 @@ type UserStatus = {
 
 export type User = Entity & {
   telegramId: number;
-  languageCode?: string;
+  languageCode?: Language;
   firstName?: string;
   lastName?: string;
   username?: string;

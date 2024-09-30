@@ -1,0 +1,46 @@
+{
+  "Mode": "Mode",
+  "processingPreviousMessage": "I'm processing your previous message, please wait... ⏳",
+  "sendingMessagesTooOften": "You are sending messages too often. Please wait {{time}}... ⏳",
+  "processingRequest": "🤔 Processing your request, please wait... ⏳",
+  "noAnswerFromChatGPT": "No answer from ChatGPT. 😣",
+  "errors": {
+    "messageTooLong": "You sent a message that is too long, please try shortening it.",
+    "rateLimitReached": "You are sending messages too often. Please wait a few seconds... ⏳",
+    "modelOverloaded": "Oh, I feel a bit dizzy... 😵 Too much workload. Give me a break... ⏳",
+    "chatGPTError": "Unknown ChatGPT error. Please try again.",
+    "quotaExceeded": "I have run out of resources to use ChatGPT. 😮 Please contact support for assistance: {{supportCommand}}",
+    "userNotFoundCtxFrom": "User not found (empty ctx.from).",
+    "unknownTelegramError": "Unknown error while sending a message to Telegram.",
+    "botError": "Bot error ({{updateType}})."
+  },
+  "chatGPTRequestsUnavailable": "⛔ ChatGPT request are unavailable.",
+  "waitOrBuy": "Please wait or buy a product",
+  "tokens": "tokens",
+  "cost": "cost",
+  "history": "history",
+  "emptyHistory": "history is empty",
+  "requestModel": "request model",
+  "responseModel": "response model",
+  "Debug": "Debug",
+  "useMainBot": "Use the main bot",
+  "chatUnavailable": "Диалог недоступен.",
+  "imageGenerationUnavailable": "Image generation unavailable.",
+  "purchasesUnavailable": "Purchases unavailable.",
+  "noAvailableBundles": "No available bundles currently.",
+  "newInvitee": "🔥 New user joined using your invite link!",
+  "Error": "Error",
+  "promo": {
+    "inviteFriends": "Invite friends and receive 🎁 rewards: {{inviteCommand}}",
+    "fanClub": "You will get 🎁 a gift after joining our fan club: {{fanClubLink}}, where you always can ask questions and share ideas.",
+    "premium": "Buy product bundles {{premiumCommand}} to get more requests to <b>{{gptDefaultModelName}}</b> and get access to <b>{{gptPremiumModelName}}</b> and <b>DALL-E</b>."
+  },
+  "welcomeBack": "Welcome back, <b>{{userName}}</b>!",
+  "anonymous": "anonymous",
+  "welcome": {
+    "hello": "Hello, <b>{{userName}}</b>! 🤖 I am <b>GPToid</b>, a bot created to help you work with <b>ChatGPT</b> and <b>DALL-E</b>!",
+    "models": "Here you can work with <b>{{gptDefaultModelName}}</b>, <b>{{gptPremiumModelName}}</b>, and <b>DALL-E 3</b> models.",
+    "tutorial": "If you are new to <b>ChatGPT</b> and <b>DALL-E</b>, our tutorial {{tutorialCommand}} would be a good starting point.",
+    "modes": "I also have different modes of operation: {{modeCommand}}"
+  }
+}

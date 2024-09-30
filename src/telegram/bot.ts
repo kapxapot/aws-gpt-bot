@@ -1,8 +1,8 @@
 import { Scenes, Telegraf, session } from "telegraf";
 import { message } from "telegraf/filters";
 import { TelegramRequest } from "../entities/telegramRequest";
-import { clearAndLeave, isTelegramError, parseCommandWithArgs, reply, userName } from "../lib/telegram";
-import { activateUser, desactivateUser, getOrAddUser } from "../services/userService";
+import { clearAndLeave, isTelegramError, parseCommandWithArgs, reply } from "../lib/telegram";
+import { activateUser, deactivateUser, getOrAddUser, getUserName } from "../services/userService";
 import { tutorialScene } from "./scenes/tutorialScene";
 import { BotContext } from "./botContext";
 import { commands, scenes, symbols } from "../lib/constants";
@@ -27,6 +27,8 @@ import { issueCoupon } from "../services/couponService";
 import { decipherNumber } from "../services/cipherService";
 import { Result } from "../lib/error";
 import { gptDefaultModelName, gptPremiumModelName } from "../services/modelService";
+import { formatCommand } from "../lib/commands";
+import { t } from "../lib/translate";
 
 const config = {
   botToken: process.env.BOT_TOKEN!,
@@ -57,15 +59,25 @@ export async function processTelegramRequest(tgRequest: TelegramRequest) {
     const newUser = userResult.isNew;
 
     const promoMessages = [
-      `Приглашайте друзей и получайте 🎁 подарки: /${commands.invite}`,
-      `Также вы получите 🎁 подарок, вступив в наш фан-клуб: @${config.fanClub}, где всегда можно задать вопросы и поделиться идеями.`,
-      `Приобретайте пакеты услуг /${commands.premium} для увеличения числа запросов к <b>${gptDefaultModelName}</b> и получения доступа к <b>${gptPremiumModelName}</b> и <b>DALL-E</b>.`
+      t(user, "promo.inviteFriends", {
+        inviteCommand: formatCommand(commands.invite)
+      }),
+      t(user, "promo.fanClub", {
+        fanClubLink: `@${config.fanClub}`
+      }),
+      t(user, "promo.premium", {
+        premiumCommand: formatCommand(commands.premium),
+        gptDefaultModelName,
+        gptPremiumModelName
+      })
     ];
+
+    const userName = getUserName(user);
 
     if (!newUser) {
       await reply(
         ctx,
-        `С возвращением, <b>${userName(ctx.from)}</b>!`,
+        t(user, "welcomeBack", { userName }),
         compactText(
           ...bulletize(...promoMessages)
         )
@@ -84,12 +96,19 @@ export async function processTelegramRequest(tgRequest: TelegramRequest) {
 
     await reply(
       ctx,
-      `Привет, <b>${userName(ctx.from)}</b>! 🤖 Я — <b>GPToid</b>, бот, созданный помогать вам в работе с <b>ChatGPT</b> и <b>DALL-E</b>!`,
+      t(user, "welcome.hello", { userName }),
       compactText(
-        `Здесь вы можете работать с моделями <b>${gptDefaultModelName}</b>, <b>${gptPremiumModelName}</b> и <b>DALL-E 3</b>.`,
+        t(user, "welcome.models", {
+          gptDefaultModelName,
+          gptPremiumModelName
+        }),
         ...bulletize(
-          `Советуем начать с обучения /${commands.tutorial}, если вы новичок в <b>ChatGPT</b> и <b>DALL-E</b>.`,
-          `Также у меня есть разные режимы работы: /${commands.mode}`,
+          t(user, "welcome.tutorial", {
+            tutorialCommand: formatCommand(commands.tutorial)
+          }),
+          t(user, "welcome.modes", {
+            modeCommand: formatCommand(commands.mode)
+          }),
           ...promoMessages
         )
       )
@@ -117,7 +136,7 @@ export async function processTelegramRequest(tgRequest: TelegramRequest) {
     if (!canUseGpt(user)) {
       await reply(
         ctx,
-        notAllowedMessage("Диалог недоступен.")
+        notAllowedMessage(user, t(user, "chatUnavailable"))
       );
 
       return;
@@ -129,14 +148,19 @@ export async function processTelegramRequest(tgRequest: TelegramRequest) {
   bot.use(kickHandler);
 
   bot.catch(async (err, ctx) => {
-    console.log(`Bot error (${ctx.updateType}).`, err);
-
     await withUser(ctx, async user => {
+      console.error(
+        t(user, "errors.botError", {
+          updateType: ctx.updateType
+        }),
+        err
+      );
+
       if (!isDebugMode(user)) {
         return;
       }
 
-      await reply(ctx, `${symbols.cross} Ошибка:`, inspect(err));
+      await reply(ctx, `${symbols.cross} ${t(user, "Error")}:`, inspect(err));
     });
   });
 
@@ -163,7 +187,7 @@ export async function sendTelegramMessage(
     console.error(error);
 
     if (isTelegramError(error)) {
-      await desactivateUser(
+      await deactivateUser(
         user,
         {
           reason: error.response.description,
@@ -174,7 +198,7 @@ export async function sendTelegramMessage(
       return error;
     }
 
-    return new Error("Неизвестная ошибка при отправке сообщения в Telegram.");
+    return new Error(t(user, "errors.unknownTelegramError"));
   }
 }
 
@@ -215,7 +239,7 @@ async function processStartParam(user: User, startParam: string) {
       }
     );
 
-    await sendTelegramMessage(inviter, `🔥 Новый пользователь присоединился по вашей ссылке!`);
+    await sendTelegramMessage(inviter, t(user, "newInvitee"));
     await issueCoupon(inviter, "invite");
 
     await putMetric("UserRegisteredByInvite");

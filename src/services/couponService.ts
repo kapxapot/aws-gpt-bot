@@ -3,6 +3,7 @@ import { Coupon, CouponCode, CouponTemplate, couponTemplates } from "../entities
 import { intervalWords } from "../entities/interval";
 import { PurchasedProduct } from "../entities/product";
 import { User } from "../entities/user";
+import { formatCommand } from "../lib/commands";
 import { isEmpty } from "../lib/common";
 import { commands, symbols } from "../lib/constants";
 import { text } from "../lib/text";
@@ -40,7 +41,7 @@ export async function issueCoupon(user: User, code: CouponCode): Promise<Coupon>
     text(
       `🎉 Вы получили купон на активацию ${formatProductName(product, "Genitive")}.`,
       `${symbols.warning} Внимание! Срок действия купона ограничен, его нужно активировать в течение <b>${formatWordNumber(word, coupon.term.range, "Genitive")}</b>.`,
-      `🚀 Активировать: /${commands.coupons}`
+      `🚀 Активировать: ${formatCommand(commands.coupons)}`
     )
   );
 
@@ -82,7 +83,7 @@ export function formatCouponsString(coupons: Coupon[]): string | null {
     return null;
   }
 
-  return `${symbols.coupon} У вас ${formatWordNumber("купон", coupons.length)}: /${commands.coupons}`;
+  return `${symbols.coupon} У вас ${formatWordNumber("купон", coupons.length)}: ${formatCommand(commands.coupons)}`;
 }
 
 export function formatCouponExpiration(coupon: Coupon): string {

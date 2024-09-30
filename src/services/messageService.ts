@@ -9,7 +9,6 @@ import { storeMessage } from "../storage/messageStorage";
 import { addMessageToUser, getLastHistoryMessage, getOrAddUser, getUserActiveCoupons, getUserActiveProducts, stopWaitingForGptAnswer, updateUserProduct, waitForGptAnswer } from "./userService";
 import { commands, symbols } from "../lib/constants";
 import { getCurrentHistory } from "./contextService";
-import { formatWordNumber } from "./grammarService";
 import { Completion } from "../entities/message";
 import { putMetric } from "./metricService";
 import { isDebugMode } from "./userSettingsService";
@@ -33,6 +32,8 @@ import { formatCouponsString } from "./couponService";
 import { getTextModelPrices } from "./priceService";
 import { gptokenString } from "./gptokenService";
 import { parse } from "../lib/parser";
+import { t, t0, tWordNumber } from "../lib/translate";
+import { formatCommand } from "../lib/commands";
 
 const config = {
   messageInterval: parseInt(process.env.MESSAGE_INTERVAL ?? "15") * 1000, // milliseconds
@@ -60,7 +61,7 @@ export async function sendMessageToGpt(ctx: BotContext, user: User, question: st
       // we have waited enough for the GPT answer
       await stopWaitingForGptAnswer(user);
     } else {
-      await reply(ctx, "Я обрабатываю ваше предыдущее сообщение, подождите... ⏳");
+      await reply(ctx, t(user, "processingPreviousMessage"));
       return;
     }
   }
@@ -71,16 +72,15 @@ export async function sendMessageToGpt(ctx: BotContext, user: User, question: st
     );
 
     if (seconds > 0) {
-      await reply(
-        ctx,
-        `Вы отправляете сообщения слишком часто. Подождите ${formatWordNumber("секунда", seconds)}... ⏳`
-      );
+      await reply(ctx, t(user, "sendingMessagesTooOften", {
+        time: tWordNumber(user, "second", seconds)
+      }));
 
       return;
     }
   }
 
-  const messages = await reply(ctx, "🤔 Думаю над ответом, подождите... ⏳");
+  const messages = await reply(ctx, t(user, "processingRequest"));
 
   await waitForGptAnswer(user);
   const answer = await gptChatCompletion(user, model, question);
@@ -102,7 +102,7 @@ export async function sendMessageToGpt(ctx: BotContext, user: User, question: st
     await addMessageToUser(user, message);
 
     if (!answer.reply) {
-      await reply(ctx, "Нет ответа от ChatGPT. 😣");
+      await reply(ctx, t(user, "noAnswerFromChatGPT"));
     } else {
       await sendParsedMessage(ctx, user, answer.reply);
     }
@@ -132,7 +132,7 @@ export async function sendMessageToGpt(ctx: BotContext, user: User, question: st
     await reply(
       ctx,
       commatize([
-        `📌 Режим: <b>${getModeName(user)}</b>`,
+        `📌 ${t(user, "Mode")}: <b>${getModeName(user)}</b>`,
         model,
         formattedLimits
       ])
@@ -152,19 +152,9 @@ export async function sendMessageToGpt(ctx: BotContext, user: User, question: st
 
     await addMessageMetrics(answer);
   } else {
-    let errorMessage = answer.message;
+    const errorMessage = adaptErrorMessage(user, answer.message);
 
-    if (errorMessage.includes("Please reduce the length of the messages.")) {
-      errorMessage = "Вы отправили слишком длинное сообщение, попробуйте его сократить.";
-    } else if (errorMessage.includes("Rate limit reached")) {
-      errorMessage = "Вы шлете сообщения слишком часто. Подождите несколько секунд... ⏳";
-    } else if (errorMessage.includes("model is currently overloaded")) {
-      errorMessage = "Ой, что-то мне поплохело... 😵 Слишком большая нагрузка. Дайте отдышаться... ⏳";
-    } else if (errorMessage.includes("The server had an error while processing your request")) {
-      errorMessage = "Неизвестная ошибка на стороне ChatGPT. Попробуйте повторить запрос.";
-    }
-
-    await reply(ctx, `${symbols.cross} ${errorMessage}`);
+    await reply(ctx, sentence(symbols.cross, errorMessage));
   }
 }
 
@@ -183,7 +173,7 @@ export function getStatusMessage(user: User): string {
   return text(
     formatProductsString(products),
     formatCouponsString(coupons),
-    `Режим: <b>${getModeName(user)}</b>`
+    `${t(user, "Mode")}: <b>${getModeName(user)}</b>`
   );
 }
 
@@ -215,7 +205,8 @@ export async function getUserOrLeave(ctx: BotContext): Promise<User | null> {
     await clearAndLeave(ctx);
   }
 
-  console.error(new Error("User not found (empty ctx.from)."));
+  const errorText = t0("errors.userNotFoundCtxFrom");
+  console.error(new Error(errorText));
 
   await putMetric("Error");
   await putMetric("UserNotFoundError");
@@ -228,12 +219,38 @@ export async function replyBackToMainDialog(ctx: BotContext, ...lines: StringLik
   await backToChatHandler(ctx);
 }
 
-export function notAllowedMessage(message: string): string {
+export function notAllowedMessage(user: User, message: string): string {
   return sentence(
     symbols.stop,
     message,
-    config.mainBot ? `Используйте основной бот: @${config.mainBot}` : null
+    config.mainBot ? `${t(user, "useMainBot")}: @${config.mainBot}` : null
   );
+}
+
+function adaptErrorMessage(user: User, errorMessage: string) {
+  if (errorMessage.includes("Please reduce the length of the messages.")) {
+    return t(user, "errors.messageTooLong");
+  }
+
+  if (errorMessage.includes("Rate limit reached")) {
+    return t(user, "errors.rateLimitReached");
+  }
+
+  if (errorMessage.includes("model is currently overloaded")) {
+    return t(user, "errors.modelOverloaded");
+  }
+
+  if (errorMessage.includes("The server had an error while processing your request")) {
+    return t(user, "errors.chatGPTError");
+  }
+
+  if (errorMessage.includes("You exceeded your current quota")) {
+    return t(user, "errors.quotaExceeded", {
+      supportCommand: formatCommand(commands.support)
+    });
+  }
+
+  return errorMessage;
 }
 
 async function sendParsedMessage(ctx: BotContext, user: User, message: string) {
@@ -281,8 +298,8 @@ async function getTextModelContext(ctx: BotContext, user: User): Promise<TextMod
     ctx,
     inlineKeyboard(gotoPremiumButton),
     text(...messages),
-    "⛔ Запросы к ChatGPT недоступны.",
-    `Подождите или приобретите пакет услуг: /${commands.premium}`
+    t(user, "chatGPTRequestsUnavailable"),
+    `${t(user, "waitOrBuy")}: ${formatCommand(commands.premium)}`
   );
 
   return null;
@@ -325,7 +342,7 @@ function buildDebugInfo(
 
   if (answer?.usage) {
     const usage = answer.usage;
-    chunks.push(`токены: ${usage.totalTokens} (${usage.promptTokens} + ${usage.completionTokens})`);
+    chunks.push(`${t(user, "tokens")}: ${usage.totalTokens} (${usage.promptTokens} + ${usage.completionTokens})`);
   }
 
   const formattedPoints = toFixedOrInt(actualUsagePoints, 3);
@@ -334,7 +351,7 @@ function buildDebugInfo(
     ? gptokenString(formattedPoints)
     : formattedPoints;
 
-  chunks.push(`стоимость: ${cost}`);
+  chunks.push(`${t(user, "cost")}: ${cost}`);
 
   const context = user.context;
 
@@ -346,22 +363,22 @@ function buildDebugInfo(
 
       chunks.push(
         encodeText(
-          `история: ${commatize(truncatedRequests)}`
+          `${t(user, "history")}: ${commatize(truncatedRequests)}`
         )
       );
     } else {
-      chunks.push("история пуста");
+      chunks.push(t(user, "emptyHistory"));
     }
   }
 
-  chunks.push(`модель запроса: ${model}`);
+  chunks.push(`${t(user, "requestModel")}: ${model}`);
 
   if (answer?.model) {
-    chunks.push(`модель ответа: ${answer.model}`);
+    chunks.push(`${t(user, "responseModel")}: ${answer.model}`);
   }
 
   return compactText(
-    "🛠 Отладка:",
+    `🛠 ${t(user, "Debug")}:`,
     ...bulletize(...chunks)
   );
 }

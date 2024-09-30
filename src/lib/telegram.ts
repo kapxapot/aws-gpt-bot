@@ -1,4 +1,4 @@
-import { InlineKeyboardButton, InlineKeyboardMarkup, Message, ReplyKeyboardMarkup, ReplyKeyboardRemove, User as TelegrafUser } from "telegraf/types";
+import { InlineKeyboardButton, InlineKeyboardMarkup, Message, ReplyKeyboardMarkup, ReplyKeyboardRemove } from "telegraf/types";
 import { StringLike, last } from "./common";
 import { Markup, TelegramError } from "telegraf";
 import { settings } from "./constants";
@@ -15,10 +15,6 @@ type CommandWithArgs = {
   command: string;
   args: string[];
 };
-
-export function userName(user: TelegrafUser): string {
-  return user.first_name ?? user.last_name ?? user.username ?? "anonymous";
-}
 
 export function inlineKeyboard(...buttonLikes: ButtonLike[]): InlineKeyboard {
   const buttons = buttonLikes.map(buttonLike => {

@@ -25,6 +25,8 @@ import { getModelName, gptDefaultModelName, gptPremiumModelName } from "../../se
 import { formatSubscriptionDescription } from "../../services/subscriptionService";
 import { gptProducts } from "../../entities/products/gptProducts";
 import { gptokenProducts } from "../../entities/products/gptokenProducts";
+import { formatCommand } from "../../lib/commands";
+import { t } from "../../lib/translate";
 
 type Message = string;
 
@@ -101,13 +103,13 @@ async function sceneIndex(ctx: BotContext, user: User) {
   }
 
   if (!productCount) {
-    messages.push("На данный момент доступных пакетов нет.");
+    messages.push(t(user, "noAvailableBundles"));
 
     if (!canMakePurchases(user)) {
       await replyBackToMainDialog(
         ctx,
         ...messages,
-        notAllowedMessage("Покупки недоступны.")
+        notAllowedMessage(user, t(user, "purchasesUnavailable"))
       );
     }
 
@@ -275,7 +277,7 @@ async function buyProduct(ctx: BotContext, productCode: ProductCode) {
         cancelButton
       ),
       `${symbols.card} Для оплаты <b>${productName}</b> <a href="${payment.url}">пройдите по ссылке</a>.`,
-      `${symbols.warning} Время действия ссылки ограничено. Если вы не успеете оплатить счет, вы можете получить новую ссылку с помощью команды /${commands.premium}`,
+      `${symbols.warning} Время действия ссылки ограничено. Если вы не успеете оплатить счет, вы можете получить новую ссылку с помощью команды ${formatCommand(commands.premium)}`,
       "Мы сообщим вам, когда получим оплату."
     );
   });
