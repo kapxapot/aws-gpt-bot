@@ -39,8 +39,8 @@ type ProductGroup = {
   code: "gptoken" | "gpt-default";
   name: string;
   products: Product[];
-  marketingMessage: string;
-  description: string;
+  getMarketingMessage: (user: User) => string;
+  getDescription: (user: User) => string;
 };
 
 const usagePoints = getGptokenUsagePoints();
@@ -50,20 +50,41 @@ const productGroups: ProductGroup[] = [
     code: "gpt-default",
     name: gptDefaultModelName,
     products: gptProducts,
-    marketingMessage: `вам нужно больше запросов к <b>${gptDefaultModelName}</b>`,
-    description: `Пакеты запросов к модели <b>${gptDefaultModelName}</b>`
+    getMarketingMessage: (user: User) => t(
+      user,
+      "productGroups.gpt-default.marketing",
+      { gptDefaultModelName }
+    ),
+    getDescription: (user: User) => t(
+      user,
+      "productGroups.gpt-default.description",
+      { gptDefaultModelName }
+    )
   },
   {
     code: "gptoken",
     name: `${gptPremiumModelName} / DALL-E`,
     products: gptokenProducts,
-    marketingMessage: `вы хотите работать с <b>${gptPremiumModelName}</b> и <b>DALL-E</b>`,
-    description: text(
-      `Пакеты ${symbols.gptoken} гптокенов для работы с <b>${gptPremiumModelName}</b> и <b>DALL-E</b>`,
+    getMarketingMessage: (user: User) => t(
+      user,
+      "productGroups.gptoken.marketing",
+      { gptPremiumModelName }
+    ),
+    getDescription: (user: User) => text(
+      t(user, "productGroups.gptoken.description.intro", {
+        gptokenSymbol: symbols.gptoken,
+        gptPremiumModelName
+      }),
       compactText(
         ...bulletize(
-          `1 запрос к <b>${getModelName("gpt4")}</b> (~1000 токенов) = ${gptokenString(usagePoints.text)}`,
-          `1 картинка <b>${getModelName("dalle3")}</b> = от ${gptokenString(usagePoints.image, "Genitive")}`
+          t(user, "productGroups.gptoken.description.gpt4", {
+            model: getModelName("gpt4"),
+            usagePoints: gptokenString(usagePoints.text)
+          }),
+          t(user, "productGroups.gptoken.description.dalle3", {
+            model: getModelName("dalle3"),
+            usagePoints: gptokenString(usagePoints.image, "Genitive")
+          })
         )
       )
     )
@@ -116,7 +137,7 @@ async function sceneIndex(ctx: BotContext, user: User) {
     return;
   }
 
-  const marketingMessages = validProductGroups.map(group => group.marketingMessage);
+  const marketingMessages = validProductGroups.map(group => group.getMarketingMessage(user));
 
   messages.push(
     `Если ${orJoin(...marketingMessages)}, приобретите один из пакетов услуг.`
@@ -162,7 +183,7 @@ async function groupAction(ctx: BotContext, group: ProductGroup) {
         ["Назад", backToStartAction],
         cancelButton
       ),
-      group.description,
+      group.getDescription(user),
       ...messages
     );
   });

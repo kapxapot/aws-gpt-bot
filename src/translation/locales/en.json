@@ -42,5 +42,19 @@
     "models": "Here you can work with <b>{{gptDefaultModelName}}</b>, <b>{{gptPremiumModelName}}</b>, and <b>DALL-E 3</b> models.",
     "tutorial": "If you are new to <b>ChatGPT</b> and <b>DALL-E</b>, our tutorial {{tutorialCommand}} would be a good starting point.",
     "modes": "I also have different modes of operation: {{modeCommand}}"
+  },
+  "productGroups": {
+    "gpt-default": {
+      "marketing": "you need more requests to <b>{{gptDefaultModelName}}</b>",
+      "description": "Request bundles to <b>{{gptDefaultModelName}}</b>"
+    },
+    "gptoken": {
+      "marketing": "you want to work with <b>{{gptPremiumModelName}}</b> and <b>DALL-E</b>",
+      "description": {
+        "intro": "{{gptokenSymbol}} Gptoken bundles to work with <b>{{gptPremiumModelName}}</b> and <b>DALL-E</b>",
+        "gpt4": "1 request to <b>{{model}}</b> (~1000 tokens) = {{usagePoints}}",
+        "dalle3": "1 <b>{{model}}</b> image = from {{usagePoints}}"
+      }
+    }
   }
 }
