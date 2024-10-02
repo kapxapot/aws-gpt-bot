@@ -59,7 +59,7 @@
     }
   },
   "orDelimiter": ", or ",
-  "buyBundleIfNeeded": "If {{marketingChunk}}, purchase one of the product bundles.",
+  "buyBundleIfNeeded": "If {{marketingBlock}}, purchase one of the product bundles.",
   "Back": "Back",
   "phoneInput": {
     "line1": "📱 Please, provide your phone number.",
