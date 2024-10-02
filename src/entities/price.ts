@@ -44,6 +44,16 @@ export const textPrices: Record<TextModel, TextPrice> = {
     inputPrice: 0.0075, // $0.00015
     outputPrice: 0.03, // $0.0006
     avgPrice: 0.01875 // $0.000375
+  },
+  "o1-preview": {
+    inputPrice: 0.75, // $0.015
+    outputPrice: 3, // $0.06
+    avgPrice: 1.875 // $0.0375
+  },
+  "o1-mini": {
+    inputPrice: 0.15, // $0.003
+    outputPrice: 0.6, // $0.012
+    avgPrice: 0.375 // $0.0075
   }
 };
 

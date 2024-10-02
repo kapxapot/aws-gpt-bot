@@ -1,12 +1,25 @@
-import { text } from "../lib/text";
+import { t } from "../lib/translate";
 import { getUserContext } from "../services/userService";
 import { User } from "./user";
 
-export const noPromptCode = "_none";
-export const customPromptCode = "_custom";
-export const customPromptName = "Свой промт";
+export const modeCodes = [
+  "free",
+  "role",
+  "prompt"
+] as const;
 
-export type ModeCode = "free" | "role" | "prompt";
+export type ModeCode = typeof modeCodes[number];
+
+export const promptCodes = [
+  "idea-generator",
+  "psychologist",
+  "coach",
+  "chef",
+  "english-tutor",
+  "kids-animator"
+] as const;
+
+export type PromptCode = typeof promptCodes[number] | "_none" | "_custom";
 
 export type Mode = {
   code: ModeCode;
@@ -14,172 +27,122 @@ export type Mode = {
   description: string;
 };
 
-const modes: Mode[] = [
-  {
-    code: "free",
-    name: "Свободный диалог",
-    description: text(
-      "В этом режиме вы общаетесь с ChatGPT без промта и в памяти удерживается история только 3 последних сообщений и ответов на них. Режим подходит для формата «вопрос-ответ».",
-      "Свободный диалог включен по умолчанию при первом запуске бота."
-    )
-  },
-  {
-    code: "role",
-    name: "Роль",
-    description: "В этом режиме я выступаю в одной из заданных ролей. Например, Психолога, Коуча или Генератора идей."
-  },
-  {
-    code: "prompt",
-    name: "Свой промт",
-    description: "В этом режиме вы можете задать свою инструкцию для ChatGPT."
-  }
-];
-
 type PromptDefaults = {
   modeCode: ModeCode;
-  promptCode: string;
+  promptCode: PromptCode;
 };
 
 export type Prompt = {
-  language: "ru" | "en"
-  code: string;
+  code: PromptCode;
   name: string;
   content: string;
   intro: string;
 };
 
-const prompts: Prompt[] = [
-  {
-    language: "ru",
-    code: "idea-generator",
-    name: "Генератор идей",
-    content: text(
-      "Выступай в роли генератора идей.",
-      "Подсказывай варианты решения стоящих передо мной задач.",
-      "В зависимости от моих ответов, продолжай предлагать идеи.",
-      "Начнем с моего следующего сообщения."
-    ),
-    intro: text(
-      "Нейросеть будет выступать в роли генератора идей и подсказывать варианты решения стоящих перед вами задач.",
-      "Напишите, какая у вас задача?"
-    )
-  },
-  {
-    language: "ru",
-    code: "psychologist",
-    name: "Психолог",
-    content: text(
-      "Выступай в роли психолога.",
-      "Помогай решать мои психологические проблемы и повышать уровень психологического развития.",
-      "Начнем с моего следующего сообщения."
-    ),
-    intro: text(
-      "Нейросеть будет выступать в роли психолога и поможет решить ваши психологические проблемы и повышать уровень психологического развития.",
-      "Напишите, что вас сейчас наиболее беспокоит?"
-    )
-  },
-  {
-    language: "ru",
-    code: "coach",
-    name: "Коуч",
-    content: text(
-      "Выступай в роли коуча.",
-      "Задавай мне вопросы с целью помочь в конкретизации и достижении цели.",
-      "Начнем с моего следующего сообщения."
-    ),
-    intro: text(
-      "Нейросеть будет задавать вопросы с целью помочь в конкретизации и достижении вашей цели.",
-      "Напишите, какую цель вы хотели бы достичь?"
-    )
-  },
-  {
-    language: "ru",
-    code: "chef",
-    name: "Повар",
-    content: text(
-      "Act as a chef.",
-      "Offer recipes for dishes from the ingredients I have.",
-      "Let's start with my next post.",
-      "Веди разговор на русском."
-    ),
-    intro: text(
-      "Нейросеть будет предлагать вам рецепты блюд из имеющихся у вас ингредиентов.",
-      "Напишите, какие продукты у вас есть?"
-    )
-  },
-  {
-    language: "ru",
-    code: "english-tutor",
-    name: "Репетитор по английскому языку",
-    content: text(
-      "I want you to act as a spoken English teacher and improver. I will speak to you in English and you will reply to me in English to practice my spoken English. I want you to keep your reply neat, limiting the reply to 100 words. I want you to strictly correct my grammar mistakes, typos, and factual errors. I want you to ask me a question in your reply. Now let's start practicing, you could ask me a question first. Remember, I want you to strictly correct my grammar mistakes, typos, and factual errors.",
-      "I will set the level of language proficiency: beginner, intermediate or advanced, and you communicate with me according to this level.",
-      "Duplicate each of your answers in Russian."
-    ),
-    intro: text(
-      "Нейросеть будет отвечать вам как носитель языка и исправлять ваши ошибки, чтобы вы практиковали свой английский.",
-      "Для старта — напишите свой уровень владения английским языком (начальный, средний, продвинутый) и свое первое предложение."
-    )
-  },
-  {
-    language: "ru",
-    code: "kids-animator",
-    name: "Аниматор для детей",
-    content: "Выступи в роли аниматора для детей. Придумай варианты игры для детей и их родителей, которые не требуют специального оборудования, имеют простые правила, веселые и могут быть сыграны в дороге. Я буду указывать количество игроков и их возраст, а ты составь список игр, подходящих под эти параметры. Представь ответ в виде списка игр, представь их пронумерованными. Каждый вариант сделай по структуре Название игры, примерная продолжительность игры, подробные правила игры.",
-    intro: text(
-      "Нейросеть будет предлагать вам игры для детей и их родителей, которые не требуют специального оборудования, имеют простые правила, веселые и могут быть сыграны в дороге.",
-      "Напишите количество игроков и возраст самого младшего из них."
-    )
-  }
-];
-
 export function getPromptDefaults(): PromptDefaults {
   return {
     modeCode: "free",
-    promptCode: noPromptCode
+    promptCode: "_none"
   };
 }
 
-export function getPrompts(): Prompt[] {
-  return prompts;
+export function getPrompts(user: User): Prompt[] {
+  return [
+    {
+      code: "idea-generator",
+      name: t(user, "prompts.idea-generator.name"),
+      content: t(user, "prompts.idea-generator.content"),
+      intro: t(user, "prompts.idea-generator.intro")
+    },
+    {
+      code: "psychologist",
+      name: t(user, "prompts.psychologist.name"),
+      content: t(user, "prompts.psychologist.content"),
+      intro: t(user, "prompts.psychologist.intro")
+    },
+    {
+      code: "coach",
+      name: t(user, "prompts.coach.name"),
+      content: t(user, "prompts.coach.content"),
+      intro: t(user, "prompts.coach.intro")
+    },
+    {
+      code: "chef",
+      name: t(user, "prompts.chef.name"),
+      content: t(user, "prompts.chef.content"),
+      intro: t(user, "prompts.chef.intro")
+    },
+    {
+      code: "english-tutor",
+      name: t(user, "prompts.english-tutor.name"),
+      content: t(user, "prompts.english-tutor.content"),
+      intro: t(user, "prompts.english-tutor.intro")
+    },
+    {
+      code: "kids-animator",
+      name: t(user, "prompts.kids-animator.name"),
+      content: t(user, "prompts.kids-animator.content"),
+      intro: t(user, "prompts.kids-animator.intro")
+    }
+  ];
 }
 
-export function getPromptByCode(code: string): Prompt | null {
-  return prompts.find(p => p.code === code) ?? null;
+export function getPromptByCode(user: User, code: PromptCode): Prompt | null {
+  return getPrompts(user).find(p => p.code === code) ?? null;
 }
 
-export function getPromptName(code: string): string | null {
-  if (code === customPromptCode) {
-    return customPromptName;
-  }
-
-  return getPromptByCode(code)?.name ?? null;
-}
-
-export function getModes(): Mode[] {
-  return modes;
-}
-
-export function getModeByCode(code: string): Mode | null {
-  return modes.find(m => m.code === code) ?? null;
+export function getModes(user: User): Mode[] {
+  return [
+    {
+      code: "free",
+      name: t(user, "modes.free.name"),
+      description: t(user, "modes.free.description")
+    },
+    {
+      code: "role",
+      name: t(user, "modes.role.name"),
+      description: t(user, "modes.role.description")
+    },
+    {
+      code: "prompt",
+      name: t(user, "modes.prompt.name"),
+      description: t(user, "modes.prompt.description")
+    }
+  ];
 }
 
 export function getModeName(user: User): string | null {
   const context = getUserContext(user);
 
   if (!context) {
-    return "Неизвестный режим";
+    return t(user, "unknownMode");
   }
 
-  const mode = getModeByCode(context.modeCode);
+  const mode = getModeByCode(user, context.modeCode);
 
   if (!mode) {
-    return getPromptName(context.promptCode);
+    return getPromptName(user, context.promptCode);
   }
 
   if (mode.code !== "role") {
     return mode.name;
   }
 
-  return `${mode.name} «${getPromptName(context.promptCode)}»`;
+  return `${mode.name} «${getPromptName(user, context.promptCode)}»`;
+}
+
+export function getModeByCode(user: User, code: ModeCode): Mode | null {
+  return getModes(user).find(m => m.code === code) ?? null;
+}
+
+function getPromptName(user: User, code: PromptCode): string | null {
+  if (code === "_custom") {
+    const customPrompt = getModeByCode(user, "prompt");
+
+    if (customPrompt) {
+      return customPrompt.name;
+    }
+  }
+
+  return getPromptByCode(user, code)?.name ?? null;
 }

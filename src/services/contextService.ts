@@ -1,6 +1,7 @@
 import { Context, History } from "../entities/context";
 import { Message } from "../entities/message";
-import { customPromptCode, getPromptDefaults, getPromptByCode, noPromptCode } from "../entities/prompt";
+import { getPromptDefaults, getPromptByCode, PromptCode } from "../entities/prompt";
+import { User } from "../entities/user";
 
 export function createContext(): Context {
   const { modeCode, promptCode } = getPromptDefaults();
@@ -29,18 +30,18 @@ export function cutoffMessages(history: History, size: number): Message[] {
     : [];
 }
 
-export function getCurrentPrompt(context: Context): string | null {
+export function getCurrentPrompt(user: User, context: Context): string | null {
   const code = context.promptCode;
 
-  if (code === noPromptCode) {
+  if (code === "_none") {
     return null;
   }
 
-  if (code === customPromptCode) {
+  if (code === "_custom") {
     return context.customPrompt;
   }
 
-  return getPromptByCode(code)?.content ?? null;
+  return getPromptByCode(user, code)?.content ?? null;
 }
 
 export function getCurrentHistory(context: Context): History {
@@ -55,7 +56,7 @@ export function getCurrentHistory(context: Context): History {
   return history;
 }
 
-function createHistory(promptCode: string) {
+function createHistory(promptCode: PromptCode) {
   return {
     promptCode,
     messages: []

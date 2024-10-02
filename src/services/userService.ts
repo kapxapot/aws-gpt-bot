@@ -3,7 +3,7 @@ import { Message } from "../entities/message";
 import { InactivityRecord, User } from "../entities/user";
 import { getUser, getUserByTelegramId, storeUser, updateUser } from "../storage/userStorage";
 import { Context } from "../entities/context";
-import { Prompt, customPromptCode, noPromptCode } from "../entities/prompt";
+import { Prompt } from "../entities/prompt";
 import { getUserHistorySize } from "./userSettingsService";
 import { addMessageToHistory, createContext, cutoffMessages, getCurrentHistory, getCurrentPrompt } from "./contextService";
 import { isSuccess } from "../lib/error";
@@ -125,7 +125,7 @@ export const newCustomPrompt = async (user: User, customPrompt: string): Promise
   const context = getUserContext(user);
 
   context.modeCode = "prompt";
-  context.promptCode = customPromptCode;
+  context.promptCode = "_custom";
   context.customPrompt = customPrompt;
 
   return await updateUserContext(user, context);
@@ -135,7 +135,7 @@ export const backToCustomPrompt = async (user: User): Promise<User> => {
   const context = getUserContext(user);
 
   context.modeCode = "prompt";
-  context.promptCode = customPromptCode;
+  context.promptCode = "_custom";
 
   return await updateUserContext(user, context);
 }
@@ -153,7 +153,7 @@ export const setFreeMode = async (user: User): Promise<User> => {
   const context = getUserContext(user);
 
   context.modeCode = "free";
-  context.promptCode = noPromptCode;
+  context.promptCode = "_none";
 
   return await updateUserContext(user, context);
 }
@@ -180,7 +180,7 @@ export function getCurrentContext(user: User, historySize: number): CurrentConte
   const latestMessages = cutoffMessages(history, historySize);
 
   return {
-    prompt: getCurrentPrompt(context),
+    prompt: getCurrentPrompt(user, context),
     latestMessages
   };
 }

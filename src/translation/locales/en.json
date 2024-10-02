@@ -47,7 +47,7 @@
   "productGroups": {
     "gpt-default": {
       "marketing": "you need more requests to <b>{{gptDefaultModelName}}</b>",
-      "description": "Request bundles to <b>{{gptDefaultModelName}}</b>"
+      "description": "Bundles with requests to <b>{{gptDefaultModelName}}</b>"
     },
     "gptoken": {
       "marketing": "you want to work with <b>{{gptPremiumModelName}}</b> and <b>DALL-E</b>",
@@ -79,5 +79,54 @@
     "line2": "⚠ The link is temporary. If you don't make payment in time, you can get a new payment link using the {{premiumCommand}} command.",
     "line3": "We will notify you on receiving your payment."
   },
-  "groupBundles": "{{groupName}} bundles"
+  "groupBundles": "Bundles for {{groupName}}",
+  "unknownMode": "Unknown mode",
+  "modes": {
+    "free": {
+      "name": "Free chat",
+      "description": "In this mode, you interact with ChatGPT without a prompt, and only the history of the last few messages and their responses is retained. This mode is suitable for a \"question-answer\" format.\n\nFree chat is enabled by default when you start me."
+    },
+    "role": {
+      "name": "Role",
+      "description": "In this mode, I take on one of the specified roles. For example, a Psychologist, Coach, or Idea Generator."
+    },
+    "prompt": {
+      "name": "Custom prompt",
+      "description": "In this mode, you can set your own instruction for ChatGPT."
+    }
+  },
+  "modeNotFound": "❌ Mode with code \"{{modeCode}}\" not found. It was probably deleted.",
+  "prompts": {
+    "idea-generator": {
+      "name": "Idea generator",
+      "context": "Act as an idea generator.\n\nSuggest options for solving the tasks I face.\n\nDepending on my responses, continue to propose ideas.",
+      "intro": "I will act as an idea generator and suggest options for solving the tasks you face.\n\nWhat task are you facing?"
+    },
+    "psychologist": {
+      "name": "Psychologist",
+      "context": "Act as a psychologist.\n\nHelp me solve my psychological problems and enhance my psychological development.",
+      "intro": "I will act as a psychologist and try to help solve your psychological problems and enhance your psychological development.\n\nWhat is currently bothering you the most?"
+    },
+    "coach": {
+      "name": "Coach",
+      "context": "Act as a coach.\n\nAsk me questions with the aim of helping to clarify and achieve the goal.",
+      "intro": "I will ask questions with the aim of helping to clarify and achieve your goal.\n\nWhat goal would you like to achieve?"
+    },
+    "chef": {
+      "name": "Chef",
+      "context": "Act as a chef.\n\nOffer recipes for dishes using the ingredients I have.",
+      "intro": "I will suggest recipes for dishes using the ingredients you have.\n\nWhat ingredients do you have?"
+    },
+    "english-tutor": {
+      "name": "Репетитор по английскому языку",
+      "context": "Act as a spoken English teacher and improver. I will speak to you in English and you will reply to me in English to practice my spoken English. Keep your reply neat, limiting the reply to 100 words. Strictly correct my grammar mistakes, typos, and factual errors. Ask me a question in your reply.\n\nI will set the level of language proficiency: beginner, intermediate or advanced, and you communicate with me according to this level.",
+      "intro": "I will respond to you as a native speaker and correct your mistakes so that you can practice your English.\n\nTo start, please write your level of English proficiency (beginner, intermediate, advanced) and your first sentence."
+    },
+    "kids-animator": {
+      "name": "Kids entertainer",
+      "context": "Act as a kids entertainer. Come up with game options for children and their parents that do not require special equipment, have simple rules, are fun, and can be played on the go. I will specify the number of players and their ages, and you will create a list of games suitable for these parameters. Present the answer as a numbered list of games. Each option should follow this structure: <Name of the game>, <approximate duration of the game>, <detailed rules of the game>.",
+      "intro": "I will suggest games for children and their parents that do not require special equipment, have simple rules, are fun, and can be played on the go.\n\nPlease write the number of players and the age of the youngest one."
+    }
+  },
+  "promptNotFound": "❌ Prompt with code «{{promptCode}}» not found. It was probably deleted."
 }

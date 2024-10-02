@@ -15,6 +15,7 @@ export function getTextModelUsagePoints(modelCode: TextModelCode): number {
     case "gpt-default":
     case "gpt3":
     case "gpt4":
+    case "o1":
       return 1;
 
     case "gptokens":

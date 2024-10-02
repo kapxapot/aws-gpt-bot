@@ -1,14 +1,14 @@
 import { Message } from "./message";
-import { ModeCode } from "./prompt";
+import { ModeCode, PromptCode } from "./prompt";
 
 export type History = {
-  promptCode: string;
+  promptCode: PromptCode;
   messages: Message[];
 };
 
 export type Context = {
   modeCode: ModeCode;
   customPrompt: string | null;
-  promptCode: string;
+  promptCode: PromptCode;
   history: History[];
 };

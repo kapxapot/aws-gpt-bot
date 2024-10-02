@@ -3,7 +3,7 @@ import { BotContext } from "../botContext";
 import { scenes, settings, symbols } from "../../lib/constants";
 import { ButtonLike, clearAndLeave, clearInlineKeyboard, encodeText, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { backToCustomPrompt, getOrAddUser, newCustomPrompt, setFreeMode, setPrompt } from "../../services/userService";
-import { getModeName, getModes, getPrompts } from "../../entities/prompt";
+import { getModeByCode, getModeName, getModes, getPromptByCode, getPrompts, modeCodes, promptCodes } from "../../entities/prompt";
 import { addSceneCommandHandlers, backToChatHandler, dunnoHandler, kickHandler } from "../handlers";
 import { message } from "telegraf/filters";
 import { replyBackToMainDialog, sendMessageToGpt, withUser } from "../../services/messageService";
@@ -30,7 +30,7 @@ async function modeSelectionHandler(ctx: BotContext) {
 
     const buttons = [];
 
-    getModes().forEach(mode => {
+    getModes(user).forEach(mode => {
       buttons.push([mode.name, mode.code]);
     })
 
@@ -56,11 +56,21 @@ scene.action(cancelAction, async ctx => {
   await modeSelectionHandler(ctx);
 });
 
-getModes().forEach(mode => {
-  scene.action(mode.code, async ctx => {
+modeCodes.forEach(modeCode => {
+  scene.action(modeCode, async ctx => {
     if (isStage(ctx.session, "modeSelection")) {
       await withUser(ctx, async user => {
         await clearInlineKeyboard(ctx);
+
+        const mode = getModeByCode(user, modeCode);
+
+        if (!mode) {
+          const errorMessage = t(user, "modeNotFound", { modeCode });
+          console.error(errorMessage);
+          await replyBackToMainDialog(ctx, errorMessage);
+
+          return;
+        }
 
         const messages = [
           `${t(user, "Mode")} <b>«${mode.name}»</b>`,
@@ -69,7 +79,7 @@ getModes().forEach(mode => {
 
         const buttons: ButtonLike[] = [];
 
-        switch (mode.code) {
+        switch (modeCode) {
           case "free":
             buttons.push(["Выбрать этот режим", selectFreeModeAction]);
             break;
@@ -79,7 +89,7 @@ getModes().forEach(mode => {
 
             messages.push("Выберите роль:");
 
-            getPrompts().forEach(p => {
+            getPrompts(user).forEach(p => {
               buttons.push([p.name, p.code]);
             });
 
@@ -129,10 +139,20 @@ scene.action(selectFreeModeAction, async ctx => {
   });
 });
 
-getPrompts().forEach(prompt => {
-  scene.action(prompt.code, async ctx => {
+promptCodes.forEach(promptCode => {
+  scene.action(promptCode, async ctx => {
     if (isStage(ctx.session, "roleSelection")) {
       await withUser(ctx, async user => {
+        const prompt = getPromptByCode(user, promptCode);
+
+        if (!prompt) {
+          const errorMessage = t(user, "promptNotFound", { promptCode });
+          console.error(errorMessage);
+          await replyBackToMainDialog(ctx, errorMessage);
+
+          return;
+        }
+
         await setPrompt(user, prompt);
 
         await replyBackToMainDialog(
