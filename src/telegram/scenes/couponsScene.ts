@@ -3,7 +3,7 @@ import { BotContext } from "../botContext";
 import { scenes, settings, symbols } from "../../lib/constants";
 import { addSceneCommandHandlers, backToChatHandler, dunnoHandler, kickHandler } from "../handlers";
 import { message } from "telegraf/filters";
-import { backToStartAction, cancelAction, cancelButton } from "../../lib/dialog";
+import { backToStartAction, cancelAction, getCancelButton } from "../../lib/dialog";
 import { withUser } from "../../services/messageService";
 import { getUserActiveCoupons } from "../../services/userService";
 import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
@@ -74,7 +74,7 @@ async function activateUserCoupon(ctx: BotContext, user: User, coupon: Coupon) {
     ctx,
     inlineKeyboard(
       ["Активировать еще один", backToStartAction],
-      cancelButton
+      getCancelButton(user)
     ),
     `${symbols.success} Вы успешно активировали купон!`,
     `Вам добавлен ${formatProductName(product)}`
@@ -99,7 +99,7 @@ async function displayCoupons(ctx: BotContext, user: User) {
   if (!totalCount) {
     await replyWithKeyboard(
       ctx,
-      inlineKeyboard(cancelButton),
+      inlineKeyboard(getCancelButton(user)),
       "У вас нет купонов. 😯"
     );
 
@@ -108,7 +108,7 @@ async function displayCoupons(ctx: BotContext, user: User) {
 
   await replyWithKeyboard(
     ctx,
-    inlineKeyboard(cancelButton),
+    inlineKeyboard(getCancelButton(user)),
     `У вас ${formatWordNumber("купон", totalCount)} на следующие продукты:`,
     ...displayCouponData.map(couponData => couponDescription(couponData)),
     remainingCount

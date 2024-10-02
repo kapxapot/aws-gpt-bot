@@ -3,7 +3,8 @@ import { User } from "../entities/user";
 import { formatWordNumber } from "../services/grammarService";
 import { getUserLanguage } from "../services/userService";
 import i18n from "../translation/i18n";
-import { sentence } from "./text";
+import { StringLike } from "./common";
+import { homogeneousJoin, sentence } from "./text";
 import { AnyRecord } from "./types";
 
 export type EnWord =
@@ -50,6 +51,9 @@ export function tWordNumber(user: User, word: EnWord, num: number) {
 
   return formatEnWordNumber(word, num);
 }
+
+export const orJoin = (user: User, ...lines: StringLike[]) =>
+  homogeneousJoin(lines, t(user, "orDelimiter"));
 
 function formatEnWordNumber(word: EnWord, num: number) {
   const wordForm = num === 1

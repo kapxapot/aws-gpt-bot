@@ -1,13 +1,13 @@
 import { BaseScene } from "telegraf/scenes";
 import { BotContext } from "../botContext";
-import { commands, scenes, symbols } from "../../lib/constants";
+import { commands, scenes } from "../../lib/constants";
 import { addSceneCommandHandlers, backToChatHandler, dunnoHandler, kickHandler } from "../handlers";
-import { ButtonLike, clearInlineKeyboard, contactKeyboard, contactRequestLabel, emptyKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
+import { ButtonLike, clearInlineKeyboard, contactKeyboard, emptyKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { Product, ProductCode, freeSubscription, isPurchasableProduct, productCodes } from "../../entities/product";
 import { isError } from "../../lib/error";
 import { canMakePurchases, canPurchaseProduct } from "../../services/permissionService";
-import { backToStartAction, cancelAction, cancelButton } from "../../lib/dialog";
-import { getUserOrLeave, notAllowedMessage, replyBackToMainDialog, withUser } from "../../services/messageService";
+import { backToStartAction, cancelAction, getCancelButton } from "../../lib/dialog";
+import { notAllowedMessage, replyBackToMainDialog, withUser } from "../../services/messageService";
 import { SessionData } from "../session";
 import { StringLike, isEmpty, phoneToItu } from "../../lib/common";
 import { message } from "telegraf/filters";
@@ -15,7 +15,7 @@ import { updateUser } from "../../storage/userStorage";
 import { formatProductDescription, formatProductDescriptions, getPrettyProductName, getProductByCode } from "../../services/productService";
 import { User } from "../../entities/user";
 import { gptokenString } from "../../services/gptokenService";
-import { bulletize, orJoin, compactText, text } from "../../lib/text";
+import { bulletize, compactText, text } from "../../lib/text";
 import { createPayment } from "../../services/paymentService";
 import { Markup } from "telegraf";
 import { getUserActiveCoupons, getUserActiveProducts } from "../../services/userService";
@@ -26,7 +26,7 @@ import { formatSubscriptionDescription } from "../../services/subscriptionServic
 import { gptProducts } from "../../entities/products/gptProducts";
 import { gptokenProducts } from "../../entities/products/gptokenProducts";
 import { formatCommand } from "../../lib/commands";
-import { t } from "../../lib/translate";
+import { orJoin, t } from "../../lib/translate";
 
 type Message = string;
 
@@ -71,10 +71,7 @@ const productGroups: ProductGroup[] = [
       { gptPremiumModelName }
     ),
     getDescription: (user: User) => text(
-      t(user, "productGroups.gptoken.description.intro", {
-        gptokenSymbol: symbols.gptoken,
-        gptPremiumModelName
-      }),
+      t(user, "productGroups.gptoken.description.intro", { gptPremiumModelName }),
       compactText(
         ...bulletize(
           t(user, "productGroups.gptoken.description.gpt4", {
@@ -138,16 +135,17 @@ async function sceneIndex(ctx: BotContext, user: User) {
   }
 
   const marketingMessages = validProductGroups.map(group => group.getMarketingMessage(user));
+  const marketingBlock = orJoin(user, ...marketingMessages);
 
   messages.push(
-    `Если ${orJoin(...marketingMessages)}, приобретите один из пакетов услуг.`
+    t(user, "buyBundleIfNeeded", { marketingBlock })
   );
 
   await replyWithKeyboard(
     ctx,
     inlineKeyboard(
-      ...validProductGroups.map(group => productGroupButton(group)),
-      cancelButton
+      ...validProductGroups.map(group => productGroupButton(user, group)),
+      getCancelButton(user)
     ),
     ...messages
   );
@@ -180,8 +178,8 @@ async function groupAction(ctx: BotContext, group: ProductGroup) {
       ctx,
       inlineKeyboard(
         ...buttons,
-        ["Назад", backToStartAction],
-        cancelButton
+        [t(user, "Back"), backToStartAction],
+        getCancelButton(user)
       ),
       group.getDescription(user),
       ...messages
@@ -200,66 +198,61 @@ async function buyAction(ctx: BotContext, productCode: ProductCode) {
 
     // ask for phone number and then buy the product
     setTargetProductCode(ctx.session, productCode);
-    await askForPhone(ctx);
+    await askForPhone(ctx, user);
   });
 }
 
-async function askForPhone(ctx: BotContext) {
+async function askForPhone(ctx: BotContext, user: User) {
+  const contactRequestLabel = getContactRequestLabel(user);
+
   await ctx.reply(
     text(
-      "📱 Пожалуйста, предоставьте номер вашего телефона.",
-      "Это нужно для автоматической отправки чеков.",
-      `Нажмите кнопку "${contactRequestLabel}" (Telegram отправит его автоматически).`,
+      t(user, "phoneInput.line1"),
+      t(user, "phoneInput.line2"),
+      t(user, "phoneInput.line3", { contactRequestLabel }),
       "👇"
     ),
-    contactKeyboard()
+    contactKeyboard(contactRequestLabel)
   );
 }
 
 scene.on(message("contact"), async ctx => {
-  const contact = ctx.message.contact.phone_number;
-  const formattedPhone = phoneToItu(contact);
+  await withUser(ctx, async user => {
+    const contact = ctx.message.contact.phone_number;
+    const formattedPhone = phoneToItu(contact);
 
-  if (!formattedPhone) {
+    if (!formattedPhone) {
+      const contactRequestLabel = getContactRequestLabel(user);
+
+      await ctx.reply(
+        text(t(user, "incorrectPhoneNumberFormat"), "👇"),
+        contactKeyboard(contactRequestLabel)
+      );
+
+      return;
+    }
+
+    const updatedUser = await updateUser(user, { phoneNumber: contact });
+
     await ctx.reply(
-      text(
-        "📱 Неверный формат телефона. Попробуйте еще раз.",
-        "👇"
-      ),
-      contactKeyboard()
-    );
-
-    return;
-  }
-
-  let user = await getUserOrLeave(ctx);
-
-  if (!user) {
-    await ctx.reply(
-      "Пользователь не найден.",
+      t(user, "gotYourPhoneNumber"),
       emptyKeyboard()
     );
 
-    return;
-  }
+    const targetProductCode = getTargetProductCode(ctx.session);
 
-  user = await updateUser(user, { phoneNumber: contact });
+    if (
+      !targetProductCode
+      || !canPurchaseProduct(updatedUser, targetProductCode)
+    ) {
+      await reply(ctx, t(user, "selectedProductUnavailable"));
+      backToChatHandler(ctx);
 
-  await ctx.reply(
-    "Я записал ваш телефон, спасибо! 🙏",
-    emptyKeyboard()
-  );
+      return;
+    }
 
-  const targetProductCode = getTargetProductCode(ctx.session);
-
-  if (!targetProductCode || !canPurchaseProduct(user, targetProductCode)) {
-    await reply(ctx, "Выбранный вами продукт более не доступен.");
-    backToChatHandler(ctx);
-
-    return;
-  }
-
-  await buyProduct(ctx, targetProductCode);
+    await buyProduct(ctx, targetProductCode);
+  });
 });
 
 async function buyProduct(ctx: BotContext, productCode: ProductCode) {
@@ -269,37 +262,34 @@ async function buyProduct(ctx: BotContext, productCode: ProductCode) {
     const product = getProductByCode(productCode);
 
     if (!isPurchasableProduct(product)) {
-      await replyBackToMainDialog(
-        ctx,
-        "Этот продукт больше недоступен к покупке. Приносим извинения."
-      );
-
+      await replyBackToMainDialog(ctx, t(user, "productCantBePurchased"));
       return;
     }
 
     const payment = await createPayment(user, product);
 
     if (isError(payment)) {
-      await replyBackToMainDialog(
-        ctx,
-        "Произошла ошибка, оплата временно недоступна. Приносим извинения."
-      );
-
+      await replyBackToMainDialog(ctx, t(user, "errors.paymentError"));
       return;
     }
 
-    const productName = getPrettyProductName(product, { targetCase: "Genitive" });
+    const productNameGen = getPrettyProductName(product, { targetCase: "Genitive" });
 
     await replyWithKeyboard(
       ctx,
       inlineKeyboard(
-        Markup.button.url("Оплатить", payment.url),
-        ["Купить еще один", backToStartAction],
-        cancelButton
+        Markup.button.url(t(user, "makePayment"), payment.url),
+        [t(user, "buyOneMoreMasculine"), backToStartAction],
+        getCancelButton(user)
       ),
-      `${symbols.card} Для оплаты <b>${productName}</b> <a href="${payment.url}">пройдите по ссылке</a>.`,
-      `${symbols.warning} Время действия ссылки ограничено. Если вы не успеете оплатить счет, вы можете получить новую ссылку с помощью команды ${formatCommand(commands.premium)}`,
-      "Мы сообщим вам, когда получим оплату."
+      t(user, "goToPayment.line1", {
+        productNameGen,
+        paymentUrl: payment.url
+      }),
+      t(user, "goToPayment.line2", {
+        premiumCommand: formatCommand(commands.premium)
+      }),
+      t(user, "goToPayment.line2")
     );
   });
 }
@@ -354,8 +344,10 @@ const productButton = (product: Product): ButtonLike => [
   getProductBuyAction(product.code)
 ];
 
-const productGroupButton = (group: ProductGroup): ButtonLike => [
-  `Пакеты ${group.name}`,
+const productGroupButton = (user: User, group: ProductGroup): ButtonLike => [
+  t(user, "groupBundles", {
+    groupName: group.name
+  }),
   getGroupAction(group)
 ];
 
@@ -371,3 +363,6 @@ function filterProductGroup(user: User, group: ProductGroup): ProductGroup {
     products: filterPurchasable(user, group.products)
   };
 }
+
+const getContactRequestLabel = (user: User) =>
+  t(user, "📱 Send phone number");

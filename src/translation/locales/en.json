@@ -12,7 +12,8 @@
     "quotaExceeded": "I have run out of resources to use ChatGPT. 😮 Please contact support for assistance: {{supportCommand}}",
     "userNotFoundCtxFrom": "User not found (empty ctx.from).",
     "unknownTelegramError": "Unknown error while sending a message to Telegram.",
-    "botError": "Bot error ({{updateType}})."
+    "botError": "Bot error ({{updateType}}).",
+    "paymentError": "An error occurred, the payment is unavailable at the moment. Sorry. 😢"
   },
   "chatGPTRequestsUnavailable": "⛔ ChatGPT request are unavailable.",
   "waitOrBuy": "Please wait or buy a product",
@@ -24,7 +25,7 @@
   "responseModel": "response model",
   "Debug": "Debug",
   "useMainBot": "Use the main bot",
-  "chatUnavailable": "Диалог недоступен.",
+  "chatUnavailable": "Chat is unavailable.",
   "imageGenerationUnavailable": "Image generation unavailable.",
   "purchasesUnavailable": "Purchases unavailable.",
   "noAvailableBundles": "No available bundles currently.",
@@ -51,10 +52,32 @@
     "gptoken": {
       "marketing": "you want to work with <b>{{gptPremiumModelName}}</b> and <b>DALL-E</b>",
       "description": {
-        "intro": "{{gptokenSymbol}} Gptoken bundles to work with <b>{{gptPremiumModelName}}</b> and <b>DALL-E</b>",
+        "intro": "🍥 Gptoken bundles to work with <b>{{gptPremiumModelName}}</b> and <b>DALL-E</b>",
         "gpt4": "1 request to <b>{{model}}</b> (~1000 tokens) = {{usagePoints}}",
         "dalle3": "1 <b>{{model}}</b> image = from {{usagePoints}}"
       }
     }
-  }
+  },
+  "orDelimiter": ", or ",
+  "buyBundleIfNeeded": "If {{marketingChunk}}, purchase one of the product bundles.",
+  "Back": "Back",
+  "phoneInput": {
+    "line1": "📱 Please, provide your phone number.",
+    "line2": "It's needed for the automatic receipt sending.",
+    "line3": "Press the \"${{contactRequestLabel}}\" button (Telegram will send it automatically)."
+  },
+  "sendPhoneNumber": "📱 Send phone number",
+  "incorrectPhoneNumberFormat": "📱 Incorrect phone number format. Please try again.",
+  "gotYourPhoneNumber": "I've saved your phone number, thanks! 🙏",
+  "selectedProductUnavailable": "The product you've selected is not available anymore.",
+  "productCantBePurchased": "This product is not available for purchase anymore. Sorry. 😢",
+  "makePayment": "Make payment",
+  "buyOneMoreMasculine": "Buy one more",
+  "Cancel": "Cancel",
+  "goToPayment": {
+    "line1": "💳 <a href=\"{{paymentUrl}}\">Follow the link</a> to make payment for <b>{{productNameGen}}</b>.",
+    "line2": "⚠ The link is temporary. If you don't make payment in time, you can get a new payment link using the {{premiumCommand}} command.",
+    "line3": "We will notify you on receiving your payment."
+  },
+  "groupBundles": "{{groupName}} bundles"
 }

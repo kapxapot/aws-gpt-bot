@@ -1,5 +1,5 @@
 import { User } from "../../src/entities/user";
-import { EnWord, tWordNumber } from "../../src/lib/translate";
+import { EnWord, orJoin, tWordNumber } from "../../src/lib/translate";
 import { Language } from "../../src/lib/types";
 import { testUser } from "../testData";
 
@@ -86,4 +86,32 @@ describe("tWordNumber", () => {
         .toBe(result);
     }
   );
+});
+
+describe("orJoin", () => {
+  test("[Russian] should join string with `или`", () => {
+    const user: User = {
+      ...testUser,
+      languageCode: "ru"
+    };
+  
+    expect(orJoin(user)).toBe("");
+    expect(orJoin(user, "a")).toBe("a");
+    expect(orJoin(user, "a", "b")).toBe("a или b");
+    expect(orJoin(user, "a", "b", "c")).toBe("a, b или c");
+    expect(orJoin(user, "a", "b", "c", "d")).toBe("a, b, c или d");
+  });
+
+  test("[English] should join string with `, or`", () => {
+    const user: User = {
+      ...testUser,
+      languageCode: "en"
+    };
+  
+    expect(orJoin(user)).toBe("");
+    expect(orJoin(user, "a")).toBe("a");
+    expect(orJoin(user, "a", "b")).toBe("a, or b");
+    expect(orJoin(user, "a", "b", "c")).toBe("a, b, or c");
+    expect(orJoin(user, "a", "b", "c", "d")).toBe("a, b, c, or d");
+  });
 });

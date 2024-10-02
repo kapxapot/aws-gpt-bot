@@ -8,7 +8,8 @@ import { addSceneCommandHandlers, backToChatHandler, dunnoHandler, kickHandler }
 import { message } from "telegraf/filters";
 import { replyBackToMainDialog, sendMessageToGpt, withUser } from "../../services/messageService";
 import { ModeStage, SessionData } from "../session";
-import { cancelAction, cancelButton } from "../../lib/dialog";
+import { cancelAction, getCancelButton } from "../../lib/dialog";
+import { t } from "../../lib/translate";
 
 const scene = new BaseScene<BotContext>(scenes.mode);
 
@@ -33,7 +34,7 @@ async function modeSelectionHandler(ctx: BotContext) {
       buttons.push([mode.name, mode.code]);
     })
 
-    buttons.push(cancelButton);
+    buttons.push(getCancelButton(user));
 
     await replyWithKeyboard(
       ctx,
@@ -57,62 +58,62 @@ scene.action(cancelAction, async ctx => {
 
 getModes().forEach(mode => {
   scene.action(mode.code, async ctx => {
-    if (isStage(ctx.session, "modeSelection") && ctx.from) {
-      await clearInlineKeyboard(ctx);
+    if (isStage(ctx.session, "modeSelection")) {
+      await withUser(ctx, async user => {
+        await clearInlineKeyboard(ctx);
 
-      const messages = [
-        `Режим <b>«${mode.name}»</b>`,
-        mode.description
-      ];
+        const messages = [
+          `${t(user, "Mode")} <b>«${mode.name}»</b>`,
+          mode.description
+        ];
 
-      const buttons: ButtonLike[] = [];
+        const buttons: ButtonLike[] = [];
 
-      switch (mode.code) {
-        case "free":
-          buttons.push(["Выбрать этот режим", selectFreeModeAction]);
-          break;
+        switch (mode.code) {
+          case "free":
+            buttons.push(["Выбрать этот режим", selectFreeModeAction]);
+            break;
 
-        case "role":
-          setStage(ctx.session, "roleSelection");
+          case "role":
+            setStage(ctx.session, "roleSelection");
 
-          messages.push("Выберите роль:");
+            messages.push("Выберите роль:");
 
-          getPrompts().forEach(p => {
-            buttons.push([p.name, p.code]);
-          });
+            getPrompts().forEach(p => {
+              buttons.push([p.name, p.code]);
+            });
 
-          break;
+            break;
 
-        case "prompt":
-          setStage(ctx.session, "promptSelection");
+          case "prompt":
+            setStage(ctx.session, "promptSelection");
 
-          // eslint-disable-next-line no-case-declarations
-          const { user } = await getOrAddUser(ctx.from);
-          // eslint-disable-next-line no-case-declarations
-          const customPrompt = user.context?.customPrompt;
+            // eslint-disable-next-line no-case-declarations
+            const customPrompt = user.context?.customPrompt;
 
-          if (customPrompt) {
-            messages.push(
-              "У вас есть свой промт:",
-              `<i>${encodeText(customPrompt)}</i>`,
-              "Вы можете вернуться к своему промту или задать новый."
-            );
+            if (customPrompt) {
+              messages.push(
+                "У вас есть свой промт:",
+                `<i>${encodeText(customPrompt)}</i>`,
+                "Вы можете вернуться к своему промту или задать новый."
+              );
 
-            buttons.push(["Вернуться к своему промту", backToCustomPromptAction]);
-          }
+              buttons.push(["Вернуться к своему промту", backToCustomPromptAction]);
+            }
 
-          buttons.push(["Задать новый промт", customPromptAction]);
+            buttons.push(["Задать новый промт", customPromptAction]);
 
-          break;
-      }
+            break;
+        }
 
-      buttons.push(cancelButton);
+        buttons.push(getCancelButton(user));
 
-      await replyWithKeyboard(
-        ctx,
-        inlineKeyboard(...buttons),
-        ...messages
-      );
+        await replyWithKeyboard(
+          ctx,
+          inlineKeyboard(...buttons),
+          ...messages
+        );
+      });
     }
   });
 });
@@ -149,11 +150,13 @@ scene.action(customPromptAction, async ctx => {
 
   setStage(ctx.session, "customPromptInput");
 
-  await replyWithKeyboard(
-    ctx,
-    inlineKeyboard(cancelButton),
-    `Введите новый промт (до ${settings.maxPromptLength} символов):`
-  );
+  await withUser(ctx, async user => {
+    await replyWithKeyboard(
+      ctx,
+      inlineKeyboard(getCancelButton(user)),
+      `Введите новый промт (до ${settings.maxPromptLength} символов):`
+    );
+  });
 });
 
 scene.action(backToCustomPromptAction, async ctx => {

@@ -6,7 +6,7 @@ import { clearAndLeave, clearInlineKeyboard, inlineKeyboard, replyWithKeyboard }
 import { message } from "telegraf/filters";
 import { generateImageWithGpt } from "../../services/imageService";
 import { ImageStage, SessionData } from "../session";
-import { backToStartAction, cancelAction, cancelButton, gotoPremiumAction, gotoPremiumButton } from "../../lib/dialog";
+import { backToStartAction, cancelAction, getCancelButton, gotoPremiumAction, gotoPremiumButton } from "../../lib/dialog";
 import { notAllowedMessage, replyBackToMainDialog, withUser } from "../../services/messageService";
 import { gptokenString } from "../../services/gptokenService";
 import { bullet, bulletize, capitalize, compactText, text } from "../../lib/text";
@@ -124,7 +124,7 @@ async function imagePromptInput(ctx: BotContext, user: User) {
 
   await replyWithKeyboard(
     ctx,
-    inlineKeyboard(cancelButton),
+    inlineKeyboard(getCancelButton(user)),
     `${symbols.picture} Генерация картинок с помощью <b>DALL-E</b>`,
     compactText(
       ...bulletize(...modelDescription),
@@ -164,7 +164,7 @@ async function getImageModelContext(ctx: BotContext, user: User): Promise<ImageM
 
   await replyWithKeyboard(
     ctx,
-    inlineKeyboard(gotoPremiumButton, cancelButton),
+    inlineKeyboard(gotoPremiumButton, getCancelButton(user)),
     text(...messages),
     "⛔ Генерация картинок недоступна.",
     `Подождите или приобретите пакет услуг: ${formatCommand(commands.premium)}`

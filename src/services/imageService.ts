@@ -3,7 +3,7 @@ import { ImageSettings, defaultImageSize } from "../entities/model";
 import { User } from "../entities/user";
 import { gptImageGeneration } from "../external/gptImageGeneration";
 import { formatWordNumber } from "./grammarService";
-import { backToStartAction, cancelButton } from "../lib/dialog";
+import { backToStartAction, getCancelButton } from "../lib/dialog";
 import { isSuccess } from "../lib/error";
 import { inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
 import { storeImageRequest, updateImageRequest } from "../storage/imageRequestStorage";
@@ -128,7 +128,7 @@ export async function generateImageWithGpt(
         ...inlineKeyboard(
           Markup.button.url("Скачать картинку", url),
           [`Создать еще одну ${symbols.picture}`, backToStartAction],
-          cancelButton
+          getCancelButton(user)
         ),
         disable_web_page_preview: true
       }
@@ -162,7 +162,7 @@ export async function generateImageWithGpt(
 
     await replyWithKeyboard(
       ctx,
-      inlineKeyboard(cancelButton),
+      inlineKeyboard(getCancelButton(user)),
       `${symbols.cross} ${errorMessage}`
     );
   }

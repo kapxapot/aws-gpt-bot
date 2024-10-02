@@ -5,8 +5,6 @@ import { settings } from "./constants";
 import { BotContext } from "../telegram/botContext";
 import { text } from "./text";
 
-export const contactRequestLabel = "📱 Отправить номер";
-
 export type ButtonLike = [label: string, action: string] | InlineKeyboardButton;
 
 type InlineKeyboard = Markup.Markup<InlineKeyboardMarkup>;
@@ -52,9 +50,9 @@ export function emptyKeyboard(): Markup.Markup<ReplyKeyboardRemove> {
   return Markup.removeKeyboard();
 }
 
-export function contactKeyboard(): Markup.Markup<ReplyKeyboardMarkup> {
+export function contactKeyboard(label: string): Markup.Markup<ReplyKeyboardMarkup> {
   return Markup.keyboard([
-    Markup.button.contactRequest(contactRequestLabel)
+    Markup.button.contactRequest(label)
   ]).resize();
 }
 

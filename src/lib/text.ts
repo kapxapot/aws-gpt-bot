@@ -38,27 +38,23 @@ export function capitalize(str: string): string {
   return str.substring(0, 1).toUpperCase() + str.substring(1);
 }
 
-export const andJoin = (...lines: StringLike[]) => homogeneousJoin(clean(lines));
-
-export const orJoin = (...lines: StringLike[]) => homogeneousJoin(clean(lines), " или ");
-
-function homogeneousJoin(
-  chunks: string[],
-  finalDelimiter?: string,
-  commaDelimiter?: string
+/**
+ * a
+ * a{final}b
+ * a{comma}b{final}c
+ * a{comma}b{comma}c{final}d
+ */
+export function homogeneousJoin(
+  chunks: StringLike[],
+  finalDelimiter: string,
+  commaDelimiter: string = ", "
 ): string {
-  finalDelimiter ??= " и ";
-  commaDelimiter ??= ", ";
-
-  // a
-  // a и b
-  // a, b и c
-
   let result = "";
-  const chunkCount = chunks.length;
+  const cleanChunks = clean(chunks);
+  const chunkCount = cleanChunks.length;
 
   for (let index = 1; index <= chunkCount; index++) {
-    const chunk = chunks[chunkCount - index];
+    const chunk = cleanChunks[chunkCount - index];
 
     switch (index) {
       case 1:
@@ -66,11 +62,11 @@ function homogeneousJoin(
         continue;
 
       case 2:
-        result = `${chunk}${finalDelimiter}${result}`;
+        result = [chunk, finalDelimiter, result].join("");
         continue;
 
       default:
-        result = `${chunk}${commaDelimiter}${result}`;
+        result = [chunk, commaDelimiter, result].join("");
     }
   }
 
