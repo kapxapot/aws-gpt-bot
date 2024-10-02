@@ -24,8 +24,10 @@ async function modeSelectionHandler(ctx: BotContext) {
 
   await withUser(ctx, async user => {
     const messages = [
-      `Текущий режим: <b>${getModeName(user)}</b>`,
-      "Выберите желаемый режим:"
+      t(user, "currentMode", {
+        modeName: getModeName(user)
+      }),
+      t(user, "chooseMode")
     ];
 
     const buttons = [];
@@ -73,7 +75,9 @@ modeCodes.forEach(modeCode => {
         }
 
         const messages = [
-          `${t(user, "Mode")} <b>«${mode.name}»</b>`,
+          t(user, "modeName", {
+            modeName: mode.name
+          }),
           mode.description
         ];
 
@@ -81,13 +85,19 @@ modeCodes.forEach(modeCode => {
 
         switch (modeCode) {
           case "free":
-            buttons.push(["Выбрать этот режим", selectFreeModeAction]);
+            buttons.push([
+              t(user, "chooseThisMode"),
+              selectFreeModeAction
+            ]);
+
             break;
 
           case "role":
             setStage(ctx.session, "roleSelection");
 
-            messages.push("Выберите роль:");
+            messages.push(
+              t(user, "chooseRole")
+            );
 
             getPrompts(user).forEach(p => {
               buttons.push([p.name, p.code]);
@@ -103,15 +113,21 @@ modeCodes.forEach(modeCode => {
 
             if (customPrompt) {
               messages.push(
-                "У вас есть свой промт:",
-                `<i>${encodeText(customPrompt)}</i>`,
-                "Вы можете вернуться к своему промту или задать новый."
+                t(user, "existingCustomPrompt", {
+                  customPrompt: encodeText(customPrompt)
+                })
               );
 
-              buttons.push(["Вернуться к своему промту", backToCustomPromptAction]);
+              buttons.push([
+                t(user, "switchBackToPrompt"),
+                backToCustomPromptAction
+              ]);
             }
 
-            buttons.push(["Задать новый промт", customPromptAction]);
+            buttons.push([
+              t(user, "enterNewPrompt"),
+              customPromptAction
+            ]);
 
             break;
         }
