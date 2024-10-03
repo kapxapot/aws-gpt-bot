@@ -136,5 +136,10 @@
   "chooseRole": "Выберите роль:",
   "existingCustomPrompt": "У вас есть свой промт:\n\n<i>{{customPrompt}}</i>\n\nВы можете вернуться к своему промту или задать новый.",
   "switchBackToPrompt": "Вернуться к своему промту",
-  "enterNewPrompt": "Задать новый промт"
+  "enterNewPrompt": "Задать новый промт",
+  "switchedToMode": "Вы перешли в режим <b>«{{modeName}}»</b>.",
+  "switchedToRole": "Вы выбрали роль <b>«{{promptName}}»</b>.",
+  "enteringNewPrompt": "Введите новый промт (до {{maxPromptLength}} символов):",
+  "switchedBackToPrompt": "Вы вернулись к своему промту.",
+  "switchedToNewPrompt": "✅ Вы задали новый промт."
 }

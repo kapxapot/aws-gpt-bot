@@ -136,5 +136,10 @@
   "chooseRole": "Choose the role:",
   "existingCustomPrompt": "You already have a custom prompt:\n\n<i>{{customPrompt}}</i>\n\nYou can switch back to it or enter a new one.",
   "switchBackToPrompt": "Switch back to prompt",
-  "enterNewPrompt": "Enter new prompt"
+  "enterNewPrompt": "Enter new prompt",
+  "switchedToMode": "Switched to mode <b>\"{{modeName}}\"</b>.",
+  "switchedToRole": "Switched to role <b>\"{{promptName}}\"</b>.",
+  "enteringNewPrompt": "Enter new prompt (up to {{maxPromptLength}} characters):",
+  "switchedBackToPrompt": "Switched back to existing custom prompt.",
+  "switchedToNewPrompt": "✅ Switched to new custom prompt."
 }

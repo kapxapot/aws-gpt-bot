@@ -1,6 +1,6 @@
 import { BaseScene } from "telegraf/scenes";
 import { BotContext } from "../botContext";
-import { scenes, settings, symbols } from "../../lib/constants";
+import { scenes, settings } from "../../lib/constants";
 import { ButtonLike, clearAndLeave, clearInlineKeyboard, encodeText, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { backToCustomPrompt, getOrAddUser, newCustomPrompt, setFreeMode, setPrompt } from "../../services/userService";
 import { getModeByCode, getModeName, getModes, getPromptByCode, getPrompts, modeCodes, promptCodes } from "../../entities/prompt";
@@ -150,7 +150,9 @@ scene.action(selectFreeModeAction, async ctx => {
 
     await replyBackToMainDialog(
       ctx,
-      `Вы перешли в режим <b>«${getModeName(user)}»</b>.`
+      t(user, "switchedToMode", {
+        modeName: getModeName(user)
+      })
     );
   });
 });
@@ -170,10 +172,13 @@ promptCodes.forEach(promptCode => {
         }
 
         await setPrompt(user, prompt);
+        await clearAndLeave(ctx);
 
-        await replyBackToMainDialog(
+        await reply(
           ctx,
-          `Вы выбрали роль <b>«${prompt.name}»</b>.`,
+          t(user, "switchedToRole", {
+            promptName: prompt.name
+          }),
           prompt.intro
         );
       });
@@ -190,7 +195,9 @@ scene.action(customPromptAction, async ctx => {
     await replyWithKeyboard(
       ctx,
       inlineKeyboard(getCancelButton(user)),
-      `Введите новый промт (до ${settings.maxPromptLength} символов):`
+      t(user, "enteringNewPrompt", {
+        maxPromptLength: settings.maxPromptLength
+      })
     );
   });
 });
@@ -199,10 +206,7 @@ scene.action(backToCustomPromptAction, async ctx => {
   await withUser(ctx, async user => {
     await backToCustomPrompt(user);
 
-    await replyBackToMainDialog(
-      ctx,
-      "Вы вернулись к своему промту."
-    );
+    await replyBackToMainDialog(ctx, t(user, "switchedBackToPrompt"));
   });
 });
 
@@ -216,7 +220,7 @@ scene.on(message("text"), async ctx => {
     const { user } = await getOrAddUser(ctx.from);
     await newCustomPrompt(user, customPrompt);
 
-    await reply(ctx, `${symbols.success} Вы задали новый промт.`);
+    await reply(ctx, t(user, "switchedToNewPrompt"));
     await sendMessageToGpt(ctx, user, customPrompt);
 
     return;
