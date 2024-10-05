@@ -76,11 +76,11 @@ const productGroups: ProductGroup[] = [
         ...bulletize(
           t(user, "productGroups.gptoken.description.gpt4", {
             model: getModelName("gpt4"),
-            usagePoints: gptokenString(usagePoints.text)
+            usagePoints: gptokenString(user, usagePoints.text)
           }),
           t(user, "productGroups.gptoken.description.dalle3", {
             model: getModelName("dalle3"),
-            usagePoints: gptokenString(usagePoints.image, "Genitive")
+            usagePoints: gptokenString(user, usagePoints.image, "Genitive")
           })
         )
       )

@@ -115,7 +115,7 @@ async function imagePromptInput(ctx: BotContext, user: User) {
   }
 
   if (modelCode === "gptokens") {
-    modelDescription.push(`стоимость: ${gptokenString(usagePoints)}`);
+    modelDescription.push(`стоимость: ${gptokenString(user, usagePoints)}`);
   }
 
   const formattedLimits = limits

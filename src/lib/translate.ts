@@ -1,4 +1,4 @@
-import { KnownWord } from "../entities/grammar";
+import { GrammarCase, KnownWord } from "../entities/grammar";
 import { User } from "../entities/user";
 import { formatWordNumber } from "../services/grammarService";
 import { getUserLanguage } from "../services/userService";
@@ -7,18 +7,68 @@ import { StringLike } from "./common";
 import { homogeneousJoin, sentence } from "./text";
 import { AnyRecord } from "./types";
 
-export type EnWord =
-  "second";
+const enWords = [
+  "bundle",
+  "coupon",
+  "day",
+  "dollar",
+  "gptoken",
+  "image",
+  "month",
+  "product",
+  "request",
+  "ruble",
+  "second",
+  "subscription",
+  "week"
+] as const;
+
+export type EnWord = typeof enWords[number];
 
 type EnWordMeta = {
-  plural: string;
+  plural?: string;
   ruWord: KnownWord;
 };
 
 const wordMeta: Record<EnWord, EnWordMeta> = {
+  "bundle": {
+    ruWord: "пакет"
+  },
+  "coupon": {
+    ruWord: "купон"
+  },
+  "day": {
+    ruWord: "день"
+  },
+  "dollar": {
+    ruWord: "доллар"
+  },
+  "gptoken": {
+    ruWord: "гптокен"
+  },
+  "image": {
+    ruWord: "картинка"
+  },
+  "month": {
+    ruWord: "месяц"
+  },
+  "product": {
+    ruWord: "продукт"
+  },
+  "request": {
+    ruWord: "запрос"
+  },
+  "ruble": {
+    ruWord: "рубль"
+  },
   "second": {
-    plural: "seconds",
     ruWord: "секунда"
+  },
+  "subscription": {
+    ruWord: "тариф"
+  },
+  "week": {
+    ruWord: "неделя"
   }
 };
 
@@ -38,14 +88,14 @@ export function t(user: User | undefined, text: string, values?: AnyRecord) {
   return i18n.t(text, values);
 }
 
-export function tWordNumber(user: User, word: EnWord, num: number) {
+export function tWordNumber(user: User, word: EnWord, num: number, targetCase?: GrammarCase) {
   const language = getUserLanguage(user);
 
   if (language === "ru") {
     const ruWord = getRuWord(word);
 
     if (ruWord) {
-      return formatWordNumber(ruWord, num);
+      return formatWordNumber(ruWord, num, targetCase);
     }
   }
 
@@ -56,9 +106,9 @@ export const orJoin = (user: User, ...lines: StringLike[]) =>
   homogeneousJoin(lines, t(user, "orDelimiter"));
 
 function formatEnWordNumber(word: EnWord, num: number) {
-  const wordForm = num === 1
+  const wordForm = (num === 1)
     ? word
-    : wordMeta[word].plural;
+    : plural(word);
 
   return sentence(String(num), wordForm);
 }
@@ -71,4 +121,8 @@ function setLanguage(user: User) {
   if (i18n.language !== language) {
     i18n.changeLanguage(language);
   }
+}
+
+function plural(word: EnWord) {
+  return wordMeta[word].plural ?? `${word}s`;
 }

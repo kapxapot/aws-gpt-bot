@@ -348,7 +348,7 @@ function buildDebugInfo(
   const formattedPoints = toFixedOrInt(actualUsagePoints, 3);
 
   const cost = (modelCode === "gptokens")
-    ? gptokenString(formattedPoints)
+    ? gptokenString(user, formattedPoints)
     : formattedPoints;
 
   chunks.push(`${t(user, "cost")}: ${cost}`);

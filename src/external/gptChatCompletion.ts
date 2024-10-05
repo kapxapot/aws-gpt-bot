@@ -9,6 +9,7 @@ import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
 import { getOpenAiClient, isOpenAiError } from "../lib/openAi";
 import { putMetric } from "../services/metricService";
 import { TextModel } from "../entities/model";
+import { t } from "../lib/translate";
 
 const config = {
   gptTimeout: gptTimeout * 1000,
@@ -82,9 +83,13 @@ export async function gptChatCompletion(user: User, model: TextModel, userMessag
     if (isOpenAiError(error)) {
       const message = error.error.message;
 
-      return new Error(`Ошибка OpenAI API: ${message}`);
+      return new Error(
+        t(user, "openAiApiInnerError", { message })
+      );
     }
 
-    return new Error("Ошибка обращения к OpenAI API.");
+    return new Error(
+      t(user, "openAiApiError")
+    );
   }
 }

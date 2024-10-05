@@ -63,7 +63,7 @@ export async function processTelegramRequest(tgRequest: TelegramRequest) {
         inviteCommand: formatCommand(commands.invite)
       }),
       t(user, "promo.fanClub", {
-        fanClubLink: `@${config.fanClub}`
+        fanClubLink: config.fanClub
       }),
       t(user, "promo.premium", {
         premiumCommand: formatCommand(commands.premium),

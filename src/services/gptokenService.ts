@@ -1,7 +1,7 @@
 import { GrammarCase } from "../entities/grammar";
-import { symbols } from "../lib/constants";
-import { formatWordNumber } from "./grammarService";
+import { User } from "../entities/user";
+import { sentence } from "../lib/text";
+import { tWordNumber } from "../lib/translate";
 
-export function gptokenString(amount: number, targetCase?: GrammarCase): string {
-  return `${symbols.gptoken} ${formatWordNumber("гптокен", amount, targetCase)}`;
-}
+export const gptokenString = (user: User, amount: number, targetCase?: GrammarCase) =>
+  sentence("🍥", tWordNumber(user, "gptoken", amount, targetCase));
