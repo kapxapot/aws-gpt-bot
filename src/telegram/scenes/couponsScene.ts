@@ -1,19 +1,19 @@
 import { BaseScene } from "telegraf/scenes";
 import { BotContext } from "../botContext";
-import { scenes, settings, symbols } from "../../lib/constants";
+import { scenes, settings } from "../../lib/constants";
 import { addSceneCommandHandlers, backToChatHandler, dunnoHandler, kickHandler } from "../handlers";
 import { message } from "telegraf/filters";
 import { backToStartAction, cancelAction, getCancelButton } from "../../lib/dialog";
 import { withUser } from "../../services/messageService";
 import { getUserActiveCoupons } from "../../services/userService";
 import { clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
-import { formatWordNumber } from "../../services/grammarService";
 import { formatProductDescription, formatProductName, getProductByCode } from "../../services/productService";
 import { activateCoupon, formatCouponExpiration } from "../../services/couponService";
 import { getIdChunk } from "../../lib/uuid";
-import { bullet, compactText, text } from "../../lib/text";
+import { bullet, compactText, sentence, text } from "../../lib/text";
 import { Coupon } from "../../entities/coupon";
 import { User } from "../../entities/user";
+import { t, tWordNumber } from "../../lib/translate";
 
 type CouponData = {
   coupon: Coupon;
@@ -59,7 +59,15 @@ async function textHandler(ctx: BotContext, user: User, text: string) {
         await activateUserCoupon(ctx, user, coupon);
         return;
       } catch (error) {
-        await reply(ctx, `${symbols.cross} Ошибка активации купона ${coupon.id}. ${error}`);
+        await reply(
+          ctx,
+          sentence(
+            t(user, "couponActivationError", {
+              couponId: coupon.id
+            }),
+            String(error)
+          )
+        );
       }
     }
   }
@@ -73,11 +81,16 @@ async function activateUserCoupon(ctx: BotContext, user: User, coupon: Coupon) {
   await replyWithKeyboard(
     ctx,
     inlineKeyboard(
-      ["Активировать еще один", backToStartAction],
+      [
+        t(user, "activateOneMoreMasculine"),
+        backToStartAction
+      ],
       getCancelButton(user)
     ),
-    `${symbols.success} Вы успешно активировали купон!`,
-    `Вам добавлен ${formatProductName(product)}`
+    t(user, "couponActivated"),
+    t(user, "productAdded", {
+      productName: formatProductName(product)
+    })
   );
 }
 
@@ -100,7 +113,7 @@ async function displayCoupons(ctx: BotContext, user: User) {
     await replyWithKeyboard(
       ctx,
       inlineKeyboard(getCancelButton(user)),
-      "У вас нет купонов. 😯"
+      t(user, "noCoupons")
     );
 
     return;
@@ -109,24 +122,34 @@ async function displayCoupons(ctx: BotContext, user: User) {
   await replyWithKeyboard(
     ctx,
     inlineKeyboard(getCancelButton(user)),
-    `У вас ${formatWordNumber("купон", totalCount)} на следующие продукты:`,
-    ...displayCouponData.map(couponData => couponDescription(couponData)),
+    t(user, "couponsForProducts", {
+      coupons: tWordNumber(user, "coupon", totalCount)
+    }),
+    ...displayCouponData.map(
+      couponData => couponDescription(user, couponData)
+    ),
     remainingCount
-      ? `И еще ${formatWordNumber("купон", remainingCount)}...`
+      ? t(user, "andMoreCoupons", {
+        coupons: tWordNumber(user, "coupon", remainingCount)
+      })
       : null
   );
 }
 
-function couponDescription(couponData: CouponData): string {
+function couponDescription(user: User, couponData: CouponData): string {
   const { coupon, activateCommand } = couponData;
   const product = getProductByCode(coupon.productCode);
 
   return text(
     compactText(
       formatProductDescription(product),
-      bullet(`Купон действует по 🕓 ${formatCouponExpiration(coupon)}`)
+      bullet(
+        t(user, "couponBestBefore", {
+          couponExpiration: formatCouponExpiration(coupon)
+        })
+      )
     ),
-    `🚀 Активировать: ${activateCommand}`
+    t(user, "activateCoupon", { activateCommand })
   );
 }
 
@@ -155,6 +178,6 @@ function buildCouponContext(user: User): CouponContext {
   return {
     displayCouponData,
     totalCount,
-    remainingCount: totalCount - displayCount,
+    remainingCount: totalCount - displayCount
   };
 }

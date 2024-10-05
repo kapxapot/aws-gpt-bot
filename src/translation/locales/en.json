@@ -15,7 +15,8 @@
     "botError": "Bot error ({{updateType}}).",
     "paymentError": "An error occurred, the payment is unavailable at the moment. Sorry. 😢",
     "openAiApiInnerError": "OpenAI API error: {{message}}",
-    "openAiApiError": "OpenAI API request error."
+    "openAiApiError": "OpenAI API request error.",
+    "couponActivationError": "❌ Error activating coupon {{couponId}}."
   },
   "chatGPTRequestsUnavailable": "⛔ ChatGPT request are unavailable.",
   "waitOrBuy": "Please wait or buy a product",
@@ -157,5 +158,13 @@
     "step8": "<b>Tutorial Completed</b>\n\n🔥 Hooray, you've read to the end! 🔥\n\nTry interacting with the bot in different ways to solve your tasks.\n\nChoose one of the modes {{modeCommand}} or start messaging the bot right now!\n👇"
   },
   "Next": "Next",
-  "Finish": "Finish"
+  "Finish": "Finish",
+  "activateOneMoreMasculine": "Activate one more",
+  "couponActivated": "✅ You successfully activated the coupon!",
+  "productAdded": "You have {{productName}} added.",
+  "noCoupons": "You have no coupons. 😯",
+  "couponsForProducts": "You have {{coupons}} for the following products:",
+  "andMoreCoupons": "And another {{coupons}}...",
+  "couponBestBefore": "The coupon is valid until 🕓 {{couponExpiration}}",
+  "activateCoupon": "🚀 Activate: {{activateCommand}}"
 }
