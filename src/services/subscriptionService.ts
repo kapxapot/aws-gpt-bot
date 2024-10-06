@@ -42,7 +42,7 @@ export function getPrettySubscriptionName(
   );
 }
 
-export function formatSubscriptionDescription(subscription: Subscription, user: User): string {
+export function formatSubscriptionDescription(user: User, subscription: Subscription): string {
   const plan = getSubscriptionPlan(subscription);
   const modelCodes = getPlanModels(plan);
 
@@ -55,7 +55,14 @@ export function formatSubscriptionDescription(subscription: Subscription, user: 
       continue;
     }
 
-    formattedLimits.push(...formatConsumptionLimits(limits, modelCode, true));
+    formattedLimits.push(
+      ...formatConsumptionLimits(
+        user,
+        limits,
+        modelCode,
+        true
+      )
+    );
   }
 
   return compactText(

@@ -7,6 +7,8 @@ import { getProductByCode } from "../../src/services/productService";
 import { formatSubscriptionDescription, getPrettySubscriptionName } from "../../src/services/subscriptionService";
 import { testUser } from "../testData";
 
+const user = testUser;
+
 describe("getPrettySubscriptionName", () => {
   test("should correctly build name", () => {
     expect([
@@ -17,13 +19,13 @@ describe("getPrettySubscriptionName", () => {
         }
       ),
       getPrettySubscriptionName(
-        getProductByCode("subscription-premium-30-days"),
+        getProductByCode(user, "subscription-premium-30-days"),
         {
           targetCase: "Dative"
         }
       ),
       getPrettySubscriptionName(
-        getProductByCode("bundle-pro-30-days"),
+        getProductByCode(user, "bundle-pro-30-days"),
         {
           targetCase: "Instrumental"
         }
@@ -83,7 +85,7 @@ describe("formatSubscriptionDescription", () => {
     };
 
     expect(
-      formatSubscriptionDescription(freeSubscription, user)
+      formatSubscriptionDescription(user, freeSubscription)
     ).toBe(
       `<b>🤑 Тариф «Бесплатный»</b>
 🔹 7/10 запросов к <b>${gptDefaultModelName}</b> в день

@@ -1,16 +1,17 @@
 import { ConsumptionLimit, ConsumptionLimits, IntervalConsumptionLimit } from "../entities/consumption";
 import { KnownWord } from "../entities/grammar";
 import { ModelCode } from "../entities/model";
+import { User } from "../entities/user";
 import { toFixedOrIntStr } from "../lib/common";
 import { settings } from "../lib/constants";
 import { cleanJoin, commatize, sentence } from "../lib/text";
 import { isConsumptionLimit } from "./consumptionService";
+import { formatInterval, formatLimit } from "./formatService";
 import { formatWordNumber, getCase, getCaseForNumber } from "./grammarService";
-import { formatInterval } from "./intervalService";
 import { formatModelSuffix, getModelSymbol, getModelWord } from "./modelService";
-import { formatLimit } from "./usageLimitService";
 
 export function formatRemainingLimits(
+  user: User,
   limits: ConsumptionLimits,
   modelCode: ModelCode,
   usagePoints?: number,
@@ -27,7 +28,7 @@ export function formatRemainingLimits(
 
   const formattedIntervalLimits = limits.map(limit =>
     sentence(
-      `${formatInterval(limit.interval)}: ${formatRemainingLimit(limit)}`,
+      `${formatInterval(user, limit.interval)}: ${formatRemainingLimit(limit)}`,
       formatTargetLimit(limit, targetWord ?? word, usagePoints)
     )
   );
@@ -39,6 +40,7 @@ export function formatRemainingLimits(
 }
 
 export function formatConsumptionLimits(
+  user: User,
   limits: ConsumptionLimits,
   modelCode: ModelCode,
   showConsumption: boolean
@@ -56,6 +58,7 @@ export function formatConsumptionLimits(
   } else {
     for (const limit of limits) {
       const formattedLimit = formatIntervalConsumptionLimit(
+        user,
         limit,
         modelCode,
         showConsumption
@@ -87,12 +90,13 @@ function formatConsumptionLimit(
 }
 
 const formatIntervalConsumptionLimit = (
+  user: User,
   limit: IntervalConsumptionLimit,
   modelCode: ModelCode,
   showConsumption: boolean
 ) => sentence(
   formatConsumptionLimit(limit, modelCode, showConsumption),
-  formatInterval(limit.interval)
+  formatInterval(user, limit.interval)
 );
 
 function formatLeft(modelCode: ModelCode): string {

@@ -1,4 +1,5 @@
 import { GrammarCase, KnownWord } from "../entities/grammar";
+import { Interval } from "../entities/interval";
 import { User } from "../entities/user";
 import { formatWordNumber } from "../services/grammarService";
 import { getUserLanguage } from "../services/userService";
@@ -12,6 +13,7 @@ const enWords = [
   "coupon",
   "day",
   "dollar",
+  "euro",
   "gptoken",
   "image",
   "month",
@@ -23,7 +25,7 @@ const enWords = [
   "week"
 ] as const;
 
-export type EnWord = typeof enWords[number];
+export type EnWord = Interval | typeof enWords[number];
 
 type EnWordMeta = {
   plural?: string;
@@ -42,6 +44,9 @@ const wordMeta: Record<EnWord, EnWordMeta> = {
   },
   "dollar": {
     ruWord: "доллар"
+  },
+  "euro": {
+    ruWord: "евро"
   },
   "gptoken": {
     ruWord: "гптокен"

@@ -7,21 +7,21 @@ import { ExpirableProduct, Product, ProductCode, PurchasedProduct, isExpirablePr
 import { gptokenProducts } from "../entities/products/gptokenProducts";
 import { gptProducts } from "../entities/products/gptProducts";
 import { legacyProducts } from "../entities/products/legacyProducts";
+import { User } from "../entities/user";
 import { formatCommand } from "../lib/commands";
 import { StringLike, isEmpty } from "../lib/common";
-import { commands, symbols } from "../lib/constants";
+import { commands } from "../lib/constants";
 import { bulletize, sentence, compactText, text, capitalize } from "../lib/text";
+import { t, tWordNumber } from "../lib/translate";
 import { uuid } from "../lib/uuid";
 import { formatConsumptionLimits } from "./consumptionFormatService";
 import { getProductConsumptionLimits } from "./consumptionService";
 import { addDays, addTerm, formatDate } from "./dateService";
-import { formatWordNumber } from "./grammarService";
-import { formatMoney } from "./moneyService";
 import { getPlanModelLimit, getPlanModels } from "./planService";
 import { getPlanSettings } from "./planSettingsService";
 import { isProductUsageExceeded } from "./productUsageService";
 import { SubscriptionNameOptions, getPrettySubscriptionName, getSubscriptionPlan } from "./subscriptionService";
-import { formatTerm } from "./termService";
+import { formatMoney, formatTerm } from "./formatService";
 
 export type ProductDescriptionOptions = {
   showPrice?: boolean;
@@ -33,13 +33,14 @@ export const getPrettyProductName = (product: Product, options?: SubscriptionNam
   getPrettySubscriptionName(product, options);
 
 export function formatProductName(
+  user: User,
   product: Product,
   targetCase?: GrammarCase
 ): string {
   return sentence(
     `<b>${getPrettyProductName(product, { full: true, targetCase })}</b>`,
     isExpirableProduct(product)
-      ? `(${formatProductExpiration(product)})`
+      ? `(${formatProductExpiration(user, product)})`
       : null
   );
 }
@@ -51,7 +52,7 @@ export function getActiveProducts(): Product[] {
   ];
 }
 
-export function getProductByCode(code: ProductCode): Product {
+export function getProductByCode(user: User, code: ProductCode): Product {
   const products = [
     ...legacyProducts,
     ...getActiveProducts()
@@ -63,7 +64,11 @@ export function getProductByCode(code: ProductCode): Product {
     return product;
   }
 
-  throw new Error(`Product not found: ${code}`);
+  throw new Error(
+    t(user, "errors.productNotFound", {
+      productCode: code
+    })
+  );
 }
 
 export const isProductActive = (product: PurchasedProduct) =>
@@ -91,23 +96,27 @@ export function productToPurchasedProduct(product: Product, purchasedAt: At): Pu
   };
 }
 
-export function formatProductsString(products: PurchasedProduct[]): string | null {
+export function formatProductsString(user: User, products: PurchasedProduct[]): string | null {
   if (isEmpty(products)) {
     return null;
   }
 
-  return `${symbols.product} У вас ${formatWordNumber("продукт", products.length)}: ${formatCommand(commands.products)}`;
+  return t(user, "userProducts", {
+    products: tWordNumber(user, "product", products.length),
+    productsCommand: formatCommand(commands.products)
+  });
 }
 
-export function formatProductDescriptions(products: Product[]): StringLike {
+export function formatProductDescriptions(user: User, products: Product[]): StringLike {
   if (isEmpty(products)) {
     return null;
   }
 
   return text(
-    "Ваши продукты:",
+    t(user, "yourProducts"),
     ...products
       .map(product => formatProductDescription(
+        user,
         product,
         {
           showExpiration: true,
@@ -118,23 +127,31 @@ export function formatProductDescriptions(products: Product[]): StringLike {
 }
 
 export function formatProductDescription(
+  user: User,
   product: Product,
   options: ProductDescriptionOptions = {}
 ): string {
   const term = product.details.term;
-  const termChunk = term ? `на ${formatTerm(term, "Accusative")}` : "";
 
   const priceLine = options.showPrice && isPurchasableProduct(product)
-    ? `${formatMoney(product.price)} ${termChunk}`
+    ? sentence(
+        formatMoney(user, product.price),
+        term
+          ? t(user, "forTerm", {
+              term: formatTerm(user, term, "Accusative")
+            })
+          : null
+      )
     : null;
 
   const expirationLine = (options.showExpiration && isExpirableProduct(product))
     ? capitalize(
-        formatProductExpiration(product)
+        formatProductExpiration(user, product)
       )
     : null;
 
   const formattedLimits = formatProductLimits(
+    user,
     product,
     options.showConsumption ?? false
   );
@@ -145,7 +162,7 @@ export function formatProductDescription(
   );
 }
 
-function formatProductLimits(product: Product, showConsumption: boolean): string[] {
+function formatProductLimits(user: User, product: Product, showConsumption: boolean): string[] {
   const modelCodes = getProductModels(product);
   const formattedLimits = [];
 
@@ -156,20 +173,29 @@ function formatProductLimits(product: Product, showConsumption: boolean): string
       continue;
     }
 
-    formattedLimits.push(...formatConsumptionLimits(limits, modelCode, showConsumption));
+    formattedLimits.push(
+      ...formatConsumptionLimits(
+        user,
+        limits,
+        modelCode,
+        showConsumption
+      )
+    );
   }
 
   return formattedLimits;
 }
 
-const formatProductExpiration = (product: ExpirableProduct) =>
-  `действует по 🕓 ${getProductExpiration(product)}`;
+const formatProductExpiration = (user: User, product: ExpirableProduct) =>
+  t(user, "validUntil", {
+    validUntil: getProductExpiration(user, product)
+  });
 
-function getProductExpiration(product: ExpirableProduct): string {
+function getProductExpiration(user: User, product: ExpirableProduct): string {
   const end = getProductEnd(product);
   const expiresAt = new Date(end);
 
-  return formatDate(expiresAt, "dd.MM.yyyy");
+  return formatDate(expiresAt, t(user, "dateFormat"));
 }
 
 function isProductExpired(product: PurchasedProduct): boolean {

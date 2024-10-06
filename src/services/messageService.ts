@@ -126,7 +126,7 @@ export async function sendMessageToGpt(ctx: BotContext, user: User, question: st
     const newLimits = getConsumptionLimits(user, product, modelCode, pureModelCode);
 
     const formattedLimits = newLimits
-      ? formatRemainingLimits(newLimits, modelCode)
+      ? formatRemainingLimits(user, newLimits, modelCode)
       : null;
 
     await reply(
@@ -171,8 +171,8 @@ export function getStatusMessage(user: User): string {
   const coupons = getUserActiveCoupons(user);
 
   return text(
-    formatProductsString(products),
-    formatCouponsString(coupons),
+    formatProductsString(user, products),
+    formatCouponsString(user, coupons),
     `${t(user, "Mode")}: <b>${getModeName(user)}</b>`
   );
 }
@@ -284,7 +284,7 @@ async function getTextModelContext(ctx: BotContext, user: User): Promise<TextMod
     }
 
     const subscription = product ?? freeSubscription;
-    const formattedLimits = formatRemainingLimits(limits, modelCode, usagePoints);
+    const formattedLimits = formatRemainingLimits(user, limits, modelCode, usagePoints);
 
     messages.push(
       compactText(

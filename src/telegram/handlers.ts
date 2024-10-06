@@ -123,12 +123,12 @@ async function statusHandler(ctx: BotContext) {
 
 async function inviteHandler(ctx: BotContext) {
   await withUser(ctx, async user => {
-    const couponTemplate = getCouponTemplateByCode("invite");
-    const product = getProductByCode(couponTemplate.productCode);
+    const couponTemplate = getCouponTemplateByCode(user, "invite");
+    const product = getProductByCode(user, couponTemplate.productCode);
 
     await reply(
       ctx,
-      `Пригласите друзей в бот и получите купон на активацию ${formatProductName(product, "Genitive")} в подарок! 🎁`,
+      `Пригласите друзей в бот и получите купон на активацию ${formatProductName(user, product, "Genitive")} в подарок! 🎁`,
       `Поделитесь с друзьями этой ссылкой: ${getUserInviteLink(user)}`
     );
   });
@@ -147,7 +147,7 @@ async function productsHandler(ctx: BotContext) {
     } else {
       await reply(
         ctx,
-        formatProductDescriptions(products),
+        formatProductDescriptions(user, products),
         `${symbols.card} Приобрести еще: ${formatCommand(commands.premium)}`
       );
     }

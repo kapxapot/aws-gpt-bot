@@ -108,15 +108,15 @@ async function sceneIndex(ctx: BotContext, user: User) {
   const products = getUserActiveProducts(user);
 
   const messages: StringLike[] = [
-    formatProductDescriptions(products),
-    formatSubscriptionDescription(freeSubscription, user)
+    formatProductDescriptions(user, products),
+    formatSubscriptionDescription(user, freeSubscription)
   ];
 
   const coupons = getUserActiveCoupons(user);
 
   if (!isEmpty(coupons)) {
     messages.push(
-      formatCouponsString(coupons)
+      formatCouponsString(user, coupons)
     );
   }
 
@@ -172,7 +172,7 @@ async function groupAction(ctx: BotContext, group: ProductGroup) {
 
   await withUser(ctx, async user => {
     const filteredGroup = filterProductGroup(user, group);
-    const { messages, buttons } = listProducts(filteredGroup.products);
+    const { messages, buttons } = listProducts(user, filteredGroup.products);
 
     await replyWithKeyboard(
       ctx,
@@ -206,12 +206,7 @@ async function askForPhone(ctx: BotContext, user: User) {
   const contactRequestLabel = getContactRequestLabel(user);
 
   await ctx.reply(
-    text(
-      t(user, "phoneInput.line1"),
-      t(user, "phoneInput.line2"),
-      t(user, "phoneInput.line3", { contactRequestLabel }),
-      "👇"
-    ),
+    t(user, "phoneInput", { contactRequestLabel }),
     contactKeyboard(contactRequestLabel)
   );
 }
@@ -225,7 +220,7 @@ scene.on(message("contact"), async ctx => {
       const contactRequestLabel = getContactRequestLabel(user);
 
       await ctx.reply(
-        text(t(user, "incorrectPhoneNumberFormat"), "👇"),
+        t(user, "incorrectPhoneNumberFormat"),
         contactKeyboard(contactRequestLabel)
       );
 
@@ -259,7 +254,7 @@ async function buyProduct(ctx: BotContext, productCode: ProductCode) {
   await clearInlineKeyboard(ctx);
 
   await withUser(ctx, async user => {
-    const product = getProductByCode(productCode);
+    const product = getProductByCode(user, productCode);
 
     if (!isPurchasableProduct(product)) {
       await replyBackToMainDialog(ctx, t(user, "productCantBePurchased"));
@@ -282,14 +277,11 @@ async function buyProduct(ctx: BotContext, productCode: ProductCode) {
         [t(user, "buyOneMoreMasculine"), backToStartAction],
         getCancelButton(user)
       ),
-      t(user, "goToPayment.line1", {
+      t(user, "goToPayment", {
         productNameGen,
-        paymentUrl: payment.url
-      }),
-      t(user, "goToPayment.line2", {
+        paymentUrl: payment.url,
         premiumCommand: formatCommand(commands.premium)
-      }),
-      t(user, "goToPayment.line2")
+      })
     );
   });
 }
@@ -327,12 +319,17 @@ function filterPurchasable(user: User, products: Product[]): Product[] {
     .filter(product => canPurchaseProduct(user, product.code));
 }
 
-function listProducts(products: Product[]): MessagesAndButtons {
+function listProducts(user: User, products: Product[]): MessagesAndButtons {
   const messages: Message[] = [];
   const buttons: ButtonLike[] = [];
 
   for (const product of products) {
-    messages.push(formatProductDescription(product, { showPrice: true }));
+    messages.push(
+      formatProductDescription(user, product, {
+        showPrice: true
+      })
+    );
+
     buttons.push(productButton(product));
   }
 

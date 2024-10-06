@@ -84,12 +84,12 @@ export async function gptChatCompletion(user: User, model: TextModel, userMessag
       const message = error.error.message;
 
       return new Error(
-        t(user, "openAiApiInnerError", { message })
+        t(user, "errors.openAiApiInnerError", { message })
       );
     }
 
     return new Error(
-      t(user, "openAiApiError")
+      t(user, "errors.openAiApiError")
     );
   }
 }

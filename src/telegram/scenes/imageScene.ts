@@ -119,7 +119,7 @@ async function imagePromptInput(ctx: BotContext, user: User) {
   }
 
   const formattedLimits = limits
-    ? formatRemainingLimits(limits, modelCode, usagePoints, "картинка")
+    ? formatRemainingLimits(user, limits, modelCode, usagePoints, "картинка")
     : "";
 
   await replyWithKeyboard(
@@ -152,7 +152,7 @@ async function getImageModelContext(ctx: BotContext, user: User): Promise<ImageM
     }
 
     const subscription = product ?? freeSubscription;
-    const formattedLimits = formatRemainingLimits(limits, modelCode, usagePoints, "картинка");
+    const formattedLimits = formatRemainingLimits(user, limits, modelCode, usagePoints, "картинка");
 
     messages.push(
       compactText(

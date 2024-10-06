@@ -14,9 +14,11 @@
     "unknownTelegramError": "Unknown error while sending a message to Telegram.",
     "botError": "Bot error ({{updateType}}).",
     "paymentError": "An error occurred, the payment is unavailable at the moment. Sorry. 😢",
-    "openAiApiInnerError": "OpenAI API error: {{message}}",
+    "openAiApiInnerError": "OpenAI API error: {{message}}.",
     "openAiApiError": "OpenAI API request error.",
-    "couponActivationError": "❌ Error activating coupon {{couponId}}."
+    "couponActivationError": "❌ Error activating coupon {{couponId}}.",
+    "productNotFound": "Product not found: {{productCode}}.",
+    "couponTemplateNotFound": "Coupon template not found: {{couponCode}}."
   },
   "chatGPTRequestsUnavailable": "⛔ ChatGPT request are unavailable.",
   "waitOrBuy": "Please wait or buy a product",
@@ -64,25 +66,17 @@
   "orDelimiter": ", or ",
   "buyBundleIfNeeded": "If {{marketingBlock}}, purchase one of the product bundles.",
   "Back": "Back",
-  "phoneInput": {
-    "line1": "📱 Please, provide your phone number.",
-    "line2": "It's needed for the automatic receipt sending.",
-    "line3": "Press the \"${{contactRequestLabel}}\" button (Telegram will send it automatically)."
-  },
+  "phoneInput": "📱 Please, provide your phone number. It's needed for the automatic receipt sending.\n\nPress the \"{{contactRequestLabel}}\" button. Telegram will send the phone number automatically.\n👇",
   "sendPhoneNumber": "📱 Send phone number",
-  "incorrectPhoneNumberFormat": "📱 Incorrect phone number format. Please try again.",
+  "incorrectPhoneNumberFormat": "❌ Incorrect phone number format. Please try again.\n👇",
   "gotYourPhoneNumber": "I've saved your phone number, thanks! 🙏",
   "selectedProductUnavailable": "The product you've selected is not available anymore.",
   "productCantBePurchased": "This product is not available for purchase anymore. Sorry. 😢",
   "makePayment": "Make payment",
   "buyOneMoreMasculine": "Buy one more",
   "Cancel": "Cancel",
-  "goToPayment": {
-    "line1": "💳 <a href=\"{{paymentUrl}}\">Follow the link</a> to make payment for <b>{{productNameGen}}</b>.",
-    "line2": "⚠ The link is temporary. If you don't make payment in time, you can get a new payment link using the {{premiumCommand}} command.",
-    "line3": "We will notify you on receiving your payment."
-  },
-  "groupBundles": "Bundles for {{groupName}}",
+  "goToPayment": "💳 <a href=\"{{paymentUrl}}\">Follow the link</a> to make payment for <b>{{productNameGen}}</b>.\n\n⚠ The link is temporary. If you don't make payment in time, you can get a new payment link using the {{premiumCommand}} command.\n\nWe will notify you on receiving your payment.",
+  "groupBundles": "{{groupName}} Bundles",
   "unknownMode": "Unknown mode",
   "modes": {
     "free": {
@@ -121,7 +115,7 @@
       "intro": "I will suggest recipes for dishes using the ingredients you have.\n\nWhat ingredients do you have?"
     },
     "english-tutor": {
-      "name": "Репетитор по английскому языку",
+      "name": "English Tutor",
       "context": "Act as a spoken English teacher and improver. I will speak to you in English and you will reply to me in English to practice my spoken English. Keep your reply neat, limiting the reply to 100 words. Strictly correct my grammar mistakes, typos, and factual errors. Ask me a question in your reply.\n\nI will set the level of language proficiency: beginner, intermediate or advanced, and you communicate with me according to this level.",
       "intro": "I will respond to you as a native speaker and correct your mistakes so that you can practice your English.\n\nTo start, please write your level of English proficiency (beginner, intermediate, advanced) and your first sentence."
     },
@@ -165,6 +159,19 @@
   "noCoupons": "You have no coupons. 😯",
   "couponsForProducts": "You have {{coupons}} for the following products:",
   "andMoreCoupons": "And another {{coupons}}...",
-  "couponBestBefore": "The coupon is valid until 🕓 {{couponExpiration}}",
-  "activateCoupon": "🚀 Activate: {{activateCommand}}"
+  "couponValidUntil": "The coupon is valid until 🕓 {{validUntil}}",
+  "activateCoupon": "🚀 Activate: {{activateCommand}}",
+  "userProducts": "🛒 You have {{products}}: {{productsCommand}}",
+  "yourProducts": "Your products:",
+  "forTerm": "for {{term}}",
+  "validUntil": "valid until 🕓 {{validUntil}}",
+  "dateFormat": "MMM d, yyyy",
+  "per": {
+    "day": "per day",
+    "week": "per week",
+    "month": "per month"
+  },
+  "gotCoupon": "🎉 You have received a coupon to activate {{productName}}.",
+  "activateCouponInTerm": "⚠️ Attention! The coupon is valid for a limited time and must be activated within <b>{{couponTerm}}</b>.",
+  "userCoupons": "🎫 You have {{coupons}}: {{couponsCommand}}"
 }

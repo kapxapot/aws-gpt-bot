@@ -1,47 +1,56 @@
 import { TimeSpan, now } from "../entities/at";
 import { Coupon, CouponCode, CouponTemplate, couponTemplates } from "../entities/coupon";
-import { intervalWords } from "../entities/interval";
 import { PurchasedProduct } from "../entities/product";
 import { User } from "../entities/user";
 import { formatCommand } from "../lib/commands";
 import { isEmpty } from "../lib/common";
-import { commands, symbols } from "../lib/constants";
+import { commands } from "../lib/constants";
 import { text } from "../lib/text";
+import { t, tWordNumber } from "../lib/translate";
 import { uuid } from "../lib/uuid";
 import { sendTelegramMessage } from "../telegram/bot";
 import { addDays, addTerm, formatDate, isExpired } from "./dateService";
-import { formatWordNumber } from "./grammarService";
 import { putMetric } from "./metricService";
 import { formatProductName, getProductByCode, productToPurchasedProduct } from "./productService";
 import { addUserCoupon, addUserProduct, updateUserCoupon } from "./userService";
 
-export function getCouponTemplateByCode(code: CouponCode): CouponTemplate {
+export function getCouponTemplateByCode(user: User, code: CouponCode): CouponTemplate {
   const template = couponTemplates.find(ct => ct.code === code);
 
   if (!template) {
-    throw new Error(`Coupon template not found. Unknown coupon code: ${code}.`)
+    throw new Error(
+      t(user, "couponTemplateNotFound", {
+        couponCode: code
+      })
+    );
   }
 
   return template;
 }
 
 export async function issueCoupon(user: User, code: CouponCode): Promise<Coupon> {
-  const template = getCouponTemplateByCode(code);
+  const template = getCouponTemplateByCode(user, code);
   const coupon = createCoupon(template);
   await addUserCoupon(user, coupon);
 
   // post actions
   await putMetric("CouponIssued");
 
-  const product = getProductByCode(coupon.productCode);
-  const word = intervalWords[coupon.term.unit];
+  const product = getProductByCode(user, coupon.productCode);
+  const term = coupon.term;
 
   await sendTelegramMessage(
     user,
     text(
-      `🎉 Вы получили купон на активацию ${formatProductName(product, "Genitive")}.`,
-      `${symbols.warning} Внимание! Срок действия купона ограничен, его нужно активировать в течение <b>${formatWordNumber(word, coupon.term.range, "Genitive")}</b>.`,
-      `🚀 Активировать: ${formatCommand(commands.coupons)}`
+      t(user, "gotCoupon", {
+        productName: formatProductName(user, product, "Genitive")
+      }),
+      t(user, "activateCouponInTerm", {
+        couponTerm: tWordNumber(user, term.unit, term.range, "Genitive")
+      }),
+      t(user, "activateCoupon", {
+        activateCommand: formatCommand(commands.coupons)
+      })
     )
   );
 
@@ -49,10 +58,14 @@ export async function issueCoupon(user: User, code: CouponCode): Promise<Coupon>
 }
 
 export async function activateCoupon(user: User, coupon: Coupon): Promise<PurchasedProduct> {
-  const product = getProductByCode(coupon.productCode);
+  const product = getProductByCode(user, coupon.productCode);
 
   if (!product) {
-    throw new Error(`Продукт ${coupon.productCode} не найден.`)
+    throw new Error(
+      t(user, "errors.productNotFound", {
+        productCode: coupon.productCode
+      })
+    );
   }
 
   const then = now();
@@ -78,19 +91,22 @@ export function getCouponSpan(coupon: Coupon): TimeSpan {
   return { start, end };
 }
 
-export function formatCouponsString(coupons: Coupon[]): string | null {
+export function formatCouponsString(user: User, coupons: Coupon[]): string | null {
   if (isEmpty(coupons)) {
     return null;
   }
 
-  return `${symbols.coupon} У вас ${formatWordNumber("купон", coupons.length)}: ${formatCommand(commands.coupons)}`;
+  return t(user, "userCoupons", {
+    coupons: tWordNumber(user, "coupon", coupons.length),
+    couponsCommand: formatCommand(commands.coupons)
+  });
 }
 
-export function formatCouponExpiration(coupon: Coupon): string {
+export function formatCouponExpiration(user: User, coupon: Coupon): string {
   const { end } = getCouponSpan(coupon);
   const expiresAt = new Date(end);
 
-  return formatDate(expiresAt, "dd.MM.yyyy");
+  return formatDate(expiresAt, t(user, "dateFormat"));
 }
 
 const isCouponActivated = (coupon: Coupon) => !!coupon.activatedAt;

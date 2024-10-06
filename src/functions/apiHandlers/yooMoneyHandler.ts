@@ -76,7 +76,7 @@ export async function yooMoneyHandler(requestData: YouMoneyRequestData) {
       await putMetrics(product);
     }
 
-    const productName = formatProductName(purchasedProduct, "Accusative");
+    const productName = formatProductName(user, purchasedProduct, "Accusative");
 
     await sendTelegramMessage(
       user,

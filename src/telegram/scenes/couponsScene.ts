@@ -62,7 +62,7 @@ async function textHandler(ctx: BotContext, user: User, text: string) {
         await reply(
           ctx,
           sentence(
-            t(user, "couponActivationError", {
+            t(user, "errors.couponActivationError", {
               couponId: coupon.id
             }),
             String(error)
@@ -89,7 +89,7 @@ async function activateUserCoupon(ctx: BotContext, user: User, coupon: Coupon) {
     ),
     t(user, "couponActivated"),
     t(user, "productAdded", {
-      productName: formatProductName(product)
+      productName: formatProductName(user, product)
     })
   );
 }
@@ -138,14 +138,14 @@ async function displayCoupons(ctx: BotContext, user: User) {
 
 function couponDescription(user: User, couponData: CouponData): string {
   const { coupon, activateCommand } = couponData;
-  const product = getProductByCode(coupon.productCode);
+  const product = getProductByCode(user, coupon.productCode);
 
   return text(
     compactText(
-      formatProductDescription(product),
+      formatProductDescription(user, product),
       bullet(
-        t(user, "couponBestBefore", {
-          couponExpiration: formatCouponExpiration(coupon)
+        t(user, "couponValidUntil", {
+          validUntil: formatCouponExpiration(user, coupon)
         })
       )
     ),

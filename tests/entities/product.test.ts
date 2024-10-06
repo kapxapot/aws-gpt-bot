@@ -29,7 +29,7 @@ describe("coupon products", () => {
   });
 
   it.each(couponProductCodes)("is expirable", code => {
-    const product = getProductByCode(code);
+    const product = getProductByCode(user, code);
     const purchasedProduct = productToPurchasedProduct(product, now());
 
     expect(
@@ -57,7 +57,7 @@ describe("purchasable endless products", () => {
   });
 
   test("endless product bought 1 year ago is still active", () => {
-    const product = getProductByCode("bundle-boss");
+    const product = getProductByCode(user, "bundle-boss");
     const purchasedProduct = productToPurchasedProduct(
       product,
       at(addMonths(ts(), -12))

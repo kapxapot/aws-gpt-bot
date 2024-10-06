@@ -14,7 +14,7 @@ export function canPurchaseProduct(user: User, productCode: ProductCode) {
     return false;
   }
 
-  const product = getProductByCode(productCode);
+  const product = getProductByCode(user, productCode);
 
   if (!isPurchasableProduct(product)) {
     return false;
