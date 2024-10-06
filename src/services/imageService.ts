@@ -15,7 +15,7 @@ import { stopWaitingForGptImageGeneration, updateUserProduct, waitForGptImageGen
 import { incProductUsage } from "./productUsageService";
 import { Markup } from "telegraf";
 import { ImageModelContext } from "../entities/modelContext";
-import { sentence, text } from "../lib/text";
+import { sentence } from "../lib/text";
 import { t, tWordNumber } from "../lib/translate";
 
 const config = {
@@ -45,7 +45,7 @@ export async function generateImageWithGpt(
       // we have waited enough for the GPT answer
       await stopWaitingForGptImageGeneration(user);
     } else {
-      await reply(ctx, "Ваша предыдущая картинка еще не готова, подождите... ⏳");
+      await reply(ctx, t(user, "processingPreviousImage"));
       return false;
     }
   }
@@ -67,7 +67,7 @@ export async function generateImageWithGpt(
     }
   }
 
-  const messages = await reply(ctx, "👨‍🎨 Рисую вашу картинку, подождите... ⏳");
+  const messages = await reply(ctx, t(user, "drawingImage"));
 
   let imageRequest = await storeImageRequest({
     userId: user.id,
@@ -82,7 +82,7 @@ export async function generateImageWithGpt(
   });
 
   await waitForGptImageGeneration(user);
-  const image = await gptImageGeneration(imageRequest);
+  const image = await gptImageGeneration(user, imageRequest);
   await stopWaitingForGptImageGeneration(user);
 
   await ctx.deleteMessage(messages[0].message_id);
@@ -105,30 +105,26 @@ export async function generateImageWithGpt(
       await putMetric("Error");
       await putMetric("ImageHasNoUrlError");
 
-      await reply(
-        ctx,
-        "Не удалось нарисовать картинку. Попробуйте еще раз."
-      );
+      await reply(ctx, t(user, "failedToDraw"));
 
       return false;
     }
 
-    await reply(
-      ctx,
-      `🖼 Ваша картинка по запросу <b>«${prompt}»</b> готова. 👇`
-    );
-
+    await reply(ctx, t(user, "imageIsReady", { prompt }));
     await ctx.replyWithPhoto(url);
 
     await ctx.replyWithHTML(
-      text(
-        `<a href="${url}">Скачать картинку</a> в хорошем качестве.`,
-        `⚠ Ссылка работает 60 минут!`
-      ),
+      t(user, "downloadImageLink", { url }),
       {
         ...inlineKeyboard(
-          Markup.button.url("Скачать картинку", url),
-          ["Создать еще одну 🖼", backToStartAction],
+          Markup.button.url(
+            t(user, "downloadImage"),
+            url
+          ),
+          [
+            t(user, "createOneMoreImage"),
+            backToStartAction
+          ],
           getCancelButton(user)
         ),
         disable_web_page_preview: true
@@ -151,15 +147,7 @@ export async function generateImageWithGpt(
 
     return true;
   } else {
-    let errorMessage = image.message;
-
-    if (errorMessage.includes("Your prompt may contain text that is not allowed by our safety system.")) {
-      errorMessage = "Ваш запрос был отвергнут системой безопасности OpenAI. Попробуйте его перефразировать.";
-    } else if (errorMessage.includes("This request has been blocked by our content filters.")) {
-      errorMessage = "Ваш запрос был заблокирован фильтрами OpenAI. Попробуйте его перефразировать.";
-    } else if (errorMessage.includes("Image descriptions generated from your prompt may contain text that is not allowed by our safety system. If you believe this was done in error, your request may succeed if retried, or by adjusting your prompt.")) {
-      errorMessage = "Ваш запрос был отвергнут системой безопасности OpenAI. Если вы считаете, что это ошибка, можете попробовать повторить запрос. Иначе попробуйте его перефразировать.";
-    }
+    const errorMessage = adaptErrorMessage(user, image.message);
 
     await replyWithKeyboard(
       ctx,
@@ -177,3 +165,19 @@ export const getDefaultImageSettings = (): ImageSettings => ({
 
 export const imageSettingsEqual = (settingsA: ImageSettings, settingsB: ImageSettings) =>
   settingsA.size === settingsB.size && settingsA.quality === settingsB.quality;
+
+function adaptErrorMessage(user: User, errorMessage: string) {
+  if (errorMessage.includes("Your prompt may contain text that is not allowed by our safety system.")) {
+    return t(user, "errors.securityRejected");
+  }
+
+  if (errorMessage.includes("This request has been blocked by our content filters.")) {
+    return t(user, "errors.blockedByFilters");
+  }
+
+  if (errorMessage.includes("Image descriptions generated from your prompt may contain text that is not allowed by our safety system. If you believe this was done in error, your request may succeed if retried, or by adjusting your prompt.")) {
+    return t(user, "errors.imageTextNotAllowed");
+  }
+
+  return errorMessage;
+}

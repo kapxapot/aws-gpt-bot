@@ -5,13 +5,15 @@ import { ImageRequest } from "../entities/imageRequest";
 import { Image } from "openai/resources/images.mjs";
 import { getOpenAiClient, isOpenAiError } from "../lib/openAi";
 import { putMetric } from "../services/metricService";
+import { t } from "../lib/translate";
+import { User } from "../entities/user";
 
 const config = {
   gptTimeout: gptTimeout * 1000,
   maxImagePromptLength: settings.maxImagePromptLength
 };
 
-export async function gptImageGeneration(imageRequest: ImageRequest): Promise<Result<Image>> {
+export async function gptImageGeneration(user: User, imageRequest: ImageRequest): Promise<Result<Image>> {
   const prompt = imageRequest.strict
     ? `I NEED to test how the tool works with extremely simple prompts. DO NOT add any detail, just use it AS-IS: ${imageRequest.prompt}`
     : imageRequest.prompt;
@@ -39,11 +41,15 @@ export async function gptImageGeneration(imageRequest: ImageRequest): Promise<Re
     await putMetric("OpenAiError");
 
     if (isOpenAiError(error)) {
-      const message = error.error.message;
-
-      return new Error(`Ошибка OpenAI API: ${message}`);
+      return new Error(
+        t(user, "errors.openAiApiInnerError", {
+          message: error.error.message
+        })
+      );
     }
 
-    return new Error("Ошибка обращения к OpenAI API.");
+    return new Error(
+      t(user, "errors.openAiApiError")
+    );
   }
 }

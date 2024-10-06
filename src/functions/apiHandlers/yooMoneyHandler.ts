@@ -1,6 +1,6 @@
 import { at, ts } from "../../entities/at";
 import { isPurchasableProduct, PurchasableProduct } from "../../entities/product";
-import { text } from "../../lib/text";
+import { t } from "../../lib/translate";
 import { putMetric } from "../../services/metricService";
 import { formatProductName, productToPurchasedProduct } from "../../services/productService";
 import { addUserProduct, getUserById } from "../../services/userService";
@@ -79,11 +79,7 @@ export async function yooMoneyHandler(requestData: YouMoneyRequestData) {
 
     await sendTelegramMessage(
       user,
-      text(
-        `✅ Мы успешно получили ваш платеж.`,
-        `Вы приобрели ${productName}.`,
-        "♥ Благодарим за покупку!"
-      )
+      t(user, "paymentReceived", { productName })
     );
   }
 }
@@ -100,6 +96,10 @@ async function putMetrics(product: PurchasableProduct): Promise<void> {
 
     case "USD":
       await putMetric("USDAmountReceived", amount);
+      break;
+
+    case "EUR":
+      await putMetric("EURAmountReceived", amount);
       break;
   }
 }

@@ -81,10 +81,10 @@ export async function gptChatCompletion(user: User, model: TextModel, userMessag
     await putMetric("OpenAiError");
 
     if (isOpenAiError(error)) {
-      const message = error.error.message;
-
       return new Error(
-        t(user, "errors.openAiApiInnerError", { message })
+        t(user, "errors.openAiApiInnerError", {
+          message: error.error.message
+        })
       );
     }
 

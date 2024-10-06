@@ -1,9 +1,16 @@
 {
   "Mode": "Mode",
   "processingPreviousMessage": "I'm processing your previous message, please wait... ⏳",
+  "processingPreviousImage": "Your previous image isn't ready yet, please wait... ⏳",
   "sendingMessagesTooOften": "You are sending messages too often. Please wait {{time}}... ⏳",
   "sendingRequestsTooOften": "You are sending requests too often. Please wait {{time}}... ⏳",
   "processingRequest": "🤔 Processing your request, please wait... ⏳",
+  "drawingImage": "👨‍🎨 Drawing your image, please wait... ⏳",
+  "failedToDraw": "Failed to draw an image. Try again.",
+  "imageIsReady": "🖼 Your image for the prompt <b>\"{{prompt}}\"</b> is ready. 👇",
+  "downloadImageLink": "<a href=\"{{url}}\">Download the image</a> in high quality.\n\n⚠ The link is active for 60 minutes!",
+  "downloadImage": "Download the image",
+  "createOneMoreImage": "Create one more 🖼",
   "noAnswerFromChatGPT": "No answer from ChatGPT. 😣",
   "errors": {
     "messageTooLong": "You sent a message that is too long, please try shortening it.",
@@ -11,6 +18,9 @@
     "modelOverloaded": "Oh, I feel a bit dizzy... 😵 Too much workload. Give me a break... ⏳",
     "chatGPTError": "Unknown ChatGPT error. Please try again.",
     "quotaExceeded": "I have run out of resources to use ChatGPT. 😮 Please contact support for assistance: {{supportCommand}}",
+    "securityRejected": "Your prompt may contain text that is not allowed by OpenAI's safety system. Try to adjust your prompt.",
+    "blockedByFilters": "Your request has been blocked by OpenAI's content filters. Try to adjust your prompt.",
+    "imageTextNotAllowed": "Image descriptions generated from your prompt may contain text that is not allowed by OpenAI's safety system. If you believe this was done in error, your request may succeed if retried, or by adjusting your prompt.",
     "unknownTelegramError": "Unknown error while sending a message to Telegram.",
     "paymentError": "An error occurred, the payment is unavailable at the moment. Sorry. 😢",
     "openAiApiInnerError": "OpenAI API error: {{message}}.",
@@ -181,5 +191,9 @@
   "quality": "quality",
   "imageGeneration": "🖼 Image generation using <b>DALL-E</b>",
   "enterImagePrompt": "Describe the image you want to generate (up to {{maxLength}} characters):",
-  "quote": "\"{{content}}\""
+  "quote": "\"{{content}}\"",
+  "enterTemperature": "Specify the target temperature as a decimal number separated by a space, ranging from {{minTemperature}} to {{maxTemperature}}.",
+  "currentTemperature": "The current temperature: {{temperature}}",
+  "temperatureUpdated": "The temperature was successfully changed.",
+  "paymentReceived": "✅ We've successfully received your payment.\n\nYou've purchased {{productName}}.\n\n♥ Thank you for your purchase!"
 }
