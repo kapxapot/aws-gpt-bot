@@ -1,16 +1,10 @@
 import { At } from "./at";
-import { KnownWord } from "./grammar";
 import { ProductUsage } from "./modelUsage";
 import { Money } from "./money";
 import { Plan, defaultPlan } from "./plan";
 import { Term } from "./term";
 
 export type ProductType = "subscription" | "bundle";
-
-export const productTypeDisplayNames: Record<ProductType, KnownWord> = {
-  "subscription": "тариф",
-  "bundle": "пакет"
-};
 
 export type Subscription = {
   name: string;

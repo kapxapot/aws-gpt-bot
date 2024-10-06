@@ -13,11 +13,6 @@ export const commands = {
   products: "products"
 } as const;
 
-export const commonMessages = {
-  backToChat: "💬 Возвращаемся к диалогу с ChatGPT...",
-  useTheKeyboard: "Используйте кнопки диалога. 👆"
-} as const;
-
 export const scenes = {
   tutorial: "TUTORIAL_SCENE",
   mode: "MODE_SCENE",
@@ -48,18 +43,4 @@ export const settings = {
   defaultUsagePoints: 1,
   couponsToShow: 10,
   defaultLanguage: "ru" // if there is no info on user's language
-} as const;
-
-export const symbols = {
-  infinity: "♾",
-  gptoken: "🍥",
-  bullet: "🔹",
-  warning: "⚠",
-  coupon: "🎫",
-  product: "🛒",
-  stop: "⛔",
-  cross: "❌",
-  success: "✅",
-  card: "💳",
-  picture: "🖼"
 } as const;

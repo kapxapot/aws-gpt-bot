@@ -13,18 +13,21 @@ describe("getPrettySubscriptionName", () => {
   test("should correctly build name", () => {
     expect([
       getPrettySubscriptionName(
+        user,
         freeSubscription,
         {
           targetCase: "Genitive"
         }
       ),
       getPrettySubscriptionName(
+        user,
         getProductByCode(user, "subscription-premium-30-days"),
         {
           targetCase: "Dative"
         }
       ),
       getPrettySubscriptionName(
+        user,
         getProductByCode(user, "bundle-pro-30-days"),
         {
           targetCase: "Instrumental"

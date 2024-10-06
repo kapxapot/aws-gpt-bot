@@ -1,6 +1,5 @@
 import { at, ts } from "../../entities/at";
 import { isPurchasableProduct, PurchasableProduct } from "../../entities/product";
-import { symbols } from "../../lib/constants";
 import { text } from "../../lib/text";
 import { putMetric } from "../../services/metricService";
 import { formatProductName, productToPurchasedProduct } from "../../services/productService";
@@ -81,7 +80,7 @@ export async function yooMoneyHandler(requestData: YouMoneyRequestData) {
     await sendTelegramMessage(
       user,
       text(
-        `${symbols.success} Мы успешно получили ваш платеж.`,
+        `✅ Мы успешно получили ваш платеж.`,
         `Вы приобрели ${productName}.`,
         "♥ Благодарим за покупку!"
       )

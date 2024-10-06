@@ -121,7 +121,7 @@ async function sceneIndex(ctx: BotContext, user: User) {
   }
 
   if (!productCount) {
-    messages.push(t(user, "noAvailableBundles"));
+    messages.push(t(user, "noAvailableProducts"));
 
     if (!canMakePurchases(user)) {
       await replyBackToMainDialog(
@@ -138,7 +138,7 @@ async function sceneIndex(ctx: BotContext, user: User) {
   const marketingBlock = orJoin(user, ...marketingMessages);
 
   messages.push(
-    t(user, "buyBundleIfNeeded", { marketingBlock })
+    t(user, "buyProductIfNeeded", { marketingBlock })
   );
 
   await replyWithKeyboard(
@@ -264,11 +264,16 @@ async function buyProduct(ctx: BotContext, productCode: ProductCode) {
     const payment = await createPayment(user, product);
 
     if (isError(payment)) {
-      await replyBackToMainDialog(ctx, t(user, "errors.paymentError"));
+      await replyBackToMainDialog(
+        ctx,
+        t(user, "errors.paymentError"),
+        payment.message
+      );
+
       return;
     }
 
-    const productNameGen = getPrettyProductName(product, { targetCase: "Genitive" });
+    const productNameGen = getPrettyProductName(user, product, { targetCase: "Genitive" });
 
     await replyWithKeyboard(
       ctx,
@@ -330,19 +335,21 @@ function listProducts(user: User, products: Product[]): MessagesAndButtons {
       })
     );
 
-    buttons.push(productButton(product));
+    buttons.push(
+      productButton(user, product)
+    );
   }
 
   return { messages, buttons };
 }
 
-const productButton = (product: Product): ButtonLike => [
-  getPrettyProductName(product),
+const productButton = (user: User, product: Product): ButtonLike => [
+  getPrettyProductName(user, product),
   getProductBuyAction(product.code)
 ];
 
 const productGroupButton = (user: User, group: ProductGroup): ButtonLike => [
-  t(user, "groupBundles", {
+  t(user, "productGroup", {
     groupName: group.name
   }),
   getGroupAction(group)

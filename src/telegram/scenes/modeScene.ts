@@ -9,7 +9,7 @@ import { message } from "telegraf/filters";
 import { replyBackToMainDialog, sendMessageToGpt, withUser } from "../../services/messageService";
 import { ModeStage, SessionData } from "../session";
 import { cancelAction, getCancelButton } from "../../lib/dialog";
-import { t } from "../../lib/translate";
+import { t, t0 } from "../../lib/translate";
 
 const scene = new BaseScene<BotContext>(scenes.mode);
 
@@ -67,9 +67,14 @@ modeCodes.forEach(modeCode => {
         const mode = getModeByCode(user, modeCode);
 
         if (!mode) {
-          const errorMessage = t(user, "modeNotFound", { modeCode });
-          console.error(errorMessage);
-          await replyBackToMainDialog(ctx, errorMessage);
+          console.error(
+            t0("modeNotFound", { modeCode })
+          );
+
+          await replyBackToMainDialog(
+            ctx,
+            t(user, "modeNotFound", { modeCode })
+          );
 
           return;
         }
@@ -164,9 +169,14 @@ promptCodes.forEach(promptCode => {
         const prompt = getPromptByCode(user, promptCode);
 
         if (!prompt) {
-          const errorMessage = t(user, "promptNotFound", { promptCode });
-          console.error(errorMessage);
-          await replyBackToMainDialog(ctx, errorMessage);
+          console.error(
+            t0("promptNotFound", { promptCode })
+          );
+
+          await replyBackToMainDialog(
+            ctx,
+            t(user, "promptNotFound", { promptCode })
+          );
 
           return;
         }

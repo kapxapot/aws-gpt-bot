@@ -2,6 +2,7 @@
   "Mode": "Mode",
   "processingPreviousMessage": "I'm processing your previous message, please wait... ⏳",
   "sendingMessagesTooOften": "You are sending messages too often. Please wait {{time}}... ⏳",
+  "sendingRequestsTooOften": "You are sending requests too often. Please wait {{time}}... ⏳",
   "processingRequest": "🤔 Processing your request, please wait... ⏳",
   "noAnswerFromChatGPT": "No answer from ChatGPT. 😣",
   "errors": {
@@ -10,18 +11,19 @@
     "modelOverloaded": "Oh, I feel a bit dizzy... 😵 Too much workload. Give me a break... ⏳",
     "chatGPTError": "Unknown ChatGPT error. Please try again.",
     "quotaExceeded": "I have run out of resources to use ChatGPT. 😮 Please contact support for assistance: {{supportCommand}}",
-    "userNotFoundCtxFrom": "User not found (empty ctx.from).",
     "unknownTelegramError": "Unknown error while sending a message to Telegram.",
-    "botError": "Bot error ({{updateType}}).",
     "paymentError": "An error occurred, the payment is unavailable at the moment. Sorry. 😢",
     "openAiApiInnerError": "OpenAI API error: {{message}}.",
     "openAiApiError": "OpenAI API request error.",
     "couponActivationError": "❌ Error activating coupon {{couponId}}.",
     "productNotFound": "Product not found: {{productCode}}.",
-    "couponTemplateNotFound": "Coupon template not found: {{couponCode}}."
+    "couponTemplateNotFound": "Coupon template not found: {{couponCode}}.",
+    "noPhoneNumber": "No phone number provided.",
+    "yoomoneyApiInnerError": "YooMoney API error",
+    "yoomoneyApiError": "YooMoney API request error."
   },
   "chatGPTRequestsUnavailable": "⛔ ChatGPT request are unavailable.",
-  "waitOrBuy": "Please wait or buy a product",
+  "waitOrBuy": "Please wait or buy a product: {{premiumCommand}}",
   "tokens": "tokens",
   "cost": "cost",
   "history": "history",
@@ -31,15 +33,15 @@
   "Debug": "Debug",
   "useMainBot": "Use the main bot",
   "chatUnavailable": "Chat is unavailable.",
-  "imageGenerationUnavailable": "Image generation unavailable.",
+  "imageGenerationUnavailable": "⛔ Image generation unavailable.",
   "purchasesUnavailable": "Purchases unavailable.",
-  "noAvailableBundles": "No available bundles currently.",
+  "noAvailableProducts": "⛔ No available products currently.",
   "newInvitee": "🔥 New user joined using your invite link!",
   "Error": "Error",
   "promo": {
     "inviteFriends": "Invite friends and receive 🎁 rewards: {{inviteCommand}}",
     "fanClub": "You will get 🎁 a gift after joining our fan club: {{fanClubLink}}, where you always can ask questions and share ideas.",
-    "premium": "Buy product bundles {{premiumCommand}} to get more requests to <b>{{gptDefaultModelName}}</b> and get access to <b>{{gptPremiumModelName}}</b> and <b>DALL-E</b>."
+    "premium": "Buy products {{premiumCommand}} to get more requests to <b>{{gptDefaultModelName}}</b> and get access to <b>{{gptPremiumModelName}}</b> and <b>DALL-E</b>."
   },
   "welcomeBack": "Welcome back, <b>{{userName}}</b>!",
   "anonymous": "anonymous",
@@ -52,19 +54,19 @@
   "productGroups": {
     "gpt-default": {
       "marketing": "you need more requests to <b>{{gptDefaultModelName}}</b>",
-      "description": "Bundles with requests to <b>{{gptDefaultModelName}}</b>"
+      "description": "<b>{{gptDefaultModelName}}</b> products"
     },
     "gptoken": {
       "marketing": "you want to work with <b>{{gptPremiumModelName}}</b> and <b>DALL-E</b>",
       "description": {
-        "intro": "🍥 Gptoken bundles to work with <b>{{gptPremiumModelName}}</b> and <b>DALL-E</b>",
+        "intro": "🍥 Gptoken packs to work with <b>{{gptPremiumModelName}}</b> and <b>DALL-E</b>",
         "gpt4": "1 request to <b>{{model}}</b> (~1000 tokens) = {{usagePoints}}",
         "dalle3": "1 <b>{{model}}</b> image = from {{usagePoints}}"
       }
     }
   },
   "orDelimiter": ", or ",
-  "buyBundleIfNeeded": "If {{marketingBlock}}, purchase one of the product bundles.",
+  "buyProductIfNeeded": "If {{marketingBlock}}, purchase one of the products.",
   "Back": "Back",
   "phoneInput": "📱 Please, provide your phone number. It's needed for the automatic receipt sending.\n\nPress the \"{{contactRequestLabel}}\" button. Telegram will send the phone number automatically.\n👇",
   "sendPhoneNumber": "📱 Send phone number",
@@ -76,7 +78,7 @@
   "buyOneMoreMasculine": "Buy one more",
   "Cancel": "Cancel",
   "goToPayment": "💳 <a href=\"{{paymentUrl}}\">Follow the link</a> to make payment for <b>{{productNameGen}}</b>.\n\n⚠ The link is temporary. If you don't make payment in time, you can get a new payment link using the {{premiumCommand}} command.\n\nWe will notify you on receiving your payment.",
-  "groupBundles": "{{groupName}} Bundles",
+  "productGroup": "{{groupName}} Products",
   "unknownMode": "Unknown mode",
   "modes": {
     "free": {
@@ -146,8 +148,8 @@
     "step3_1": "4. Specify the expected answer structure.\n\nFor example:\n🔹 \"Create a step-by-step algorithm and break down tasks into stages with subtasks.\"\n\n5. Specify an example or a style of communication.\n\nFor example:\n🔹 \"Rewrite this text in the same style as the following message.\"\n🔹 \"Write the response in the style of a letter: formal / informal / technical / conversational / humorous.\"",
     "step4": "<b>Bot Operation Modes</b>\n\nThe bot includes several modes of operation with ChatGPT:\n\n1. <b>Free Chat</b> — generic request/response conversation. In this mode, ChatGPT remembers the history of the most recent messages. This is a universal mode suitable for conversations on open topics.\n\nFor example:\n🔹 \"Read and summarize the essence of the following text in 3 sentences.\"\n🔹 \"Explain how to learn to prioritize.\"\n🔹 \"Come up with 10 name options for a company that makes wooden children's toys.\"",
     "step4_1": "2. <b>Role</b> — interacting with the bot in one of the preset roles, such as Coach, Psychologist, or Idea Generator. Within each role, the history is also saved, allowing you to resume the conversation from where you left off when you return.\n\n3. <b>Custom Prompt</b> — an instruction that ChatGPT will keep in memory and consider when responding for the duration of your interaction. The \"Role\" mode also operates on similar instructions that are already \"embedded\" in <b>GPToid</b>.\n\nFor example:\n🔹 \"Act as an English teacher. I will write sentences, and you correct the mistakes and suggest what can be added.\"\n\n(Such a built-in role also exists!)",
-    "step5": "<b>Plans and Products</b>\n\nAll users by default have access to the <b>\"Free\"</b> plan, which comes with limited number of requests. This plan provides access to <b>{{gptDefaultModelName}}</b> and allows to try image generation using <b>DALL-E</b>.\n\nIf you need more requests to <b>{{gptDefaultModelName}}</b> or access to <b>{{gptPremiumModelName}}</b> and <b>DALL-E</b>, consider purchasing one of the product bundles (menu item \"Product Bundles\" {{premiumCommand}}).",
-    "step6": "<b>Gptokens, {{gptPremiumModelName}}, and DALL-E</b>\n\nThe <b>{{gptPremiumModelName}}</b> model is more advanced compared to <b>{{gptDefaultModelName}}</b>, capable of handling larger requests and providing higher-quality responses.\n\nThe <b>DALL-E</b> model generates images based on text prompts.\n\nBoth models are available with the purchase of bundles ({{premiumCommand}}) with 🍥 <b>gptokens</b> — our special \"currency.\" One gptoken allows you to make {{usageText1}} to <b>{{gptPremiumModelName}}</b> (~1000 ChatGPT tokens each), and two gptokens enable you to create {{usageImage2}} of size {{imageSize}} in <b>DALL-E 3</b>.\n\nThus, a bundle of {{gptoken100}} will suffice for {{usageText100}} to <b>{{gptPremiumModelName}}</b> or generating {{usageImage100}} images of size {{imageSize}}.",
+    "step5": "<b>Plans and Products</b>\n\nAll users by default have access to the <b>\"Free\"</b> plan, which comes with limited number of requests. This plan provides access to <b>{{gptDefaultModelName}}</b> and allows to try image generation using <b>DALL-E</b>.\n\nIf you need more requests to <b>{{gptDefaultModelName}}</b> or access to <b>{{gptPremiumModelName}}</b> and <b>DALL-E</b>, consider purchasing one of the products (menu item \"Buy Products\" {{premiumCommand}}).",
+    "step6": "<b>Gptokens, {{gptPremiumModelName}}, and DALL-E</b>\n\nThe <b>{{gptPremiumModelName}}</b> model is more advanced compared to <b>{{gptDefaultModelName}}</b>, capable of handling larger requests and providing higher-quality responses.\n\nThe <b>DALL-E</b> model generates images based on text prompts.\n\nBoth models are available with the purchase of 🍥 <b>gptokens</b> ({{premiumCommand}}) — our special \"currency.\" One gptoken allows you to make {{usageText1}} to <b>{{gptPremiumModelName}}</b> (~1000 ChatGPT tokens each), and two gptokens enable you to create {{usageImage2}} of size {{imageSize}} in <b>DALL-E 3</b>.\n\nThus, a pack of {{gptoken100}} will suffice for {{usageText100}} to <b>{{gptPremiumModelName}}</b> or generating {{usageImage100}} images of size {{imageSize}}.",
     "step7": "<b>GPToid Fan Club</b>\n\nThe mission of <b>GPToid</b> is to assist you in the practical mastery of ChatGPT.\n\nThe bot and training will support you in this process.\n\nIf you have questions, ideas, or simply want to chat, welcome to our fan club: {{fanClubLink}}",
     "step8": "<b>Tutorial Completed</b>\n\n🔥 Hooray, you've read to the end! 🔥\n\nTry interacting with the bot in different ways to solve your tasks.\n\nChoose one of the modes {{modeCommand}} or start messaging the bot right now!\n👇"
   },
@@ -173,5 +175,11 @@
   },
   "gotCoupon": "🎉 You have received a coupon to activate {{productName}}.",
   "activateCouponInTerm": "⚠️ Attention! The coupon is valid for a limited time and must be activated within <b>{{couponTerm}}</b>.",
-  "userCoupons": "🎫 You have {{coupons}}: {{couponsCommand}}"
+  "userCoupons": "🎫 You have {{coupons}}: {{couponsCommand}}",
+  "model": "model",
+  "size": "size",
+  "quality": "quality",
+  "imageGeneration": "🖼 Image generation using <b>DALL-E</b>",
+  "enterImagePrompt": "Describe the image you want to generate (up to {{maxLength}} characters):",
+  "quote": "\"{{content}}\""
 }

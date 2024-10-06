@@ -5,6 +5,7 @@ import { putMetric } from "../services/metricService";
 import { User } from "../entities/user";
 import { phoneToItu } from "../lib/common";
 import { uuid } from "../lib/uuid";
+import { t } from "../lib/translate";
 
 export type YooMoneyPaymentData = {
   user: User;
@@ -34,13 +35,14 @@ export async function yooMoneyPayment(paymentData: YooMoneyPaymentData): Promise
   const phoneNumber = phoneToItu(user.phoneNumber);
 
   if (!phoneNumber) {
-    const error = new Error(`У пользователя ${user.id} отсутствует номер телефона.`);
+    console.error(`The user ${user.id} doesn't have a phone number.`);
 
-    console.error(error);
     await putMetric("Error");
     await putMetric("EmptyUserPhoneNumberError");
 
-    return error;
+    return new Error(
+      t(user, "errors.noPhoneNumber")
+    );
   }
 
   const totalAmount = paymentData.total.amount.toFixed(2);
@@ -102,19 +104,21 @@ export async function yooMoneyPayment(paymentData: YooMoneyPaymentData): Promise
     await putMetric("YooMoneyError");
 
     if (axios.isAxiosError(error)) {
-      let errorMessage = "Ошибка YooMoney API";
+      let errorMessage = t(user, "errors.yoomoneyApiInnerError");
 
       try {
         const message = error.response?.data?.error?.message
           ?? error.response?.data?.description
           ?? error.message;
 
-        errorMessage += `: ${message}`;
+        errorMessage = `${errorMessage}: ${message}`;
       } catch { /* empty */ }
 
       return new Error(errorMessage);
     }
 
-    return new Error("Ошибка обращения к YooMoney API.");
+    return new Error(
+      t(user, "errors.yoomoneyApiError")
+    );
   }
 }

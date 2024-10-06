@@ -7,7 +7,7 @@ import { isSuccess } from "../lib/error";
 import { clearAndLeave, encodeText, inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
 import { storeMessage } from "../storage/messageStorage";
 import { addMessageToUser, getLastHistoryMessage, getOrAddUser, getUserActiveCoupons, getUserActiveProducts, stopWaitingForGptAnswer, updateUserProduct, waitForGptAnswer } from "./userService";
-import { commands, symbols } from "../lib/constants";
+import { commands } from "../lib/constants";
 import { getCurrentHistory } from "./contextService";
 import { Completion } from "../entities/message";
 import { putMetric } from "./metricService";
@@ -32,7 +32,7 @@ import { formatCouponsString } from "./couponService";
 import { getTextModelPrices } from "./priceService";
 import { gptokenString } from "./gptokenService";
 import { parse } from "../lib/parser";
-import { t, t0, tWordNumber } from "../lib/translate";
+import { t, tWordNumber } from "../lib/translate";
 import { formatCommand } from "../lib/commands";
 
 const config = {
@@ -154,7 +154,7 @@ export async function sendMessageToGpt(ctx: BotContext, user: User, question: st
   } else {
     const errorMessage = adaptErrorMessage(user, answer.message);
 
-    await reply(ctx, sentence(symbols.cross, errorMessage));
+    await reply(ctx, sentence("❌", errorMessage));
   }
 }
 
@@ -205,8 +205,7 @@ export async function getUserOrLeave(ctx: BotContext): Promise<User | null> {
     await clearAndLeave(ctx);
   }
 
-  const errorText = t0("errors.userNotFoundCtxFrom");
-  console.error(new Error(errorText));
+  console.error("User not found (empty ctx.from).");
 
   await putMetric("Error");
   await putMetric("UserNotFoundError");
@@ -221,7 +220,7 @@ export async function replyBackToMainDialog(ctx: BotContext, ...lines: StringLik
 
 export function notAllowedMessage(user: User, message: string): string {
   return sentence(
-    symbols.stop,
+    "⛔",
     message,
     config.mainBot ? `${t(user, "useMainBot")}: @${config.mainBot}` : null
   );
@@ -288,7 +287,7 @@ async function getTextModelContext(ctx: BotContext, user: User): Promise<TextMod
 
     messages.push(
       compactText(
-        `<b>${getPrettySubscriptionName(subscription)}</b>`,
+        `<b>${getPrettySubscriptionName(user, subscription)}</b>`,
         bullet(capitalize(formattedLimits))
       )
     );
@@ -299,7 +298,9 @@ async function getTextModelContext(ctx: BotContext, user: User): Promise<TextMod
     inlineKeyboard(gotoPremiumButton),
     text(...messages),
     t(user, "chatGPTRequestsUnavailable"),
-    `${t(user, "waitOrBuy")}: ${formatCommand(commands.premium)}`
+    t(user, "waitOrBuy", {
+      premiumCommand: formatCommand(commands.premium)
+    })
   );
 
   return null;

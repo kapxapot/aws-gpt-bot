@@ -2,7 +2,6 @@ import { now } from "../entities/at";
 import { ImageSettings, defaultImageSize } from "../entities/model";
 import { User } from "../entities/user";
 import { gptImageGeneration } from "../external/gptImageGeneration";
-import { formatWordNumber } from "./grammarService";
 import { backToStartAction, getCancelButton } from "../lib/dialog";
 import { isSuccess } from "../lib/error";
 import { inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
@@ -16,8 +15,8 @@ import { stopWaitingForGptImageGeneration, updateUserProduct, waitForGptImageGen
 import { incProductUsage } from "./productUsageService";
 import { Markup } from "telegraf";
 import { ImageModelContext } from "../entities/modelContext";
-import { symbols } from "../lib/constants";
-import { text } from "../lib/text";
+import { sentence, text } from "../lib/text";
+import { t, tWordNumber } from "../lib/translate";
 
 const config = {
   imageInterval: parseInt(process.env.IMAGE_INTERVAL ?? "60") * 1000, // milliseconds
@@ -59,7 +58,9 @@ export async function generateImageWithGpt(
     if (seconds > 0) {
       await reply(
         ctx,
-        `Вы отправляете запросы слишком часто. Подождите ${formatWordNumber("секунда", seconds)}... ⏳`
+        t(user, "sendingRequestsTooOften", {
+          time: tWordNumber(user, "second", seconds)
+        })
       );
 
       return false;
@@ -114,7 +115,7 @@ export async function generateImageWithGpt(
 
     await reply(
       ctx,
-      `${symbols.picture} Ваша картинка по запросу <b>«${prompt}»</b> готова. 👇`
+      `🖼 Ваша картинка по запросу <b>«${prompt}»</b> готова. 👇`
     );
 
     await ctx.replyWithPhoto(url);
@@ -122,12 +123,12 @@ export async function generateImageWithGpt(
     await ctx.replyWithHTML(
       text(
         `<a href="${url}">Скачать картинку</a> в хорошем качестве.`,
-        `${symbols.warning} Ссылка работает 60 минут!`
+        `⚠ Ссылка работает 60 минут!`
       ),
       {
         ...inlineKeyboard(
           Markup.button.url("Скачать картинку", url),
-          [`Создать еще одну ${symbols.picture}`, backToStartAction],
+          ["Создать еще одну 🖼", backToStartAction],
           getCancelButton(user)
         ),
         disable_web_page_preview: true
@@ -163,7 +164,7 @@ export async function generateImageWithGpt(
     await replyWithKeyboard(
       ctx,
       inlineKeyboard(getCancelButton(user)),
-      `${symbols.cross} ${errorMessage}`
+      sentence("❌", errorMessage)
     );
   }
 

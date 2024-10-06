@@ -1,4 +1,4 @@
-import { KnownWord } from "./grammar";
+import { EnWord } from "../lib/translate";
 
 export type GptokensCode = "gptokens";
 
@@ -40,13 +40,13 @@ export const imageModelMap: Record<PureImageModelCode, ImageModel> = {
   "dalle3": "dall-e-3"
 };
 
-export const modelWordMap: Record<ModelCode, KnownWord> = {
-  "gpt-default": "запрос",
-  "gpt3": "запрос",
-  "gpt4": "запрос",
-  "o1": "запрос",
-  "dalle3": "картинка",
-  "gptokens": "гптокен"
+export const modelWordMap: Record<ModelCode, EnWord> = {
+  "gpt-default": "request",
+  "gpt3": "request",
+  "gpt4": "request",
+  "o1": "request",
+  "dalle3": "image",
+  "gptokens": "gptoken"
 };
 
 export const modelNameMap: Record<PureModelCode, string> = {

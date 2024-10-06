@@ -1,11 +1,11 @@
 import { GrammarCase } from "../entities/grammar";
-import { Subscription, freeSubscription, productTypeDisplayNames } from "../entities/product";
+import { Subscription, freeSubscription } from "../entities/product";
 import { User } from "../entities/user";
 import { first } from "../lib/common";
 import { bulletize, capitalize, compactText, sentence } from "../lib/text";
+import { t, tCase } from "../lib/translate";
 import { formatConsumptionLimits } from "./consumptionFormatService";
 import { getUserConsumptionLimits } from "./consumptionService";
-import { getCase } from "./grammarService";
 import { getPlanModels } from "./planService";
 import { getUserActiveProducts } from "./userService";
 
@@ -20,25 +20,27 @@ export const getCurrentSubscription = (user: User) =>
 export const getSubscriptionPlan = (subscription: Subscription) => subscription.details.plan;
 
 /**
- * ${icon} ${typeName} ${name}
+ * `icon typeName "displayName"`
  */
 export function getPrettySubscriptionName(
+  user: User,
   subscription: Subscription,
   options: SubscriptionNameOptions = {}
 ) {
   const { full, targetCase } = options;
 
+  const typeCase = tCase(user, subscription.details.type, targetCase);
+
   const displayName = full
     ? getSubscriptionDisplayName(subscription)
     : getSubscriptionShortName(subscription);
-
-  const typeDisplayName = productTypeDisplayNames[subscription.details.type];
-  const typeCase = getCase(typeDisplayName, targetCase);
-
+  
   return sentence(
     subscription.icon,
     capitalize(typeCase),
-    `«${displayName}»`
+    t(user, "quote", {
+      content: displayName
+    })
   );
 }
 
@@ -66,7 +68,7 @@ export function formatSubscriptionDescription(user: User, subscription: Subscrip
   }
 
   return compactText(
-    `<b>${getPrettySubscriptionName(subscription)}</b>`,
+    `<b>${getPrettySubscriptionName(user, subscription)}</b>`,
     ...bulletize(...formattedLimits)
   );
 }

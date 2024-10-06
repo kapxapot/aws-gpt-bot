@@ -1,9 +1,17 @@
 import { StringLike, clean } from "./common";
-import { symbols } from "./constants";
 
 export const cleanJoin = (lines: StringLike[], delimiter: string = "") =>
   clean(lines).join(delimiter);
 
+/**
+ * Joins words without gaps.
+ */
+export const glue = (...lines: StringLike[]) =>
+  cleanJoin(lines);
+
+/**
+ * Joins words with spaces.
+ */
 export const sentence = (...lines: StringLike[]) => cleanJoin(lines, " ");
 
 export const text = (...lines: StringLike[]) => cleanJoin(lines, "\n\n");
@@ -15,7 +23,7 @@ export const compactText = (...lines: StringLike[]) => cleanJoin(lines, "\n");
  */
 export const commatize = (lines: StringLike[]) => cleanJoin(lines, ", ");
 
-export const bullet = (line: string) => `${symbols.bullet} ${line}`;
+export const bullet = (line: string) => `🔹 ${line}`;
 
 /**
  * Cleans the array and adds the bullet symbol to every line.
@@ -62,11 +70,11 @@ export function homogeneousJoin(
         continue;
 
       case 2:
-        result = [chunk, finalDelimiter, result].join("");
+        result = glue(chunk, finalDelimiter, result);
         continue;
 
       default:
-        result = [chunk, commaDelimiter, result].join("");
+        result = glue(chunk, commaDelimiter, result);
     }
   }
 

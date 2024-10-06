@@ -1,6 +1,6 @@
 import { BaseScene } from "telegraf/scenes";
 import { BotContext } from "../botContext";
-import { commands, scenes, settings, symbols } from "../../lib/constants";
+import { commands, scenes, settings } from "../../lib/constants";
 import { addSceneCommandHandlers, backToChatHandler, dunnoHandler, kickHandler } from "../handlers";
 import { clearAndLeave, clearInlineKeyboard, inlineKeyboard, replyWithKeyboard } from "../../lib/telegram";
 import { message } from "telegraf/filters";
@@ -105,32 +105,38 @@ async function imagePromptInput(ctx: BotContext, user: User) {
 
   setStage(ctx.session, "imagePromptInput");
 
-  const modelDescription: string[] = [
-    `модель: ${model}`,
-    `размер: ${imageSettings.size}`,
+  const modelDescription = [
+    `${t(user, "model")}: ${model}`,
+    `${t(user, "size")}: ${imageSettings.size}`
   ];
 
   if (imageSettings.quality) {
-    modelDescription.push(`качество: ${imageSettings.quality}`);
+    modelDescription.push(
+      `${t(user, "quality")}: ${imageSettings.quality}`
+    );
   }
 
   if (modelCode === "gptokens") {
-    modelDescription.push(`стоимость: ${gptokenString(user, usagePoints)}`);
+    modelDescription.push(
+      `${t(user, "cost")}: ${gptokenString(user, usagePoints)}`
+    );
   }
 
   const formattedLimits = limits
-    ? formatRemainingLimits(user, limits, modelCode, usagePoints, "картинка")
+    ? formatRemainingLimits(user, limits, modelCode, usagePoints, "image")
     : "";
 
   await replyWithKeyboard(
     ctx,
     inlineKeyboard(getCancelButton(user)),
-    `${symbols.picture} Генерация картинок с помощью <b>DALL-E</b>`,
+    t(user, "imageGeneration"),
     compactText(
       ...bulletize(...modelDescription),
     ),
     capitalize(formattedLimits),
-    `Опишите картинку, которую хотите сгенерировать (до ${settings.maxImagePromptLength} символов):`
+    t(user, "enterImagePrompt", {
+      maxLength: settings.maxImagePromptLength
+    })
   );
 }
 
@@ -152,11 +158,11 @@ async function getImageModelContext(ctx: BotContext, user: User): Promise<ImageM
     }
 
     const subscription = product ?? freeSubscription;
-    const formattedLimits = formatRemainingLimits(user, limits, modelCode, usagePoints, "картинка");
+    const formattedLimits = formatRemainingLimits(user, limits, modelCode, usagePoints, "image");
 
     messages.push(
       compactText(
-        `<b>${getPrettySubscriptionName(subscription)}</b>`,
+        `<b>${getPrettySubscriptionName(user, subscription)}</b>`,
         bullet(capitalize(formattedLimits))
       )
     );
@@ -166,8 +172,10 @@ async function getImageModelContext(ctx: BotContext, user: User): Promise<ImageM
     ctx,
     inlineKeyboard(gotoPremiumButton, getCancelButton(user)),
     text(...messages),
-    "⛔ Генерация картинок недоступна.",
-    `Подождите или приобретите пакет услуг: ${formatCommand(commands.premium)}`
+    t(user, "imageGenerationUnavailable"),
+    t(user, "waitOrBuy", {
+      premiumCommand: formatCommand(commands.premium)
+    })
   );
 
   return null;

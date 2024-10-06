@@ -1,7 +1,7 @@
 import { inspect } from "util";
 import { Composer } from "telegraf";
 import { BotContext } from "./botContext";
-import { commands, commonMessages, scenes, symbols } from "../lib/constants";
+import { commands, scenes } from "../lib/constants";
 import { clearAndLeave, clearInlineKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../lib/telegram";
 import { historySizeHandler } from "./handlers/historySizeHandler";
 import { temperatureHandler } from "./handlers/temperatureHandler";
@@ -66,7 +66,7 @@ export async function dunnoHandler(ctx: BotContext) {
     }
   });
 
-  await reply(ctx, `Я не понял ваш запрос. ${commonMessages.useTheKeyboard}`);
+  await reply(ctx, "Я не понял ваш запрос. Используйте кнопки диалога. 👆");
 }
 
 /**
@@ -85,7 +85,7 @@ export async function backToChatHandler(ctx: BotContext) {
     await replyWithKeyboard(
       ctx,
       remindKeyboard,
-      commonMessages.backToChat,
+      "💬 Возвращаемся к диалогу с ChatGPT...",
       getStatusMessage(user)
     );
   });
@@ -142,13 +142,13 @@ async function productsHandler(ctx: BotContext) {
       await reply(
         ctx,
         "У вас нет активных продуктов.",
-        `${symbols.card} Приобрести: ${formatCommand(commands.premium)}`
+        `💳 Приобрести: ${formatCommand(commands.premium)}`
       );
     } else {
       await reply(
         ctx,
         formatProductDescriptions(user, products),
-        `${symbols.card} Приобрести еще: ${formatCommand(commands.premium)}`
+        `💳 Приобрести еще: ${formatCommand(commands.premium)}`
       );
     }
   });

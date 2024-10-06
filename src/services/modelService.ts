@@ -1,5 +1,4 @@
 import { TextModel, TextModelCode, ImageModel, ImageModelCode, ModelCode, PureTextModelCode, PureImageModelCode, textModelMap, imageModelMap, modelWordMap, PureModelCode, modelNameMap } from "../entities/model";
-import { symbols } from "../lib/constants";
 
 export function isTextModelCode(code: ModelCode): code is TextModelCode {
   return code === "gpt3" ||
@@ -37,7 +36,7 @@ export const gptPremiumModelName = getModelName("gpt4");
 
 export function getModelSymbol(modelCode: ModelCode): string | null {
   return (modelCode === "gptokens")
-    ? symbols.gptoken
+    ? "🍥"
     : null;
 }
 

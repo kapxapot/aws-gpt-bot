@@ -29,8 +29,11 @@ export type ProductDescriptionOptions = {
   showExpiration?: boolean;
 };
 
-export const getPrettyProductName = (product: Product, options?: SubscriptionNameOptions) =>
-  getPrettySubscriptionName(product, options);
+export const getPrettyProductName = (
+  user: User,
+  product: Product,
+  options?: SubscriptionNameOptions
+) => getPrettySubscriptionName(user, product, options);
 
 export function formatProductName(
   user: User,
@@ -38,7 +41,7 @@ export function formatProductName(
   targetCase?: GrammarCase
 ): string {
   return sentence(
-    `<b>${getPrettyProductName(product, { full: true, targetCase })}</b>`,
+    `<b>${getPrettyProductName(user, product, { full: true, targetCase })}</b>`,
     isExpirableProduct(product)
       ? `(${formatProductExpiration(user, product)})`
       : null
@@ -157,7 +160,7 @@ export function formatProductDescription(
   );
 
   return compactText(
-    `<b>${getPrettyProductName(product)}</b>`,
+    `<b>${getPrettyProductName(user, product)}</b>`,
     ...bulletize(...formattedLimits, priceLine, expirationLine)
   );
 }

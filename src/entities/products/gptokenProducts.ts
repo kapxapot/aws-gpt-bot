@@ -1,4 +1,3 @@
-import { symbols } from "../../lib/constants";
 import { money, overprice } from "../money";
 import { Product } from "../product";
 import { days } from "../term";
@@ -10,7 +9,7 @@ export const gptokenProducts: Product[] = [
     name: "Promo Bundle - 30 Days",
     shortName: "Промо",
     displayName: "Промо на 30 дней",
-    icon: symbols.coupon,
+    icon: "🎫",
     details: {
       type: "bundle",
       plan: "promo",

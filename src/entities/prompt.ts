@@ -1,3 +1,4 @@
+import { sentence } from "../lib/text";
 import { t } from "../lib/translate";
 import { getUserContext } from "../services/userService";
 import { User } from "./user";
@@ -128,7 +129,12 @@ export function getModeName(user: User): string | null {
     return mode.name;
   }
 
-  return `${mode.name} «${getPromptName(user, context.promptCode)}»`;
+  return sentence(
+    mode.name,
+    t(user, "quote", {
+      content: getPromptName(user, context.promptCode)
+    })
+  );
 }
 
 export function getModeByCode(user: User, code: ModeCode): Mode | null {

@@ -5,7 +5,7 @@ import { clearAndLeave, isTelegramError, parseCommandWithArgs, reply } from "../
 import { activateUser, deactivateUser, getOrAddUser, getUserName } from "../services/userService";
 import { tutorialScene } from "./scenes/tutorialScene";
 import { BotContext } from "./botContext";
-import { commands, scenes, symbols } from "../lib/constants";
+import { commands, scenes } from "../lib/constants";
 import { backToChatHandler, getCommandHandlers, kickHandler, remindHandler } from "./handlers";
 import { premiumScene } from "./scenes/premiumScene";
 import { User } from "../entities/user";
@@ -149,18 +149,13 @@ export async function processTelegramRequest(tgRequest: TelegramRequest) {
 
   bot.catch(async (err, ctx) => {
     await withUser(ctx, async user => {
-      console.error(
-        t(user, "errors.botError", {
-          updateType: ctx.updateType
-        }),
-        err
-      );
+      console.error(`Bot error (${ctx.updateType}).`, err);
 
       if (!isDebugMode(user)) {
         return;
       }
 
-      await reply(ctx, `${symbols.cross} ${t(user, "Error")}:`, inspect(err));
+      await reply(ctx, `❌ ${t(user, "Error")}:`, inspect(err));
     });
   });
 
