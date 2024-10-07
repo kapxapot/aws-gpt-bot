@@ -8,9 +8,13 @@ export const getCancelButton = (user: User): ButtonLike =>
   [t(user, "Cancel"), cancelAction];
 
 export const remindAction = "remindLastMessage";
-export const remindButton: ButtonLike = ["На чем мы остановились?", remindAction];
+
+export const getRemindButton = (user: User): ButtonLike =>
+  [t(user, "whereWereWe"), remindAction];
 
 export const gotoPremiumAction = "gotoPremium";
-export const gotoPremiumButton: ButtonLike = ["Пакеты услуг", gotoPremiumAction]
+
+export const getGotoPremiumButton = (user: User): ButtonLike =>
+  [t(user, "gotoPremium"), gotoPremiumAction];
 
 export const backToStartAction = "backToStart";

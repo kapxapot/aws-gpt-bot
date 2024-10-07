@@ -3,11 +3,13 @@ import { AnyRecord, DefinedUndefined } from "./types";
 type Like<T> = T | null | undefined;
 export type StringLike = Like<string>;
 
-export function clean(lines: StringLike[]) {
-  return lines
+/**
+ * Trims lines and filters all empty values.
+ */
+export const clean = (lines: StringLike[]) =>
+  lines
     .map(l => l ? l.trim() : "")
     .filter(l => !!l);
-}
 
 export function toArray<T>(value: T | T[] | undefined | null): T[] {
   if (value === null || isUndefined(value)) {

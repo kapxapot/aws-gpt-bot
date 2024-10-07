@@ -20,7 +20,7 @@ import { incUsage } from "./usageStatsService";
 import { formatProductsString } from "./productService";
 import { incProductUsage } from "./productUsageService";
 import { freeSubscription } from "../entities/product";
-import { gotoPremiumButton, remindButton } from "../lib/dialog";
+import { getGotoPremiumButton, getRemindButton } from "../lib/dialog";
 import { getConsumptionLimits } from "./consumptionService";
 import { getTextModelContexts, getUsableModelContext } from "./modelContextService";
 import { bullet, bulletize, commatize, sentence, compactText, text, truncate, capitalize } from "../lib/text";
@@ -161,7 +161,9 @@ export async function sendMessageToGpt(ctx: BotContext, user: User, question: st
 export async function showStatus(ctx: BotContext, user: User) {
   await replyWithKeyboard(
     ctx,
-    inlineKeyboard(remindButton),
+    inlineKeyboard(
+      getRemindButton(user)
+    ),
     getStatusMessage(user)
   );
 }
@@ -295,7 +297,9 @@ async function getTextModelContext(ctx: BotContext, user: User): Promise<TextMod
 
   await replyWithKeyboard(
     ctx,
-    inlineKeyboard(gotoPremiumButton),
+    inlineKeyboard(
+      getGotoPremiumButton(user)
+    ),
     text(...messages),
     t(user, "chatGPTRequestsUnavailable"),
     t(user, "waitOrBuy", {

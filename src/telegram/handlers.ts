@@ -8,11 +8,12 @@ import { temperatureHandler } from "./handlers/temperatureHandler";
 import { getStatusMessage, showLastHistoryMessage, showStatus, withUser } from "../services/messageService";
 import { isDebugMode } from "../services/userSettingsService";
 import { getUserActiveProducts, getUserInviteLink, userHasHistoryMessage } from "../services/userService";
-import { remindButton } from "../lib/dialog";
 import { getCouponTemplateByCode } from "../services/couponService";
 import { formatProductDescriptions, formatProductName, getProductByCode } from "../services/productService";
 import { isEmpty } from "../lib/common";
 import { formatCommand } from "../lib/commands";
+import { getRemindButton } from "../lib/dialog";
+import { t } from "../lib/translate";
 
 type Handler = (ctx: BotContext) => Promise<void | unknown>;
 type HandlerTuple = [command: string, handler: Handler];
@@ -64,9 +65,9 @@ export async function dunnoHandler(ctx: BotContext) {
     if (isDebugMode(user)) {
       console.log(inspect(ctx));
     }
-  });
 
-  await reply(ctx, "Я не понял ваш запрос. Используйте кнопки диалога. 👆");
+    await reply(ctx, t(user, "dunno"));
+  });
 }
 
 /**
@@ -79,13 +80,15 @@ export async function backToChatHandler(ctx: BotContext) {
 
   await withUser(ctx, async user => {
     const remindKeyboard = userHasHistoryMessage(user)
-      ? inlineKeyboard(remindButton)
+      ? inlineKeyboard(
+        getRemindButton(user)
+      )
       : null;
 
     await replyWithKeyboard(
       ctx,
       remindKeyboard,
-      "💬 Возвращаемся к диалогу с ChatGPT...",
+      t(user, "backToChat"),
       getStatusMessage(user)
     );
   });
@@ -98,7 +101,7 @@ export async function remindHandler(ctx: BotContext) {
     await showLastHistoryMessage(
       ctx,
       user,
-      "Похоже, разговор только начался. В истории пусто."
+      t(user, "historyNotFound")
     );
   });
 }
@@ -108,11 +111,13 @@ function sceneHandler(scene: string): Handler {
 }
 
 async function supportHandler(ctx: BotContext) {
-  await reply(
-    ctx,
-    "Заходите в нашу группу задать вопросы, предложить идеи или просто поболтать:",
-    process.env.SUPPORT_URL!
-  );
+  await withUser(ctx, async user => {
+    await reply(
+      ctx,
+      t(user, "welcomeToGroup"),
+      process.env.SUPPORT_URL!
+    );
+  });
 }
 
 async function statusHandler(ctx: BotContext) {
@@ -128,8 +133,10 @@ async function inviteHandler(ctx: BotContext) {
 
     await reply(
       ctx,
-      `Пригласите друзей в бот и получите купон на активацию ${formatProductName(user, product, "Genitive")} в подарок! 🎁`,
-      `Поделитесь с друзьями этой ссылкой: ${getUserInviteLink(user)}`
+      t(user, "inviteFriends", {
+        productName: formatProductName(user, product, "Genitive"),
+        inviteLink: getUserInviteLink(user)
+      })
     );
   });
 }
@@ -137,18 +144,19 @@ async function inviteHandler(ctx: BotContext) {
 async function productsHandler(ctx: BotContext) {
   await withUser(ctx, async user => {
     const products = getUserActiveProducts(user);
+    const premiumCommand = formatCommand(commands.premium);
 
     if (isEmpty(products)) {
       await reply(
         ctx,
-        "У вас нет активных продуктов.",
-        `💳 Приобрести: ${formatCommand(commands.premium)}`
+        t(user, "noActiveProducts"),
+        t(user, "buyProducts", { premiumCommand })
       );
     } else {
       await reply(
         ctx,
         formatProductDescriptions(user, products),
-        `💳 Приобрести еще: ${formatCommand(commands.premium)}`
+        t(user, "buyMoreProducts", { premiumCommand })
       );
     }
   });

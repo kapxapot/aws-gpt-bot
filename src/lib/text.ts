@@ -4,12 +4,6 @@ export const cleanJoin = (lines: StringLike[], delimiter: string = "") =>
   clean(lines).join(delimiter);
 
 /**
- * Joins words without gaps.
- */
-export const glue = (...lines: StringLike[]) =>
-  cleanJoin(lines);
-
-/**
  * Joins words with spaces.
  */
 export const sentence = (...lines: StringLike[]) => cleanJoin(lines, " ");
@@ -70,11 +64,11 @@ export function homogeneousJoin(
         continue;
 
       case 2:
-        result = glue(chunk, finalDelimiter, result);
+        result = [chunk, finalDelimiter, result].join("");
         continue;
 
       default:
-        result = glue(chunk, commaDelimiter, result);
+        result = [chunk, commaDelimiter, result].join("");
     }
   }
 

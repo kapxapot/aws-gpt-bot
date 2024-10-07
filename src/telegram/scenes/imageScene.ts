@@ -6,7 +6,7 @@ import { clearAndLeave, clearInlineKeyboard, inlineKeyboard, replyWithKeyboard }
 import { message } from "telegraf/filters";
 import { generateImageWithGpt } from "../../services/imageService";
 import { ImageStage, SessionData } from "../session";
-import { backToStartAction, cancelAction, getCancelButton, gotoPremiumAction, gotoPremiumButton } from "../../lib/dialog";
+import { backToStartAction, cancelAction, getCancelButton, getGotoPremiumButton, gotoPremiumAction } from "../../lib/dialog";
 import { notAllowedMessage, replyBackToMainDialog, withUser } from "../../services/messageService";
 import { gptokenString } from "../../services/gptokenService";
 import { bullet, bulletize, capitalize, compactText, text } from "../../lib/text";
@@ -170,7 +170,10 @@ async function getImageModelContext(ctx: BotContext, user: User): Promise<ImageM
 
   await replyWithKeyboard(
     ctx,
-    inlineKeyboard(gotoPremiumButton, getCancelButton(user)),
+    inlineKeyboard(
+      getGotoPremiumButton(user),
+      getCancelButton(user)
+    ),
     text(...messages),
     t(user, "imageGenerationUnavailable"),
     t(user, "waitOrBuy", {
