@@ -3,7 +3,7 @@ import { Subscription, freeSubscription } from "../entities/product";
 import { User } from "../entities/user";
 import { first } from "../lib/common";
 import { bulletize, capitalize, compactText } from "../lib/text";
-import { t, tCase, tQuote } from "../lib/translate";
+import { t, tCase } from "../lib/translate";
 import { formatConsumptionLimits } from "./consumptionFormatService";
 import { getUserConsumptionLimits } from "./consumptionService";
 import { getPlanModels } from "./planService";
@@ -38,7 +38,7 @@ export function getPrettySubscriptionName(
   return t(user, "subscriptionName", {
     icon: subscription.icon,
     type: capitalize(typeCase),
-    name: tQuote(user, t(user, displayName))
+    name: t(user, displayName)
   });
 }
 

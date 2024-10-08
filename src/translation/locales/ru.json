@@ -215,7 +215,7 @@
     "text": "{{units}} к <b>{{modelName}}</b>",
     "image": "{{units}} <b>{{modelName}}</b>"
   },
-  "subscriptionName": "{{icon}} {{type}} {{name}}",
+  "subscriptionName": "{{icon}} {{type}} «{{name}}»",
   "Free": "Бесплатный",
   "Novice": "Новичок",
   "Novice Mini": "Новичок Мини",
