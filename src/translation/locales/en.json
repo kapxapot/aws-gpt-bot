@@ -50,7 +50,7 @@
   "Error": "Error",
   "promo": {
     "inviteFriends": "Invite friends and receive 🎁 rewards: {{inviteCommand}}",
-    "fanClub": "You will get 🎁 a gift after joining our fan club: {{fanClubLink}}, where you always can ask questions and share ideas.",
+    "fanClub": "You will get a 🎁 gift after joining our fan club: {{fanClubLink}}, where you always can ask questions and share ideas.",
     "premium": "Buy products {{premiumCommand}} to get more requests to <b>{{gptDefaultModelName}}</b> and get access to <b>{{gptPremiumModelName}}</b> and <b>DALL-E</b>."
   },
   "welcomeBack": "Welcome back, <b>{{userName}}</b>!",
