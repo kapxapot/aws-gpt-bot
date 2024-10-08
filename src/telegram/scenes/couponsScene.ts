@@ -81,10 +81,10 @@ async function activateUserCoupon(ctx: BotContext, user: User, coupon: Coupon) {
   await replyWithKeyboard(
     ctx,
     inlineKeyboard(
-      [
-        t(user, "activateOneMoreMasculine"),
-        backToStartAction
-      ],
+      {
+        label: t(user, "activateOneMoreMasculine"),
+        action: backToStartAction
+      },
       getCancelButton(user)
     ),
     t(user, "couponActivated"),

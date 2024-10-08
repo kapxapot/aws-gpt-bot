@@ -178,7 +178,10 @@ async function groupAction(ctx: BotContext, group: ProductGroup) {
       ctx,
       inlineKeyboard(
         ...buttons,
-        [t(user, "Back"), backToStartAction],
+        {
+          label: t(user, "Back"),
+          action: backToStartAction
+        },
         getCancelButton(user)
       ),
       group.getDescription(user),
@@ -279,7 +282,10 @@ async function buyProduct(ctx: BotContext, productCode: ProductCode) {
       ctx,
       inlineKeyboard(
         Markup.button.url(t(user, "makePayment"), payment.url),
-        [t(user, "buyOneMoreMasculine"), backToStartAction],
+        {
+          label: t(user, "buyOneMoreMasculine"),
+          action: backToStartAction
+        },
         getCancelButton(user)
       ),
       t(user, "goToPayment", {
@@ -343,17 +349,17 @@ function listProducts(user: User, products: Product[]): MessagesAndButtons {
   return { messages, buttons };
 }
 
-const productButton = (user: User, product: Product): ButtonLike => [
-  getPrettyProductName(user, product),
-  getProductBuyAction(product.code)
-];
+const productButton = (user: User, product: Product): ButtonLike => ({
+  label: getPrettyProductName(user, product),
+  action: getProductBuyAction(product.code)
+});
 
-const productGroupButton = (user: User, group: ProductGroup): ButtonLike => [
-  t(user, "productGroup", {
+const productGroupButton = (user: User, group: ProductGroup): ButtonLike => ({
+  label: t(user, "productGroup", {
     groupName: group.name
   }),
-  getGroupAction(group)
-];
+  action: getGroupAction(group)
+});
 
 function filteredProductGroups(user: User): ProductGroup[] {
   return productGroups

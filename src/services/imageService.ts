@@ -121,10 +121,10 @@ export async function generateImageWithGpt(
             t(user, "downloadImage"),
             url
           ),
-          [
-            t(user, "createOneMoreImage"),
-            backToStartAction
-          ],
+          {
+            label: t(user, "createOneMoreImage"),
+            action: backToStartAction
+          },
           getCancelButton(user)
         ),
         disable_web_page_preview: true

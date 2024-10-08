@@ -5,7 +5,13 @@ import { settings } from "./constants";
 import { BotContext } from "../telegram/botContext";
 import { text } from "./text";
 
-export type ButtonLike = [label: string, action: string] | InlineKeyboardButton;
+type PseudoButton = {
+  label: string;
+  action: string;
+  fullWidth?: boolean;
+};
+
+export type ButtonLike = InlineKeyboardButton | PseudoButton;
 
 type InlineKeyboard = Markup.Markup<InlineKeyboardMarkup>;
 
@@ -14,19 +20,10 @@ type CommandWithArgs = {
   args: string[];
 };
 
-export function inlineKeyboard(...buttonLikes: ButtonLike[]): InlineKeyboard {
-  const buttons = buttonLikes.map(buttonLike => {
-    if (!Array.isArray(buttonLike)) {
-      return buttonLike;
-    }
-
-    return Markup.button.callback(...buttonLike);
-  });
-
-  return Markup.inlineKeyboard(
-    sliceButtons(buttons)
+export const inlineKeyboard = (...buttonLikes: ButtonLike[]) =>
+  Markup.inlineKeyboard(
+    sliceButtons(buttonLikes)
   );
-}
 
 export async function clearInlineKeyboard(ctx: BotContext) {
   try {
@@ -54,43 +51,6 @@ export function contactKeyboard(label: string): Markup.Markup<ReplyKeyboardMarku
   return Markup.keyboard([
     Markup.button.contactRequest(label)
   ]).resize();
-}
-
-export function sliceButtons(
-  buttons: InlineKeyboardButton[],
-  limit: number = 2,
-  maxLength: number = settings.telegram.maxButtonTextLength
-): InlineKeyboardButton[][] {
-  const result: InlineKeyboardButton[][] = [];
-  let accumulator: InlineKeyboardButton[] = [];
-
-  function flush() {
-    if (!accumulator.length) {
-      return;
-    }
-
-    result.push(accumulator);
-    accumulator = [];
-  }
-
-  for (const button of buttons) {
-    if (button.text.length > maxLength) {
-      flush();
-      result.push([button]);
-
-      continue;
-    }
-
-    accumulator.push(button);
-
-    if (accumulator.length === limit) {
-      flush();
-    }
-  }
-
-  flush();
-
-  return result;
 }
 
 export async function reply(
@@ -190,4 +150,59 @@ async function replyWithSlices(ctx: BotContext, slices: string[]): Promise<Messa
   }
 
   return messages;
+}
+
+function sliceButtons(
+  buttonLikes: ButtonLike[],
+  limit: number = 2,
+  maxLength: number = settings.telegram.maxButtonTextLength
+): InlineKeyboardButton[][] {
+  const result: InlineKeyboardButton[][] = [];
+  let accumulator: InlineKeyboardButton[] = [];
+
+  function flush() {
+    if (!accumulator.length) {
+      return;
+    }
+
+    result.push(accumulator);
+    accumulator = [];
+  }
+
+  for (const buttonLike of buttonLikes) {
+    const button = buttonLikeToButton(buttonLike);
+
+    if (
+      !isPseudoButton(buttonLike)
+      || buttonLike.fullWidth
+      || buttonLike.label.length > maxLength
+    ) {
+      flush();
+      result.push([button]);
+
+      continue;
+    }
+
+    accumulator.push(button);
+
+    if (accumulator.length === limit) {
+      flush();
+    }
+  }
+
+  flush();
+
+  return result;
+}
+
+function buttonLikeToButton(buttonLike: ButtonLike) {
+  if (isPseudoButton(buttonLike)) {
+    return Markup.button.callback(buttonLike.label, buttonLike.action);
+  }
+
+  return buttonLike;
+}
+
+function isPseudoButton(buttonLike: ButtonLike): buttonLike is PseudoButton {
+  return "label" in buttonLike;
 }

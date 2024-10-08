@@ -90,10 +90,10 @@ modeCodes.forEach(modeCode => {
 
         switch (modeCode) {
           case "free":
-            buttons.push([
-              t(user, "chooseThisMode"),
-              selectFreeModeAction
-            ]);
+            buttons.push({
+              label: t(user, "chooseThisMode"),
+              action: selectFreeModeAction
+            });
 
             break;
 
@@ -105,7 +105,10 @@ modeCodes.forEach(modeCode => {
             );
 
             getPrompts(user).forEach(p => {
-              buttons.push([p.name, p.code]);
+              buttons.push({
+                label: p.name,
+                action: p.code
+              });
             });
 
             break;
@@ -123,16 +126,16 @@ modeCodes.forEach(modeCode => {
                 })
               );
 
-              buttons.push([
-                t(user, "switchBackToPrompt"),
-                backToCustomPromptAction
-              ]);
+              buttons.push({
+                label: t(user, "switchBackToPrompt"),
+                action: backToCustomPromptAction
+              });
             }
 
-            buttons.push([
-              t(user, "enterNewPrompt"),
-              customPromptAction
-            ]);
+            buttons.push({
+              label: t(user, "enterNewPrompt"),
+              action: customPromptAction
+            });
 
             break;
         }

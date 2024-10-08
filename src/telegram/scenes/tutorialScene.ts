@@ -88,8 +88,14 @@ function makeStepHandler(getText: TextFunc, first: boolean, last: boolean) {
   const exitAction = "exit";
 
   const getKeyboard = (user: User) => inlineKeyboard(
-    [t(user, "Next"), nextAction],
-    [t(user, "Finish"), exitAction]
+    {
+      label: t(user, "Next"),
+      action: nextAction
+    },
+    {
+      label: t(user, "Finish"),
+      action: exitAction
+    }
   );
 
   stepHandler.action(nextAction, async (ctx) => {
