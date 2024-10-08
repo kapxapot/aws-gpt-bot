@@ -2,8 +2,8 @@ import { GrammarCase } from "../entities/grammar";
 import { Subscription, freeSubscription } from "../entities/product";
 import { User } from "../entities/user";
 import { first } from "../lib/common";
-import { bulletize, capitalize, compactText, sentence } from "../lib/text";
-import { t, tCase } from "../lib/translate";
+import { bulletize, capitalize, compactText } from "../lib/text";
+import { t, tCase, tQuote } from "../lib/translate";
 import { formatConsumptionLimits } from "./consumptionFormatService";
 import { getUserConsumptionLimits } from "./consumptionService";
 import { getPlanModels } from "./planService";
@@ -20,7 +20,7 @@ export const getCurrentSubscription = (user: User) =>
 export const getSubscriptionPlan = (subscription: Subscription) => subscription.details.plan;
 
 /**
- * `icon typeName "displayName"`
+ * `icon "displayName" typeName`
  */
 export function getPrettySubscriptionName(
   user: User,
@@ -35,13 +35,11 @@ export function getPrettySubscriptionName(
     ? getSubscriptionDisplayName(subscription)
     : getSubscriptionShortName(subscription);
   
-  return sentence(
-    subscription.icon,
-    capitalize(typeCase),
-    t(user, "quote", {
-      content: displayName
-    })
-  );
+  return t(user, "subscriptionName", {
+    icon: subscription.icon,
+    type: capitalize(typeCase),
+    name: tQuote(user, t(user, displayName))
+  });
 }
 
 export function formatSubscriptionDescription(user: User, subscription: Subscription): string {

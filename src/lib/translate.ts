@@ -133,6 +133,9 @@ export function tCase(
 export const orJoin = (user: User, ...lines: StringLike[]) =>
    homogeneousJoin(lines, t(user, "orDelimiter"));
 
+export const tQuote = (user: User, content: StringLike) =>
+  content ? t(user, "quote", { content }) : null;
+
 const enCaseForNumber = (word: EnWord, num: number) =>
   (num === 1) ? word : plural(word);
 

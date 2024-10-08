@@ -4,10 +4,10 @@ import { User } from "../entities/user";
 import { toFixedOrIntStr } from "../lib/common";
 import { settings } from "../lib/constants";
 import { cleanJoin, commatize, sentence } from "../lib/text";
-import { EnWord, tCase, tCaseForNumber, tWordNumber } from "../lib/translate";
+import { EnWord, t, tCase, tCaseForNumber, tWordNumber } from "../lib/translate";
 import { isConsumptionLimit } from "./consumptionService";
 import { formatInterval, formatLimit } from "./formatService";
-import { formatModelSuffix, getModelSymbol, getModelWord } from "./modelService";
+import { getModelName, getModelWord, isImageModelCode } from "./modelService";
 
 export function formatRemainingLimits(
   user: User,
@@ -83,12 +83,12 @@ function formatConsumptionLimit(
 
   const word = getModelWord(modelCode);
   const limitNumber = showConsumption ? limit.remaining : limit.limit;
+  const units = tCaseForNumber(user, word, limitNumber);
 
   return sentence(
     getModelSymbol(modelCode),
     formatRemainingLimit(limit, showConsumption),
-    tCaseForNumber(user, word, limitNumber),
-    formatModelSuffix(modelCode)
+    formatModelUnits(user, modelCode, units)
   );
 }
 
@@ -105,11 +105,12 @@ const formatIntervalConsumptionLimit = (
 function formatLeft(user: User, modelCode: ModelCode): string {
   const word = getModelWord(modelCode);
 
-  return sentence(
-    "осталось",
+  const units = sentence(
     getModelSymbol(modelCode),
     tCase(user, word, "Genitive", "Plural")
   );
+
+  return t(user, "unitsLeft", { units });
 }
 
 function formatRemainingLimit(
@@ -138,4 +139,24 @@ function formatTargetLimit(
   const remainingCount = Math.floor(limit.remaining / usagePoints);
 
   return `= ${tWordNumber(user, targetWord, remainingCount)}`;
+}
+
+function getModelSymbol(modelCode: ModelCode): string | null {
+  return (modelCode === "gptokens")
+    ? "🍥"
+    : null;
+}
+
+function formatModelUnits(user: User, modelCode: ModelCode, units: string): string {
+  if (modelCode === "gptokens") {
+    return t(user, "modelTemplates.units", { units });
+  }
+
+  const modelName = getModelName(modelCode);
+
+  const template = isImageModelCode(modelCode)
+    ? "modelTemplates.image"
+    : "modelTemplates.text";
+
+  return t(user, template, { units, modelName });
 }

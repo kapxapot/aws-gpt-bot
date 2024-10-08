@@ -4,9 +4,7 @@ import { Product } from "../product";
 export const gptProducts: Product[] = [
   {
     code: "bundle-novice-mini",
-    name: "Novice Mini Bundle",
-    shortName: "Новичок Мини",
-    displayName: "Новичок Мини",
+    name: "Novice Mini",
     icon: "👧",
     price: money(19),
     details: {
@@ -16,9 +14,7 @@ export const gptProducts: Product[] = [
   },
   {
     code: "bundle-student-mini",
-    name: "Student Mini Bundle",
-    shortName: "Студент Мини",
-    displayName: "Студент Мини",
+    name: "Student Mini",
     icon: "👨‍🎓",
     price: money(39),
     details: {

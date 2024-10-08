@@ -33,23 +33,3 @@ export const getModelName = (modelCode: PureModelCode) => modelNameMap[modelCode
 
 export const gptDefaultModelName = getModelName("gpt-default");
 export const gptPremiumModelName = getModelName("gpt4");
-
-export function getModelSymbol(modelCode: ModelCode): string | null {
-  return (modelCode === "gptokens")
-    ? "🍥"
-    : null;
-}
-
-export function formatModelSuffix(modelCode: ModelCode): string | null {
-  switch (modelCode) {
-    case "gpt-default":
-    case "gpt3":
-    case "gpt4":
-      return `к <b>${getModelName(modelCode)}</b>`;
-
-    case "dalle3":
-      return `<b>${getModelName(modelCode)}</b>`;
-  }
-
-  return null;
-}

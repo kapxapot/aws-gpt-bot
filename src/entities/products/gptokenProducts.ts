@@ -6,9 +6,8 @@ export const gptokenProducts: Product[] = [
   // non-purchasable
   {
     code: "bundle-promo-30-days",
-    name: "Promo Bundle - 30 Days",
-    shortName: "Промо",
-    displayName: "Промо на 30 дней",
+    name: "30-Day Promo",
+    shortName: "Promo",
     icon: "🎫",
     details: {
       type: "bundle",
@@ -18,9 +17,8 @@ export const gptokenProducts: Product[] = [
   },
   {
     code: "bundle-trial-30-days",
-    name: "Trial Bundle - 30 Days",
-    shortName: "Пробный",
-    displayName: "Пробный на 30 дней",
+    name: "30-Day Trial",
+    shortName: "Trial",
     icon: "🧪",
     details: {
       type: "bundle",
@@ -31,9 +29,7 @@ export const gptokenProducts: Product[] = [
   // purchasable
   {
     code: "bundle-trial",
-    name: "Trial Bundle",
-    shortName: "Пробный",
-    displayName: "Пробный",
+    name: "Trial",
     icon: "🧪",
     price: money(99),
     details: {
@@ -43,9 +39,7 @@ export const gptokenProducts: Product[] = [
   },
   {
     code: "bundle-creative",
-    name: "Creative Bundle",
-    shortName: "Творческий",
-    displayName: "Творческий",
+    name: "Creative",
     icon: "👩‍🎨",
     price: money(199),
     details: {
@@ -55,9 +49,7 @@ export const gptokenProducts: Product[] = [
   },
   {
     code: "bundle-pro",
-    name: "Pro Bundle",
-    shortName: "Профи",
-    displayName: "Профи",
+    name: "Pro",
     icon: "😎",
     price: money(449),
     details: {
@@ -67,9 +59,7 @@ export const gptokenProducts: Product[] = [
   },
   {
     code: "bundle-boss",
-    name: "Boss Bundle",
-    shortName: "Босс",
-    displayName: "Босс",
+    name: "Boss",
     icon: "🤴",
     price: money(999),
     details: {
@@ -80,9 +70,7 @@ export const gptokenProducts: Product[] = [
   // FOR TEST PURPOSES ONLY!
   {
     code: "test-bundle-tiny-gptokens",
-    name: "Test Tiny Bundle Gptoken",
-    shortName: "Мелкий Гптокен",
-    displayName: "Мелкий Гптокен",
+    name: "[Test] Tiny Gptoken",
     icon: "🛠",
     price: overprice, // to prevent buying but to allow test buying
     details: {

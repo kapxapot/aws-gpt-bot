@@ -5,12 +5,13 @@ import { User } from "../entities/user";
 import { yooMoneyPayment } from "../external/yooMoneyPayment";
 import { Result, isError } from "../lib/error";
 import { storePayment } from "../storage/paymentStorage";
+import { getPrettyProductName } from "./productService";
 
 export async function createPayment(user: User, product: PurchasableProduct): Promise<Result<Payment>> {
   const requestData = {
     user,
     total: product.price,
-    description: product.name
+    description: getPrettyProductName(user, product, { full: true })
   };
 
   const response = await yooMoneyPayment(requestData);

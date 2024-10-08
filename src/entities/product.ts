@@ -87,7 +87,6 @@ export function isExpirableProduct(product: Subscription): product is ExpirableP
 
 export const freeSubscription: Subscription = {
   name: "Free",
-  displayName: "Бесплатный",
   icon: "🤑",
   details: {
     type: "subscription",

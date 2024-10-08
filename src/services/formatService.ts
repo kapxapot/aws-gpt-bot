@@ -12,9 +12,6 @@ const currencyToWord: Record<Currency, EnWord> = {
   "EUR": "euro"
 };
 
-/**
- * Formats the interval string in the `Accusative` case.
- */
 export const formatInterval = (user: User, interval: Interval) =>
   t(user, `per.${interval}`);
 

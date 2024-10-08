@@ -7,7 +7,7 @@ import { addSceneCommandHandlers, backToChatHandler, dunnoHandler, kickHandler }
 import { getDefaultImageSettings } from "../../services/imageService";
 import { gptokenString } from "../../services/gptokenService";
 import { getGptokenUsagePoints } from "../../services/modelUsageService";
-import { getModelName, gptPremiumModelName } from "../../services/modelService";
+import { gptDefaultModelName, gptPremiumModelName } from "../../services/modelService";
 import { formatCommand } from "../../lib/commands";
 import { User } from "../../entities/user";
 import { t, tWordNumber } from "../../lib/translate";
@@ -19,8 +19,6 @@ const usagePoints = getGptokenUsagePoints(imageSettings);
 const config = {
   fanClub: process.env.SUPPORT_GROUP!
 };
-
-const gptDefaultModelName = getModelName("gpt-default");
 
 type TextFunc = (user: User) => string;
 

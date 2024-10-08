@@ -7,9 +7,8 @@ import { days } from "../term";
 export const legacyProducts: Product[] = [
   {
     code: "subscription-premium-30-days",
-    name: "Premium Subscription - 30 Days",
-    shortName: "Премиум",
-    displayName: "Премиум на 30 дней",
+    name: "30-Day Premium",
+    shortName: "Premium",
     icon: "💔",
     // price: money(290),
     details: {
@@ -20,9 +19,8 @@ export const legacyProducts: Product[] = [
   },
   {
     code: "subscription-unlimited-30-days",
-    name: "Unlimited Subscription - 30 Days",
-    shortName: "Безлимит",
-    displayName: "Безлимит на 30 дней",
+    name: "30-Day Unlimited",
+    shortName: "Unlimited",
     icon: "💔",
     // price: money(390),
     details: {
@@ -33,9 +31,8 @@ export const legacyProducts: Product[] = [
   },
   {
     code: "bundle-novice-30-days",
-    name: "Novice Bundle - 30 Days",
-    shortName: "Новичок",
-    displayName: "Новичок на 30 дней",
+    name: "30-Day Novice",
+    shortName: "Novice",
     icon: "👧",
     // price: money(49),
     details: {
@@ -46,9 +43,8 @@ export const legacyProducts: Product[] = [
   },
   {
     code: "bundle-student-30-days",
-    name: "Student Bundle - 30 Days",
-    shortName: "Студент",
-    displayName: "Студент на 30 дней",
+    name: "30-Day Student",
+    shortName: "Student",
     icon: "👨‍🎓",
     // price: money(99),
     details: {
@@ -60,9 +56,8 @@ export const legacyProducts: Product[] = [
   // FOR TEST PURPOSES ONLY!
   {
     code: "test-bundle-tiny-gpt3-1-day",
-    name: "Test Tiny Bundle GPT-3 - 1 Day",
-    shortName: "Мелкий GPT-3",
-    displayName: "Мелкий GPT-3 на 1 день",
+    name: "[Test] 1-Day Tiny GPT-3",
+    shortName: "[Test] Tiny GPT-3",
     icon: "🛠",
     // price: overprice,
     details: {
@@ -74,9 +69,8 @@ export const legacyProducts: Product[] = [
   // discontinued timed - gpt
   {
     code: "bundle-novice-mini-30-days",
-    name: "Novice Mini Bundle - 30 Days",
-    shortName: "Новичок Мини",
-    displayName: "Новичок Мини на 30 дней",
+    name: "30-Day Novice Mini",
+    shortName: "Novice Mini",
     icon: "👧",
     // price: money(19),
     details: {
@@ -87,9 +81,8 @@ export const legacyProducts: Product[] = [
   },
   {
     code: "bundle-student-mini-30-days",
-    name: "Student Mini Bundle - 30 Days",
-    shortName: "Студент Мини",
-    displayName: "Студент Мини на 30 дней",
+    name: "30-Day Student Mini",
+    shortName: "Student Mini",
     icon: "👨‍🎓",
     // price: money(39),
     details: {
@@ -101,9 +94,8 @@ export const legacyProducts: Product[] = [
   // discontinued timed - gptokens
   {
     code: "bundle-creative-30-days",
-    name: "Creative Bundle - 30 Days",
-    shortName: "Творческий",
-    displayName: "Творческий на 30 дней",
+    name: "30-Day Creative",
+    shortName: "Creative",
     icon: "👩‍🎨",
     // price: money(199),
     details: {
@@ -114,9 +106,8 @@ export const legacyProducts: Product[] = [
   },
   {
     code: "bundle-pro-30-days",
-    name: "Pro Bundle - 30 Days",
-    shortName: "Профи",
-    displayName: "Профи на 30 дней",
+    name: "30-Day Pro",
+    shortName: "Pro",
     icon: "😎",
     // price: money(449),
     details: {
@@ -127,9 +118,8 @@ export const legacyProducts: Product[] = [
   },
   {
     code: "bundle-boss-30-days",
-    name: "Boss Bundle - 30 Days",
-    shortName: "Босс",
-    displayName: "Босс на 30 дней",
+    name: "30-Day Boss",
+    shortName: "Boss",
     icon: "🤴",
     // price: money(999),
     details: {
@@ -141,9 +131,8 @@ export const legacyProducts: Product[] = [
   // FOR TEST PURPOSES ONLY!
   {
     code: "test-bundle-tiny-gptokens-1-day",
-    name: "Test Tiny Bundle Gptoken - 1 Day",
-    shortName: "Мелкий Гптокен",
-    displayName: "Мелкий Гптокен на 1 день",
+    name: "[Test] 1-Day Tiny Gptoken",
+    shortName: "[Test] Tiny Gptoken",
     icon: "🛠",
     // price: overprice,
     details: {
