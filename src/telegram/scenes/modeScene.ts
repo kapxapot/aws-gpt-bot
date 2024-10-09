@@ -30,11 +30,11 @@ async function modeSelectionHandler(ctx: BotContext) {
       t(user, "chooseMode")
     ];
 
-    const buttons = [];
-
-    getModes(user).forEach(mode => {
-      buttons.push([mode.name, mode.code]);
-    })
+    const buttons: ButtonLike[] = getModes(user)
+      .map(mode => ({
+        label: mode.name,
+        action: mode.code
+      }));
 
     buttons.push(getCancelButton(user));
 
