@@ -12,7 +12,7 @@ import { formatCommand } from "../lib/commands";
 import { StringLike, isEmpty } from "../lib/common";
 import { commands } from "../lib/constants";
 import { bulletize, sentence, compactText, text, capitalize } from "../lib/text";
-import { t, tWordNumber } from "../lib/translate";
+import { orJoin, t, tWordNumber } from "../lib/translate";
 import { uuid } from "../lib/uuid";
 import { formatConsumptionLimits } from "./consumptionFormatService";
 import { getProductConsumptionLimits } from "./consumptionService";
@@ -22,6 +22,8 @@ import { getPlanSettings } from "./planSettingsService";
 import { isProductUsageExceeded } from "./productUsageService";
 import { SubscriptionNameOptions, getPrettySubscriptionName, getSubscriptionPlan } from "./subscriptionService";
 import { formatMoney, formatTerm } from "./formatService";
+import { Currency } from "../entities/currency";
+import { Money } from "../entities/money";
 
 export type ProductDescriptionOptions = {
   showPrice?: boolean;
@@ -138,7 +140,12 @@ export function formatProductDescription(
 
   const priceLine = options.showPrice && isPurchasableProduct(product)
     ? sentence(
-        formatMoney(user, product.price),
+        product.prices && product.prices.length
+          ? orJoin(user, ...product.prices.map(price => formatMoney(user, price)))
+          : null,
+        product.price
+          ? formatMoney(user, product.price)
+          : null,
         term
           ? t(user, "forTerm", {
               term: formatTerm(user, term, "Accusative")
@@ -163,6 +170,14 @@ export function formatProductDescription(
     `<b>${getPrettyProductName(user, product)}</b>`,
     ...bulletize(...formattedLimits, priceLine, expirationLine)
   );
+}
+
+export function getProductPrice(product: Product, currency: Currency): Money | null {
+  if (!product.prices) {
+    return null;
+  }
+
+  return product.prices.find(price => price.currency === currency) ?? null;
 }
 
 function formatProductLimits(user: User, product: Product, showConsumption: boolean): string[] {

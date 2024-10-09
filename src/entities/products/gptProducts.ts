@@ -6,7 +6,10 @@ export const gptProducts: Product[] = [
     code: "bundle-novice-mini",
     name: "Novice Mini",
     icon: "👧",
-    price: money(19),
+    prices: [
+      money(19),
+      money(15, "XTR")
+    ],
     details: {
       type: "bundle",
       plan: "novice-mini"
@@ -16,7 +19,10 @@ export const gptProducts: Product[] = [
     code: "bundle-student-mini",
     name: "Student Mini",
     icon: "👨‍🎓",
-    price: money(39),
+    prices: [
+      money(39),
+      money(31, "XTR")
+    ],
     details: {
       type: "bundle",
       plan: "student-mini"

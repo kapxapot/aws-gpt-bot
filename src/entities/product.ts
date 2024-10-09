@@ -48,14 +48,21 @@ export type ProductCode = typeof productCodes[number];
 
 export type Product = Subscription & {
   code: ProductCode;
+  /** @deprecated as of 0.3.0, use prices */
   price?: Money;
+  prices?: Money[];
+  purchasePrice?: Money;
   details: {
     term?: Term;
   };
 };
 
 export type PurchasableProduct = Product & {
-  price: Money;
+  prices: Money[];
+};
+
+export type PaymentProduct = PurchasableProduct & {
+  purchasePrice: Money;
 };
 
 export type PurchasedProduct = Product & {
@@ -71,9 +78,9 @@ export type ExpirableProduct = PurchasedProduct & {
 };
 
 export function isPurchasableProduct(product: Product): product is PurchasableProduct {
-  return "price" in product
-    && !!product.price
-    && product.price.amount > 0;
+  return "prices" in product
+    && !!product.prices
+    && product.prices.some(price => price.amount > 0);
 }
 
 export function isPurchasedProduct(product: Subscription): product is PurchasedProduct {

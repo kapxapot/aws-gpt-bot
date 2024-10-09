@@ -19,6 +19,7 @@ const enWords = [
   "request",
   "ruble",
   "second",
+  "star"
 ] as const;
 
 export type EnWord = ProductType | Interval | typeof enWords[number];
@@ -67,6 +68,9 @@ const wordMeta: Record<EnWord, EnWordMeta> = {
   },
   "subscription": {
     ruWord: "тариф"
+  },
+  "star": {
+    ruWord: "звезда"
   },
   "week": {
     ruWord: "неделя"

@@ -3,7 +3,7 @@ import { BotContext } from "../botContext";
 import { commands, scenes } from "../../lib/constants";
 import { addSceneCommandHandlers, backToChatHandler, dunnoHandler, kickHandler } from "../handlers";
 import { ButtonLike, clearInlineKeyboard, contactKeyboard, emptyKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
-import { Product, ProductCode, freeSubscription, isPurchasableProduct, productCodes } from "../../entities/product";
+import { Product, ProductCode, PurchasableProduct, freeSubscription, isPurchasableProduct, productCodes } from "../../entities/product";
 import { isError } from "../../lib/error";
 import { canMakePurchases, canPurchaseProduct } from "../../services/permissionService";
 import { backToStartAction, cancelAction, getCancelButton } from "../../lib/dialog";
@@ -12,11 +12,11 @@ import { SessionData } from "../session";
 import { StringLike, isEmpty, phoneToItu } from "../../lib/common";
 import { message } from "telegraf/filters";
 import { updateUser } from "../../storage/userStorage";
-import { formatProductDescription, formatProductDescriptions, getPrettyProductName, getProductByCode } from "../../services/productService";
+import { formatProductDescription, formatProductDescriptions, getPrettyProductName, getProductByCode, getProductPrice } from "../../services/productService";
 import { User } from "../../entities/user";
 import { gptokenString } from "../../services/gptokenService";
 import { bulletize, compactText, text } from "../../lib/text";
-import { createPayment } from "../../services/paymentService";
+import { createTelegramStarsPayment, createYooMoneyPayment } from "../../services/paymentService";
 import { Markup } from "telegraf";
 import { getUserActiveCoupons, getUserActiveProducts } from "../../services/userService";
 import { formatCouponsString } from "../../services/couponService";
@@ -27,12 +27,20 @@ import { gptProducts } from "../../entities/products/gptProducts";
 import { gptokenProducts } from "../../entities/products/gptokenProducts";
 import { formatCommand } from "../../lib/commands";
 import { orJoin, t } from "../../lib/translate";
+import { formatMoney } from "../../services/formatService";
+import { Money } from "../../entities/money";
+import { Currency } from "../../entities/currency";
 
 type Message = string;
 
 type MessagesAndButtons = {
   messages: Message[];
   buttons: ButtonLike[];
+};
+
+type ProductAndPrice = {
+  product: PurchasableProduct;
+  price: Money;
 };
 
 type ProductGroup = {
@@ -90,6 +98,8 @@ const productGroups: ProductGroup[] = [
 
 const getProductBuyAction = (code: ProductCode) => `buy-${code}`;
 const getGroupAction = (group: ProductGroup) => `group-${group.code}`;
+const buyForRublesAction = "buy-for-rubles";
+const buyForStarsAction = "buy-for-stars";
 
 const scene = new BaseScene<BotContext>(scenes.premium);
 
@@ -264,15 +274,63 @@ async function buyProduct(ctx: BotContext, productCode: ProductCode) {
       return;
     }
 
-    const payment = await createPayment(user, product);
+    const rubPrice = getProductPrice(product, "RUB");
+    const starPrice = getProductPrice(product, "XTR");
+
+    const buttons: ButtonLike[] = [];
+
+    if (rubPrice) {
+      buttons.push({
+        label: t(user, "makePayment", {
+          price: formatMoney(user, rubPrice, "Accusative")
+        }),
+        action: buyForRublesAction,
+        fullWidth: true
+      });
+    }
+
+    if (starPrice) {
+      buttons.push({
+        label: t(user, "makePayment", {
+          price: formatMoney(user, starPrice, "Accusative")
+        }),
+        action: buyForStarsAction
+      });
+    }
+
+    if (!rubPrice && !starPrice) {
+      await replyBackToMainDialog(ctx, t(user, "errors.productHasNoPrices"));
+      return;
+    }
+
+    await replyWithKeyboard(
+      ctx,
+      inlineKeyboard(
+        ...buttons,
+        getCancelButton(user)
+      ),
+      t(user, "productPurchaseOptions", {
+        productName: getPrettyProductName(user, product, { targetCase: "Accusative" })
+      })
+    );
+  });
+}
+
+scene.action(buyForRublesAction, async ctx => {
+  await withUser(ctx, async user => {
+    const productAndPrice = await getTargetProductAndPriceOrLeave(ctx, user, "RUB");
+
+    if (!productAndPrice) {
+      return;
+    }
+
+    const { product, price } = productAndPrice;
+
+    // proceed with the rubles payment
+    const payment = await createYooMoneyPayment(user, product, price);
 
     if (isError(payment)) {
-      await replyBackToMainDialog(
-        ctx,
-        t(user, "errors.paymentError"),
-        payment.message
-      );
-
+      await replyBackToMainDialog(ctx, t(user, "errors.yooMoneyPaymentError"));
       return;
     }
 
@@ -281,11 +339,12 @@ async function buyProduct(ctx: BotContext, productCode: ProductCode) {
     await replyWithKeyboard(
       ctx,
       inlineKeyboard(
-        Markup.button.url(t(user, "makePayment"), payment.url),
-        {
-          label: t(user, "buyOneMoreMasculine"),
-          action: backToStartAction
-        },
+        Markup.button.url(
+          t(user, "makePayment", {
+            price: formatMoney(user, price, "Accusative")
+          }),
+          payment.url
+        ),
         getCancelButton(user)
       ),
       t(user, "goToPayment", {
@@ -295,6 +354,62 @@ async function buyProduct(ctx: BotContext, productCode: ProductCode) {
       })
     );
   });
+});
+
+scene.action(buyForStarsAction, async ctx => {
+  await withUser(ctx, async user => {
+    const productAndPrice = await getTargetProductAndPriceOrLeave(ctx, user, "XTR");
+
+    if (!productAndPrice) {
+      return;
+    }
+
+    const { product, price } = productAndPrice;
+
+    // proceed with the stars payment
+    const payment = await createTelegramStarsPayment(user, product, price);
+    const productName = getPrettyProductName(user, product);
+
+    await ctx.replyWithInvoice(
+      {
+        title: productName,
+        description: formatProductDescription(user, product, { showExpiration: true }),
+        payload: payment.id,
+        provider_token: "",
+        currency: price.currency,
+        prices: [{
+          label: productName,
+          amount: price.amount
+        }]
+      }
+    );
+  });
+});
+
+async function getTargetProductAndPriceOrLeave(
+  ctx: BotContext,
+  user: User,
+  currency: Currency
+): Promise<ProductAndPrice | null> {
+  const targetProductCode = getTargetProductCode(ctx.session);
+
+  if (
+    !targetProductCode
+    || !canPurchaseProduct(user, targetProductCode)
+  ) {
+    await replyBackToMainDialog(ctx, t(user, "selectedProductUnavailable"));
+    return null;
+  }
+
+  const product = getProductByCode(user, targetProductCode);
+  const price = getProductPrice(product, currency);
+
+  if (!isPurchasableProduct(product) || !price) {
+    await replyBackToMainDialog(ctx, t(user, "productCantBePurchased"));
+    return null;
+  }
+
+  return { product, price };
 }
 
 scene.action(backToStartAction, async ctx => {

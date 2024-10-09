@@ -31,7 +31,10 @@ export const gptokenProducts: Product[] = [
     code: "bundle-trial",
     name: "Trial",
     icon: "🧪",
-    price: money(99),
+    prices: [
+      money(99),
+      money(77, "XTR")
+    ],
     details: {
       type: "bundle",
       plan: "trial"
@@ -41,7 +44,10 @@ export const gptokenProducts: Product[] = [
     code: "bundle-creative",
     name: "Creative",
     icon: "👩‍🎨",
-    price: money(199),
+    prices: [
+      money(199),
+      money(154, "XTR")
+    ],
     details: {
       type: "bundle",
       plan: "creative"
@@ -51,7 +57,10 @@ export const gptokenProducts: Product[] = [
     code: "bundle-pro",
     name: "Pro",
     icon: "😎",
-    price: money(449),
+    prices: [
+      money(449),
+      money(349, "XTR")
+    ],
     details: {
       type: "bundle",
       plan: "pro"
@@ -61,7 +70,10 @@ export const gptokenProducts: Product[] = [
     code: "bundle-boss",
     name: "Boss",
     icon: "🤴",
-    price: money(999),
+    prices: [
+      money(999),
+      money(779, "XTR")
+    ],
     details: {
       type: "bundle",
       plan: "boss"
@@ -72,7 +84,10 @@ export const gptokenProducts: Product[] = [
     code: "test-bundle-tiny-gptokens",
     name: "[Test] Tiny Gptoken",
     icon: "🛠",
-    price: overprice, // to prevent buying but to allow test buying
+    prices: [
+      overprice, // to prevent buying but to allow test buying
+      money(1, "XTR")
+    ],
     details: {
       type: "bundle",
       plan: "test-tinygptokens"

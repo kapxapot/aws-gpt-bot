@@ -1,7 +1,7 @@
 import { at, ts } from "../../entities/at";
-import { isPurchasableProduct, PurchasableProduct } from "../../entities/product";
+import { PaymentProduct } from "../../entities/product";
 import { t } from "../../lib/translate";
-import { putMetric } from "../../services/metricService";
+import { currencyToMetric, putMetric } from "../../services/metricService";
 import { formatProductName, productToPurchasedProduct } from "../../services/productService";
 import { addUserProduct, getUserById } from "../../services/userService";
 import { getPayment, updatePayment } from "../../storage/paymentStorage";
@@ -71,9 +71,7 @@ export async function yooMoneyHandler(requestData: YouMoneyRequestData) {
     const purchasedProduct = productToPurchasedProduct(product, paidAt);
     user = await addUserProduct(user, purchasedProduct);
 
-    if (isPurchasableProduct(product)) {
-      await putMetrics(product);
-    }
+    await putMetrics(product);
 
     const productName = formatProductName(user, purchasedProduct, "Accusative");
 
@@ -84,22 +82,11 @@ export async function yooMoneyHandler(requestData: YouMoneyRequestData) {
   }
 }
 
-async function putMetrics(product: PurchasableProduct): Promise<void> {
+async function putMetrics(product: PaymentProduct): Promise<void> {
   await putMetric("PaymentReceived");
 
-  const { currency, amount } = product.price;
+  const { currency, amount } = product.purchasePrice;
+  const metric = currencyToMetric(currency);
 
-  switch (currency) {
-    case "RUB":
-      await putMetric("RUBAmountReceived", amount);
-      break;
-
-    case "USD":
-      await putMetric("USDAmountReceived", amount);
-      break;
-
-    case "EUR":
-      await putMetric("EURAmountReceived", amount);
-      break;
-  }
+  await putMetric(metric, amount);
 }

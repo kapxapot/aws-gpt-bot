@@ -1,4 +1,5 @@
 import { CloudWatchClient, PutMetricDataCommand } from "@aws-sdk/client-cloudwatch";
+import { Currency } from "../entities/currency";
 
 export type MetricName =
   "MessageSent" |
@@ -13,6 +14,7 @@ export type MetricName =
   "RUBAmountReceived" |
   "USDAmountReceived" |
   "EURAmountReceived" |
+  "XTRAmountReceived" |
   "CouponIssued" |
   "CouponActivated" |
   "Error" |
@@ -24,6 +26,13 @@ export type MetricName =
   "UserNotFoundError" |
   "EmptyUserPhoneNumberError" |
   "ImageHasNoUrlError";
+
+const currencyMetrics: Record<Currency, MetricName> = {
+  RUB: "RUBAmountReceived",
+  USD: "USDAmountReceived",
+  EUR: "EURAmountReceived",
+  XTR: "XTRAmountReceived"
+};
 
 const config = {
   env: process.env.ENV,
@@ -49,3 +58,5 @@ export async function putMetric(name: MetricName, value: number = 1): Promise<vo
 
   await client.send(command);
 }
+
+export const currencyToMetric = (currency: Currency) => currencyMetrics[currency]

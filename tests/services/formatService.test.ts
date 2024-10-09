@@ -18,6 +18,10 @@ describe("formatMoney", () => {
     expect(
       formatMoney(user, money(11, "EUR"), "Dative")
     ).toBe("11 евро");
+
+    expect(
+      formatMoney(user, money(3, "XTR"), "Accusative")
+    ).toBe("⭐️ 3 звезды");
   });
 
   test("[en] should correctly format money", () => {
@@ -37,5 +41,9 @@ describe("formatMoney", () => {
     expect(
       formatMoney(enUser, money(11, "EUR"), "Dative")
     ).toBe("11 euros");
+
+    expect(
+      formatMoney(enUser, money(3, "XTR"), "Dative")
+    ).toBe("⭐️ 3 stars");
   });
 });

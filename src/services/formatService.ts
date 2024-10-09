@@ -4,12 +4,14 @@ import { Interval } from "../entities/interval";
 import { Money } from "../entities/money";
 import { Term } from "../entities/term";
 import { User } from "../entities/user";
+import { sentence } from "../lib/text";
 import { EnWord, t, tWordNumber } from "../lib/translate";
 
 const currencyToWord: Record<Currency, EnWord> = {
   "RUB": "ruble",
   "USD": "dollar",
-  "EUR": "euro"
+  "EUR": "euro",
+  "XTR": "star"
 };
 
 export const formatInterval = (user: User, interval: Interval) =>
@@ -25,5 +27,13 @@ export const formatLimit = (limit: number) =>
 
 export function formatMoney(user: User, money: Money, targetCase?: GrammarCase): string {
   const word = currencyToWord[money.currency];
-  return tWordNumber(user, word, money.amount, targetCase);
+
+  return sentence(
+    getCurrencySymbol(money.currency),
+    tWordNumber(user, word, money.amount, targetCase)
+  );
+}
+
+function getCurrencySymbol(currency: Currency) {
+  return currency === "XTR" ? "⭐️" : null;
 }

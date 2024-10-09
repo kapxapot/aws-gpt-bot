@@ -1,25 +1,32 @@
 import { Entity } from "../lib/types";
 import { At } from "./at";
 import { Money } from "./money";
-import { Product } from "./product";
-
-export type PaymentType = "YooMoney";
+import { PaymentProduct } from "./product";
 
 export type PaymentEvent = {
   type: "created" | "succeeded"
-  details: unknown;
+  details?: unknown;
   at: At;
 };
 
-export type Payment = Entity & {
+type PaymentBase = Entity & {
   userId: string;
-  type: PaymentType;
-  cart: Product[];
+  cart: PaymentProduct[];
   total: Money;
+  events: PaymentEvent[];
+};
+
+export type YooMoneyPayment = PaymentBase & {
+  type: "YooMoney";
   description: string;
   status: string;
   url: string;
   requestData: unknown;
   responseData: unknown;
-  events: PaymentEvent[];
 };
+
+export type TelegramStarsPayment = PaymentBase & {
+  type: "TelegramStars";
+};
+
+export type Payment = YooMoneyPayment | TelegramStarsPayment;

@@ -22,7 +22,7 @@
     "blockedByFilters": "Your request has been blocked by OpenAI's content filters. Try to adjust your prompt.",
     "imageTextNotAllowed": "Image descriptions generated from your prompt may contain text that is not allowed by OpenAI's safety system. If you believe this was done in error, your request may succeed if retried, or by adjusting your prompt.",
     "unknownTelegramError": "Unknown error while sending a message to Telegram.",
-    "paymentError": "An error occurred, the payment is unavailable at the moment. Sorry. 😢",
+    "yooMoneyPaymentError": "😥 Sorry, payments in rubles are unavailable at the moment.",
     "openAiApiInnerError": "OpenAI API error: {{message}}.",
     "openAiApiError": "OpenAI API request error.",
     "couponActivationError": "❌ Error activating coupon {{couponId}}.",
@@ -30,7 +30,8 @@
     "couponTemplateNotFound": "Coupon template not found: {{couponCode}}.",
     "noPhoneNumber": "No phone number provided.",
     "yoomoneyApiInnerError": "YooMoney API error",
-    "yoomoneyApiError": "YooMoney API request error."
+    "yoomoneyApiError": "YooMoney API request error.",
+    "productHasNoPrices": "⛔ Product doesn't have configured prices. Purchase unavailable."
   },
   "chatGPTRequestsUnavailable": "⛔ ChatGPT request are unavailable.",
   "waitOrBuy": "Please wait or buy a product: {{premiumCommand}}",
@@ -84,10 +85,10 @@
   "gotYourPhoneNumber": "I've saved your phone number, thanks! 🙏",
   "selectedProductUnavailable": "The product you've selected is not available anymore.",
   "productCantBePurchased": "This product is not available for purchase anymore. Sorry. 😢",
-  "makePayment": "Make payment",
+  "makePayment": "Buy for {{price}}",
   "buyOneMoreMasculine": "Buy one more",
   "Cancel": "Cancel",
-  "goToPayment": "💳 <a href=\"{{paymentUrl}}\">Follow the link</a> to make payment for <b>{{productNameGen}}</b>.\n\n⚠ The link is temporary. If you don't make payment in time, you can get a new payment link using the {{premiumCommand}} command.\n\nWe will notify you on receiving your payment.",
+  "goToPayment": "💳 <a href=\"{{paymentUrl}}\">Follow the link</a> to make payment for a <b>{{productNameGen}}</b>.\n\n⚠ The link is temporary. If you don't make payment in time, you can get a new payment link using the {{premiumCommand}} command.\n\nWe will notify you on receiving your payment.",
   "productGroup": "{{groupName}} products",
   "unknownMode": "Unknown mode",
   "modes": {
@@ -167,7 +168,7 @@
   "Finish": "Finish",
   "activateOneMoreMasculine": "Activate one more",
   "couponActivated": "✅ You successfully activated the coupon!",
-  "productAdded": "You have received a {{productName}}.",
+  "productAdded": "You've received a {{productName}}.",
   "noCoupons": "You have no coupons. 😯",
   "couponsForProducts": "You have {{coupons}} for the following products:",
   "andMoreCoupons": "And another {{coupons}}...",
@@ -198,7 +199,7 @@
   "enterHistorySize": "Specify the history size as an integer number separated by a space, ranging from {{minHistorySize}} to {{maxHistorySize}}.",
   "currentHistorySize": "Current history size: {{historySize}}",
   "historySizeUpdated": "History size was successfully changed.",
-  "paymentReceived": "✅ We've successfully received your payment.\n\nYou've purchased {{productName}}.\n\n♥ Thank you for your purchase!",
+  "paymentReceived": "✅ We've successfully received your payment.\n\nYou've purchased a {{productName}}.\n\n♥ Thank you for your purchase!",
   "whereWereWe": "Where were we?",
   "gotoPremium": "Buy products",
   "dunno": "I didn't understand your request. Use the dialog buttons please. 👆",
@@ -242,5 +243,6 @@
   "[Test] Tiny Gptoken": "[Test] Tiny Gptoken",
   "[Test] Tiny GPT-3": "[Test] Tiny GPT-3",
   "[Test] 1-Day Tiny GPT-3": "[Test] 1-Day Tiny GPT-3",
-  "[Test] 1-Day Tiny Gptoken": "[Test] 1-Day Tiny Gptoken"
+  "[Test] 1-Day Tiny Gptoken": "[Test] 1-Day Tiny Gptoken",
+  "productPurchaseOptions": "You can buy a <b>{{productName}}</b> using the following options:"
 }
