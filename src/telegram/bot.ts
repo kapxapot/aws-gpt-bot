@@ -138,7 +138,7 @@ export async function processTelegramRequest(tgRequest: TelegramRequest) {
 
   bot.on(message("successful_payment"), async ctx => {
     const successfulPayment = ctx.message.successful_payment;
-    await processTelegramStarsSuccessfulPayment(ctx, successfulPayment);
+    await processTelegramStarsSuccessfulPayment(successfulPayment);
   });
 
   bot.on(message("text"), async ctx => {

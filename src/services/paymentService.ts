@@ -119,11 +119,8 @@ export async function processTelegramStarsPreCheckout(ctx: BotContext, query: Pr
 }
 
 export async function processTelegramStarsSuccessfulPayment(
-  ctx: BotContext,
   successfulPayment: SuccessfulPayment
 ) {
-  await ctx.answerPreCheckoutQuery(true);
-
   let payment = await getPaymentById(
     successfulPayment.invoice_payload,
     "TelegramStars"
