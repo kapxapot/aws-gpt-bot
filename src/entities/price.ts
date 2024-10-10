@@ -25,17 +25,7 @@ export const textPrices: Record<TextModel, TextPrice> = {
     outputPrice: 0.075, // $0.0015
     avgPrice: 0.05
   },
-  "gpt-4-turbo": {
-    inputPrice: 0.5, // $0.01
-    outputPrice: 1.5, // $0.03
-    avgPrice: 1
-  },
   "gpt-4o": {
-    inputPrice: 0.25, // $0.005
-    outputPrice: 0.75, // $0.015
-    avgPrice: 0.5
-  },
-  "gpt-4o-2024-08-06": {
     inputPrice: 0.125, // $0.0025
     outputPrice: 0.5, // $0.01
     avgPrice: 0.3125

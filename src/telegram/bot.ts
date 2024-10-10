@@ -29,6 +29,7 @@ import { Result } from "../lib/error";
 import { gptDefaultModelName, gptPremiumModelName } from "../services/modelService";
 import { formatCommand } from "../lib/commands";
 import { t } from "../lib/translate";
+import { processTelegramStarsPreCheckout, processTelegramStarsSuccessfulPayment } from "../services/paymentService";
 
 const config = {
   botToken: process.env.BOT_TOKEN!,
@@ -128,6 +129,16 @@ export async function processTelegramRequest(tgRequest: TelegramRequest) {
   bot.action(gotoPremiumAction, async ctx => {
     await clearAndLeave(ctx);
     await ctx.scene.enter(scenes.premium);
+  });
+
+  bot.on("pre_checkout_query", async ctx => {
+    const query = ctx.update.pre_checkout_query;
+    await processTelegramStarsPreCheckout(ctx, query);
+  });
+
+  bot.on(message("successful_payment"), async ctx => {
+    const successfulPayment = ctx.message.successful_payment;
+    await processTelegramStarsSuccessfulPayment(ctx, successfulPayment);
   });
 
   bot.on(message("text"), async ctx => {

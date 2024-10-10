@@ -11,16 +11,9 @@ export type UsagePoints = {
 export function getTextModelUsagePoints(modelCode: TextModelCode): number {
   const model = getTextModelByCode(modelCode);
 
-  switch (modelCode) {
-    case "gpt-default":
-    case "gpt3":
-    case "gpt4":
-    case "o1":
-      return 1;
-
-    case "gptokens":
-      return getTextModelPrices(model).avgPrice;
-  }
+  return modelCode === "gptokens"
+    ? getTextModelPrices(model).avgPrice
+    : 1;
 }
 
 export function getImageModelUsagePoints(

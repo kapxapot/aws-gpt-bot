@@ -3,8 +3,11 @@ import { At } from "./at";
 import { Money } from "./money";
 import { PaymentProduct } from "./product";
 
+// eslint-disable-next-line @typescript-eslint/ban-types
+type Status = "pending" | "preCheckout" | "succeeded" | (string & {});
+
 export type PaymentEvent = {
-  type: "created" | "succeeded"
+  type: Status;
   details?: unknown;
   at: At;
 };
@@ -12,6 +15,7 @@ export type PaymentEvent = {
 type PaymentBase = Entity & {
   userId: string;
   cart: PaymentProduct[];
+  status: Status;
   total: Money;
   events: PaymentEvent[];
 };
@@ -19,7 +23,6 @@ type PaymentBase = Entity & {
 export type YooMoneyPayment = PaymentBase & {
   type: "YooMoney";
   description: string;
-  status: string;
   url: string;
   requestData: unknown;
   responseData: unknown;
@@ -30,3 +33,5 @@ export type TelegramStarsPayment = PaymentBase & {
 };
 
 export type Payment = YooMoneyPayment | TelegramStarsPayment;
+
+export type PaymentType = Payment['type']

@@ -1,10 +1,11 @@
 import { TextModel, TextModelCode, ImageModel, ImageModelCode, ModelCode, PureTextModelCode, PureImageModelCode, textModelMap, imageModelMap, modelWordMap, PureModelCode, modelNameMap } from "../entities/model";
 
 export function isTextModelCode(code: ModelCode): code is TextModelCode {
-  return code === "gpt3" ||
-    code === "gpt4" ||
-    code === "gpt-default" ||
-    code === "gptokens";
+  return code === "gpt3"
+    || code === "gpt4"
+    || code === "gpt-default"
+    || code === "o1"
+    || code === "gptokens";
 }
 
 export function isImageModelCode(code: ModelCode): code is ImageModelCode {

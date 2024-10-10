@@ -339,14 +339,15 @@ scene.action(buyForRublesAction, async ctx => {
 
     const productNameGen = getPrettyProductName(user, product, { targetCase: "Genitive" });
 
+    await clearAndLeave(ctx);
+
     await replyWithKeyboard(
       ctx,
       inlineKeyboard(
         Markup.button.url(
           t(user, "makePayment"),
           payment.url
-        ),
-        getCancelButton(user)
+        )
       ),
       t(user, "goToPayment", {
         productNameGen,
