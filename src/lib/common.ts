@@ -54,7 +54,7 @@ export function isUndefined(v: unknown): v is undefined {
   return typeof v === "undefined";
 }
 
-export const isEmpty = <T>(array?: T[]) => !array || !array.length;
+export const isEmpty = <T>(array: Like<T[]>) => !array || !array.length;
 
 export function toFixedOrInt(num: number, digits?: number): number {
   return Number(toFixedOrIntStr(num, digits));

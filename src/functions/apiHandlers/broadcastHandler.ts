@@ -1,6 +1,7 @@
 import { BroadcastRequest } from "../../entities/broadcastRequest";
 import { isEmpty } from "../../lib/common";
 import { Unsaved } from "../../lib/types";
+import { getMessages } from "../../services/broadcastService";
 import { storeBroadcastRequest } from "../../storage/broadcastRequestStorage";
 
 type BroadcastPayload = Unsaved<BroadcastRequest> & {
@@ -26,7 +27,9 @@ export async function broadcastHandler(payload: BroadcastPayload) {
     throw new Error("Invalid `apiKey`.");
   }
 
-  if (!request.resumeRequestId && isEmpty(request.messages)) {
+  const messages = getMessages(request.messages, "en");
+
+  if (!request.resumeRequestId && isEmpty(messages)) {
     throw new Error("Either `resumeRequestId` or not empty `messages` array are expected.");
   }
 

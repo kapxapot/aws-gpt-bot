@@ -1,16 +1,17 @@
 import { now } from "../entities/at";
 import { BroadcastMessage, BroadcastSuccessStatus } from "../entities/broadcastMessage";
-import { BroadcastRequest } from "../entities/broadcastRequest";
+import { BroadcastRequest, BroadcastRequestMessages, Messages, MultilingualMessages } from "../entities/broadcastRequest";
 import { User } from "../entities/user";
 import { isEmpty, isUndefined } from "../lib/common";
 import { isError } from "../lib/error";
 import { text } from "../lib/text";
+import { Language } from "../lib/types";
 import { findBroadcastMessages, storeBroadcastMessage, updateBroadcastMessage } from "../storage/broadcastMessageStorage";
 import { getBroadcastRequest } from "../storage/broadcastRequestStorage";
 import { getAllUsers } from "../storage/userStorage";
 import { sendTelegramMessage } from "../telegram/bot";
 import { putMetric } from "./metricService";
-import { getUserById } from "./userService";
+import { getUserById, getUserLanguage } from "./userService";
 
 /**
  * Adds broadcast messages for all users.
@@ -67,6 +68,19 @@ export async function sendBroadcastMessage(broadcastMessage: BroadcastMessage) {
   }
 }
 
+export function getMessages(
+  messages: BroadcastRequestMessages | undefined,
+  language: Language
+): Messages {
+  if (!messages) {
+    return [];
+  }
+
+  return isMultilingualMessages(messages)
+    ? messages[language] ?? messages.en
+    : messages;
+}
+
 async function broadcastSucceeded(
   broadcastMessage: BroadcastMessage,
   status: BroadcastSuccessStatus
@@ -113,13 +127,22 @@ async function createBroadcastMessages(
   let count = 0;
 
   for (const user of usersToBroadcast) {
+    const language = getUserLanguage(user);
+
     await storeBroadcastMessage(
       request,
       user,
-      text(...request.messages ?? []),
+      text(...getMessages(request.messages, language)),
       isUndefined(isTest) ? request.isTest : isTest
     );
 
     console.log(`[${++count}/${usersToBroadcast.length}] Created a broadcast message.`);
   }
+}
+
+function isMultilingualMessages(messages: BroadcastRequestMessages): messages is MultilingualMessages {
+  return "ru" in messages
+    && Array.isArray(messages.ru)
+    && "en" in messages
+    && Array.isArray(messages.en);
 }
