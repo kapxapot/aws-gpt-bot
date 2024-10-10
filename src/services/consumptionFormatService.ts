@@ -7,7 +7,7 @@ import { cleanJoin, commatize, sentence } from "../lib/text";
 import { EnWord, t, tCase, tCaseForNumber, tWordNumber } from "../lib/translate";
 import { isConsumptionLimit } from "./consumptionService";
 import { formatInterval, formatLimit } from "./formatService";
-import { getModelName, getModelWord, isImageModelCode } from "./modelService";
+import { getModelName, getModelSymbol, getModelWord, isImageModelCode } from "./modelService";
 
 export function formatRemainingLimits(
   user: User,
@@ -139,12 +139,6 @@ function formatTargetLimit(
   const remainingCount = Math.floor(limit.remaining / usagePoints);
 
   return `= ${tWordNumber(user, targetWord, remainingCount)}`;
-}
-
-function getModelSymbol(modelCode: ModelCode): string | null {
-  return (modelCode === "gptokens")
-    ? "🍥"
-    : null;
 }
 
 function formatModelUnits(user: User, modelCode: ModelCode, units: string): string {

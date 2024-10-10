@@ -9,13 +9,13 @@ import { gptProducts } from "../entities/products/gptProducts";
 import { legacyProducts } from "../entities/products/legacyProducts";
 import { User } from "../entities/user";
 import { formatCommand } from "../lib/commands";
-import { StringLike, isEmpty } from "../lib/common";
+import { StringLike, first, isEmpty } from "../lib/common";
 import { commands } from "../lib/constants";
 import { bulletize, sentence, compactText, text, capitalize } from "../lib/text";
-import { orJoin, t, tWordNumber } from "../lib/translate";
+import { orJoin, t, tCaseForNumber, tWordNumber } from "../lib/translate";
 import { uuid } from "../lib/uuid";
 import { formatConsumptionLimits } from "./consumptionFormatService";
-import { getProductConsumptionLimits } from "./consumptionService";
+import { getProductConsumptionLimits, isConsumptionLimit } from "./consumptionService";
 import { addDays, addTerm, formatDate } from "./dateService";
 import { getPlanModelLimit, getPlanModels } from "./planService";
 import { getPlanSettings } from "./planSettingsService";
@@ -24,6 +24,7 @@ import { SubscriptionNameOptions, getPrettySubscriptionName, getSubscriptionPlan
 import { formatMoney, formatTerm } from "./formatService";
 import { Currency } from "../entities/currency";
 import { Money } from "../entities/money";
+import { getModelName, getModelSymbol, getModelWord } from "./modelService";
 
 export type ProductDescriptionOptions = {
   showPrice?: boolean;
@@ -178,6 +179,45 @@ export function getProductPrice(product: Product, currency: Currency): Money | n
   }
 
   return product.prices.find(price => price.currency === currency) ?? null;
+}
+
+export function getProductInvoiceDescription(user: User, product: Product) {
+  const appendix = t(user, "productInvoiceDescription.appendix");
+
+  const modelCodes = getProductModels(product);
+  const modelCode = first(modelCodes);
+
+  if (!modelCode) {
+    return appendix;
+  }
+
+  const limits = getProductConsumptionLimits(product, modelCode);
+
+  if (!limits || !isConsumptionLimit(limits)) {
+    return appendix;
+  }
+
+  const word = getModelWord(modelCode);
+  const limit = limits.limit;
+
+  const units = sentence(
+    getModelSymbol(modelCode),
+    String(limit),
+    tCaseForNumber(user, word, limit)
+  );
+
+  const description =  modelCode === "gptokens"
+    ? t(user, "productInvoiceDescription.gptokens", {
+      units,
+      premiumModelName: getModelName("gpt4"),
+      imageModelName: getModelName("dalle3")
+    })
+    : t(user, "productInvoiceDescription.default", {
+      units,
+      modelName: getModelName(modelCode)
+    });
+
+  return sentence(description, appendix);
 }
 
 function formatProductLimits(user: User, product: Product, showConsumption: boolean): string[] {

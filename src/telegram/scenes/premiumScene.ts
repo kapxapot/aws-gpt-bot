@@ -2,7 +2,7 @@ import { BaseScene } from "telegraf/scenes";
 import { BotContext } from "../botContext";
 import { commands, scenes } from "../../lib/constants";
 import { addSceneCommandHandlers, backToChatHandler, dunnoHandler, kickHandler } from "../handlers";
-import { ButtonLike, clearInlineKeyboard, contactKeyboard, emptyKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
+import { ButtonLike, clearAndLeave, clearInlineKeyboard, contactKeyboard, emptyKeyboard, inlineKeyboard, reply, replyWithKeyboard } from "../../lib/telegram";
 import { Product, ProductCode, PurchasableProduct, freeSubscription, isPurchasableProduct, productCodes } from "../../entities/product";
 import { isError } from "../../lib/error";
 import { canMakePurchases, canPurchaseProduct } from "../../services/permissionService";
@@ -12,7 +12,7 @@ import { SessionData } from "../session";
 import { StringLike, isEmpty, phoneToItu } from "../../lib/common";
 import { message } from "telegraf/filters";
 import { updateUser } from "../../storage/userStorage";
-import { formatProductDescription, formatProductDescriptions, getPrettyProductName, getProductByCode, getProductPrice } from "../../services/productService";
+import { formatProductDescription, formatProductDescriptions, getPrettyProductName, getProductByCode, getProductInvoiceDescription, getProductPrice } from "../../services/productService";
 import { User } from "../../entities/user";
 import { gptokenString } from "../../services/gptokenService";
 import { bulletize, compactText, text } from "../../lib/text";
@@ -204,13 +204,14 @@ async function buyAction(ctx: BotContext, productCode: ProductCode) {
   await clearInlineKeyboard(ctx);
 
   await withUser(ctx, async user => {
+    setTargetProductCode(ctx.session, productCode);
+
     if (user.phoneNumber) {
       await buyProduct(ctx, productCode);
       return;
     }
 
     // ask for phone number and then buy the product
-    setTargetProductCode(ctx.session, productCode);
     await askForPhone(ctx, user);
   });
 }
@@ -281,7 +282,7 @@ async function buyProduct(ctx: BotContext, productCode: ProductCode) {
 
     if (rubPrice) {
       buttons.push({
-        label: t(user, "makePayment", {
+        label: t(user, "buyFor", {
           price: formatMoney(user, rubPrice, "Accusative")
         }),
         action: buyForRublesAction,
@@ -291,7 +292,7 @@ async function buyProduct(ctx: BotContext, productCode: ProductCode) {
 
     if (starPrice) {
       buttons.push({
-        label: t(user, "makePayment", {
+        label: t(user, "buyFor", {
           price: formatMoney(user, starPrice, "Accusative")
         }),
         action: buyForStarsAction
@@ -317,6 +318,8 @@ async function buyProduct(ctx: BotContext, productCode: ProductCode) {
 }
 
 scene.action(buyForRublesAction, async ctx => {
+  await clearInlineKeyboard(ctx);
+
   await withUser(ctx, async user => {
     const productAndPrice = await getTargetProductAndPriceOrLeave(ctx, user, "RUB");
 
@@ -340,9 +343,7 @@ scene.action(buyForRublesAction, async ctx => {
       ctx,
       inlineKeyboard(
         Markup.button.url(
-          t(user, "makePayment", {
-            price: formatMoney(user, price, "Accusative")
-          }),
+          t(user, "makePayment"),
           payment.url
         ),
         getCancelButton(user)
@@ -368,19 +369,23 @@ scene.action(buyForStarsAction, async ctx => {
 
     // proceed with the stars payment
     const payment = await createTelegramStarsPayment(user, product, price);
-    const productName = getPrettyProductName(user, product);
+
+    await clearAndLeave(ctx);
 
     await ctx.replyWithInvoice(
       {
-        title: productName,
-        description: formatProductDescription(user, product, { showExpiration: true }),
+        title: getPrettyProductName(user, product),
+        description: getProductInvoiceDescription(user, product),
         payload: payment.id,
         provider_token: "",
         currency: price.currency,
         prices: [{
-          label: productName,
+          label: "Product",
           amount: price.amount
-        }]
+        }],
+        photo_url: "https://i.imgur.com/o6Qu6Ms.png",
+        photo_width: 700,
+        photo_height: 400
       }
     );
   });

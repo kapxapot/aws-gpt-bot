@@ -33,3 +33,9 @@ export const getModelName = (modelCode: PureModelCode) => modelNameMap[modelCode
 
 export const gptDefaultModelName = getModelName("gpt-default");
 export const gptPremiumModelName = getModelName("gpt4");
+
+export function getModelSymbol(modelCode: ModelCode): string | null {
+  return (modelCode === "gptokens")
+    ? "🍥"
+    : null;
+}

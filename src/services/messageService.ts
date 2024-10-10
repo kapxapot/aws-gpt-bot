@@ -104,7 +104,7 @@ export async function sendMessageToGpt(ctx: BotContext, user: User, question: st
     if (!answer.reply) {
       await reply(ctx, t(user, "noAnswerFromChatGPT"));
     } else {
-      await sendParsedMessage(ctx, user, answer.reply);
+      await sendParsedMessage(ctx, answer.reply);
     }
 
     const actualUsagePoints = (modelCode === "gptokens")
@@ -183,7 +183,7 @@ export async function showLastHistoryMessage(ctx: BotContext, user: User, fallba
   const historyMessage = getLastHistoryMessage(user);
 
   if (historyMessage) {
-    await sendParsedMessage(ctx, user, historyMessage);
+    await sendParsedMessage(ctx, historyMessage);
   } else if (fallbackMessage) {
     await reply(ctx, fallbackMessage);
   }
@@ -254,13 +254,9 @@ function adaptErrorMessage(user: User, errorMessage: string) {
   return errorMessage;
 }
 
-async function sendParsedMessage(ctx: BotContext, user: User, message: string) {
+async function sendParsedMessage(ctx: BotContext, message: string) {
   try {
     await reply(ctx, formatBotMessage(parse(message)));
-
-    if (isDebugMode(user)) {
-      await reply(ctx, encodeText(message));
-    }
   } catch (error: unknown) {
     console.error(error);
     await reply(ctx, formatBotMessage(encodeText(message)));

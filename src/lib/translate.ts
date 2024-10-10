@@ -134,8 +134,11 @@ export function tCase(
     : word;
 }
 
+export const andJoin = (user: User, ...lines: StringLike[]) =>
+  homogeneousJoin(lines, t(user, "andDelimiter"));
+
 export const orJoin = (user: User, ...lines: StringLike[]) =>
-   homogeneousJoin(lines, t(user, "orDelimiter"));
+  homogeneousJoin(lines, t(user, "orDelimiter"));
 
 export const tQuote = (user: User, content: StringLike) =>
   content ? t(user, "quote", { content }) : null;

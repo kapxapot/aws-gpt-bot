@@ -76,6 +76,7 @@
       }
     }
   },
+  "andDelimiter": ", and ",
   "orDelimiter": ", or ",
   "buyProductIfNeeded": "If {{marketingBlock}}, purchase one of the products.",
   "Back": "Back",
@@ -85,8 +86,8 @@
   "gotYourPhoneNumber": "I've saved your phone number, thanks! 🙏",
   "selectedProductUnavailable": "The product you've selected is not available anymore.",
   "productCantBePurchased": "This product is not available for purchase anymore. Sorry. 😢",
-  "makePayment": "Buy for {{price}}",
-  "buyOneMoreMasculine": "Buy one more",
+  "buyFor": "Buy for {{price}}",
+  "makePayment": "Make payment",
   "Cancel": "Cancel",
   "goToPayment": "💳 <a href=\"{{paymentUrl}}\">Follow the link</a> to make payment for a <b>{{productNameGen}}</b>.\n\n⚠ The link is temporary. If you don't make payment in time, you can get a new payment link using the {{premiumCommand}} command.\n\nWe will notify you on receiving your payment.",
   "productGroup": "{{groupName}} products",
@@ -244,5 +245,10 @@
   "[Test] Tiny GPT-3": "[Test] Tiny GPT-3",
   "[Test] 1-Day Tiny GPT-3": "[Test] 1-Day Tiny GPT-3",
   "[Test] 1-Day Tiny Gptoken": "[Test] 1-Day Tiny Gptoken",
-  "productPurchaseOptions": "You can buy a <b>{{productName}}</b> using the following options:"
+  "productPurchaseOptions": "You can buy a <b>{{productName}}</b> using the following options:",
+  "productInvoiceDescription": {
+    "gptokens": "A bundle of {{units}} to work with {{premiumModelName}} and {{imageModelName}}.",
+    "default": "A bundle of {{units}} to {{modelName}}.",
+    "appendix": "No expiration date. The invoice can be shared and paid by other users and also multiple times."
+  }
 }
