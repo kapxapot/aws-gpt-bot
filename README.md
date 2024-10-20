@@ -1,6 +1,12 @@
-# AWS GPT Telegram Bot
+# GPToid
 
-This is an AWS GPT Telegram bot: [@GPToid_Bot](https://t.me/GPToid_Bot?start=720913331)
+**GPToid** is a Telegram bot that gives access to ChatGPT and DALL-E:
+[@GPToid_Bot](https://t.me/GPToid_Bot?start=720913331)
+
+## Links
+
+- Landing page with more info: https://gptoid.vercel.app
+- Instagram with images generated using GPToid: https://instagram.com/gptoid_bot
 
 ## Screenshots
 
@@ -19,11 +25,6 @@ This is an AWS GPT Telegram bot: [@GPToid_Bot](https://t.me/GPToid_Bot?start=720
   <img src="https://i.imgur.com/iPrj09a.png" alt="Dark Image 2" style="width: 30%;" />
   <img src="https://i.imgur.com/eJBDvlw.png" alt="Dark Image 3" style="width: 30%;" />
 </div>
-
-## Links
-
-- Landing page: https://gptoid.vercel.app
-- Instagram: https://instagram.com/gptoid_bot
 
 ## Stack
 
