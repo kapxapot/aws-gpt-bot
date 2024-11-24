@@ -16,7 +16,7 @@ export async function historySizeHandler(ctx: BotContext) {
       await reply(
         ctx,
         t(user, "currentHistorySize", {
-          temperature: getUserHistorySize(user)
+          historySize: getUserHistorySize(user)
         })
       );
 
