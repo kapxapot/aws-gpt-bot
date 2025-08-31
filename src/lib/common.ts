@@ -1,6 +1,8 @@
 import { AnyRecord, DefinedUndefined } from "./types";
 
 type Like<T> = T | null | undefined;
+type Many<T> = T | T[];
+
 export type StringLike = Like<string>;
 
 /**
@@ -11,28 +13,27 @@ export const clean = (lines: StringLike[]) =>
     .map(l => l ? l.trim() : "")
     .filter(l => !!l);
 
-export function toArray<T>(value: T | T[] | undefined | null): T[] {
+export function toArray<T>(value: Like<Many<T>>): T[] {
   if (value === null || isUndefined(value)) {
     return [];
   }
-  
+
   return Array.isArray(value) ? value : [value];
 }
 
-export const toCleanArray = (lines: string | string[]) =>
+export const toCleanArray = (lines: Many<StringLike>) =>
   clean(toArray(lines));
 
-export function first<T>(array: T[]): T | null {
-  return !isEmpty(array) ? array[0] : null;
-}
+export const isEmpty = <T>(array: Like<T[]>) =>
+  !array || !array.length;
 
-export function last<T>(array: T[]): T | null {
-  return !isEmpty(array) ? array[array.length - 1] : null;
-}
+export const first = <T>(array: T[]) =>
+  !isEmpty(array) ? array[0] : null;
 
-export function unique<T>(array: T[]): T[] {
-  return [...new Set(array)];
-}
+export const last = <T>(array: T[]) =>
+  !isEmpty(array) ? array[array.length - 1] : null;
+
+export const unique = <T>(array: T[]) => [...new Set(array)];
 
 export function phoneToItu(phone: string | undefined): string | null {
   if (!phone) {
@@ -53,8 +54,6 @@ export function isNumber(v: unknown): v is number {
 export function isUndefined(v: unknown): v is undefined {
   return typeof v === "undefined";
 }
-
-export const isEmpty = <T>(array: Like<T[]>) => !array || !array.length;
 
 export function toFixedOrInt(num: number, digits?: number): number {
   return Number(toFixedOrIntStr(num, digits));
