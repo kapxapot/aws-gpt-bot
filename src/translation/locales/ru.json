@@ -71,7 +71,7 @@
       "marketing": "вы хотите работать с <b>{{gptPremiumModelName}}</b> и <b>DALL-E</b>",
       "description": {
         "intro": "Пакеты 🍥 гптокенов для работы с <b>{{gptPremiumModelName}}</b> и <b>DALL-E</b>",
-        "gpt4": "1 запрос к <b>{{model}}</b> (~1000 токенов) = {{usagePoints}}",
+        "gpt-premium": "1 запрос к <b>{{model}}</b> (~1000 токенов) = {{usagePoints}}",
         "dalle3": "1 картинка <b>{{model}}</b> = от {{usagePoints}}"
       }
     }

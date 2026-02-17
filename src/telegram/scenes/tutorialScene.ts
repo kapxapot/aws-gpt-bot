@@ -12,6 +12,7 @@ import { formatCommand } from "../../lib/commands";
 import { User } from "../../entities/user";
 import { t, tWordNumber } from "../../lib/translate";
 import { withUser } from "../../services/messageService";
+import { toFixedOrInt } from "../../lib/common";
 
 const imageSettings = getDefaultImageSettings();
 const usagePoints = getGptokenUsagePoints(imageSettings);
@@ -41,13 +42,13 @@ const steps: TextFunc[] = [
     usageText1: tWordNumber(
       user,
       "request",
-      1 / usagePoints.text,
+      toFixedOrInt(1 / usagePoints.text, 2),
       "Accusative"
     ),
     usageImage2: tWordNumber(
       user,
       "image",
-      2 / usagePoints.image,
+      toFixedOrInt(2 / usagePoints.image),
       "Accusative"
     ),
     imageSize: imageSettings.size,
@@ -55,13 +56,13 @@ const steps: TextFunc[] = [
     usageText100: tWordNumber(
       user,
       "request",
-      100 / usagePoints.text,
+      toFixedOrInt(100 / usagePoints.text, 2),
       "Accusative"
     ),
     usageImage100: tWordNumber(
       user,
       "image",
-      100 / usagePoints.image,
+      toFixedOrInt(100 / usagePoints.image, 2),
       "Accusative"
     )
   }),

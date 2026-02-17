@@ -82,8 +82,8 @@ const productGroups: ProductGroup[] = [
       t(user, "productGroups.gptoken.description.intro", { gptPremiumModelName }),
       compactText(
         ...bulletize(
-          t(user, "productGroups.gptoken.description.gpt4", {
-            model: getModelName("gpt4"),
+          t(user, "productGroups.gptoken.description.gpt-premium", {
+            model: getModelName("gpt-premium"),
             usagePoints: gptokenString(user, usagePoints.text)
           }),
           t(user, "productGroups.gptoken.description.dalle3", {

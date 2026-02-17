@@ -17,6 +17,12 @@ const config = {
   maxHistoryMessageLength: settings.maxHistoryMessageLength
 };
 
+const isTemperatureApplicable = (model: TextModel): boolean => {
+  return model === "gpt-3.5-turbo"
+    || model === "gpt-4o"
+    || model === "gpt-4o-mini";
+}
+
 export async function gptChatCompletion(user: User, model: TextModel, userMessage: string): Promise<Result<Completion>> {
   const messages: ChatCompletionMessageParam[] = [];
 
@@ -56,7 +62,9 @@ export async function gptChatCompletion(user: User, model: TextModel, userMessag
     const response = await openAiClient.chat.completions.create(
       {
         model,
-        temperature: getUserTemperature(user),
+        temperature: isTemperatureApplicable(model)
+          ? getUserTemperature(user)
+          : null,
         messages: messages
       },
       {

@@ -2,7 +2,7 @@ import { EnWord } from "../lib/translate";
 
 export type GptokensCode = "gptokens";
 
-export type PureTextModelCode = "gpt3" | "gpt4" | "gpt-default" | "o1";
+export type PureTextModelCode = "gpt3" | "gpt4" | "gpt-default" | "gpt-premium";
 export type TextModelCode = PureTextModelCode | GptokensCode;
 
 export type PureImageModelCode = "dalle3";
@@ -15,8 +15,8 @@ export type TextModel =
   "gpt-3.5-turbo"
   | "gpt-4o"
   | "gpt-4o-mini"
-  | "o1-preview"
-  | "o1-mini";
+  | "gpt-5"
+  | "gpt-5-mini";
 
 export type ImageModel = "dall-e-3";
 
@@ -36,10 +36,10 @@ export type ImageSettings = {
 export const defaultImageSize: ImageSize = "1024x1024";
 
 export const textModelMap: Record<PureTextModelCode, TextModel> = {
-  "gpt-default": "gpt-4o-mini",
+  "gpt-default": "gpt-5-mini",
+  "gpt-premium": "gpt-5",
   "gpt3": "gpt-3.5-turbo",
-  "gpt4": "gpt-4o",
-  "o1": "o1-mini"
+  "gpt4": "gpt-4o"
 };
 
 export const imageModelMap: Record<PureImageModelCode, ImageModel> = {
@@ -48,17 +48,17 @@ export const imageModelMap: Record<PureImageModelCode, ImageModel> = {
 
 export const modelWordMap: Record<ModelCode, EnWord> = {
   "gpt-default": "request",
+  "gpt-premium": "request",
   "gpt3": "request",
   "gpt4": "request",
-  "o1": "request",
   "dalle3": "image",
   "gptokens": "gptoken"
 };
 
 export const modelNameMap: Record<PureModelCode, string> = {
-  "gpt-default": "GPT-4o mini",
+  "gpt-default": "GPT-5 mini",
+  "gpt-premium": "GPT-5",
   "gpt3": "GPT-3.5",
   "gpt4": "GPT-4o",
-  "o1": "o1",
   "dalle3": "DALL-E 3"
 };

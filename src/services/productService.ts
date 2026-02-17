@@ -206,10 +206,10 @@ export function getProductInvoiceDescription(user: User, product: Product) {
     tCaseForNumber(user, word, limit)
   );
 
-  const description =  modelCode === "gptokens"
+  const description = modelCode === "gptokens"
     ? t(user, "productInvoiceDescription.gptokens", {
       units,
-      premiumModelName: getModelName("gpt4"),
+      premiumModelName: getModelName("gpt-premium"),
       imageModelName: getModelName("dalle3")
     })
     : t(user, "productInvoiceDescription.default", {

@@ -1,7 +1,7 @@
 {
   "name": "aws-gpt-bot",
-  "version": "0.3.1",
-  "description": "AWS ChatGPT Telegram bot",
+  "version": "0.3.2",
+  "description": "GPToid - AWS ChatGPT Telegram bot",
   "scripts": {
     "deploy": "sls deploy",
     "deploy-prod": "sls deploy --stage prod",
@@ -18,6 +18,8 @@
     "GPT-4",
     "GPT-4o",
     "GPT-4o mini",
+    "GPT-5",
+    "GPT-5 mini",
     "DALL-E",
     "DALL-E 3",
     "ChatGPT",

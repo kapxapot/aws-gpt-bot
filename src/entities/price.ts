@@ -35,15 +35,15 @@ export const textPrices: Record<TextModel, TextPrice> = {
     outputPrice: 0.03, // $0.0006
     avgPrice: 0.01875 // $0.000375
   },
-  "o1-preview": {
-    inputPrice: 0.75, // $0.015
-    outputPrice: 3, // $0.06
-    avgPrice: 1.875 // $0.0375
+  "gpt-5": {
+    inputPrice: 0.0625, // $0.00125 × 50
+    outputPrice: 0.5, // $0.01 × 50
+    avgPrice: 0.28125
   },
-  "o1-mini": {
-    inputPrice: 0.15, // $0.003
-    outputPrice: 0.6, // $0.012
-    avgPrice: 0.375 // $0.0075
+  "gpt-5-mini": {
+    inputPrice: 0.0125, // $0.00025 × 50
+    outputPrice: 0.1, // $0.002 × 50
+    avgPrice: 0.05625
   }
 };
 

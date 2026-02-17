@@ -4,9 +4,31 @@ export const cleanJoin = (lines: StringLike[], delimiter: string = "") =>
   clean(lines).join(delimiter);
 
 /**
+ * If the string ends with a period ("."), make sure that
+ * only one or three periods are at the end of the string.
+ */
+export function squashTerminators(str: string) {
+  // calculate count of terminators at the end of the string
+  // if it's 2 -> make it 1
+  // if it's > 3 -> make it 3
+  const count = (str.match(/\.+$/) || [''])[0].length;
+
+  if (count == 2) {
+    return str.substring(0, str.length - 1);
+  }
+
+  if (count > 3) {
+    return str.substring(0, str.length - (count - 3));
+  }
+
+  return str;
+}
+
+/**
  * Joins words with spaces.
  */
-export const sentence = (...lines: StringLike[]) => cleanJoin(lines, " ");
+export const sentence = (...lines: StringLike[]) =>
+  squashTerminators(cleanJoin(lines, " "));
 
 export const text = (...lines: StringLike[]) => cleanJoin(lines, "\n\n");
 

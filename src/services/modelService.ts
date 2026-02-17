@@ -4,7 +4,7 @@ export function isTextModelCode(code: ModelCode): code is TextModelCode {
   return code === "gpt3"
     || code === "gpt4"
     || code === "gpt-default"
-    || code === "o1"
+    || code === "gpt-premium"
     || code === "gptokens";
 }
 
@@ -13,7 +13,7 @@ export function isImageModelCode(code: ModelCode): code is ImageModelCode {
 }
 
 export function purifyTextModelCode(code: TextModelCode): PureTextModelCode {
-  return code === "gptokens" ? "gpt4" : code;
+  return code === "gptokens" ? "gpt-premium" : code;
 }
 
 export function purifyImageModelCode(code: ImageModelCode): PureImageModelCode {
@@ -33,7 +33,7 @@ export const getModelWord = (modelCode: ModelCode) => modelWordMap[modelCode];
 export const getModelName = (modelCode: PureModelCode) => modelNameMap[modelCode];
 
 export const gptDefaultModelName = getModelName("gpt-default");
-export const gptPremiumModelName = getModelName("gpt4");
+export const gptPremiumModelName = getModelName("gpt-premium");
 
 export function getModelSymbol(modelCode: ModelCode): string | null {
   return (modelCode === "gptokens")
